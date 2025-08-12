@@ -2,7 +2,7 @@ import api from './api';
 import { IProduto, IApiResponse, IPaginatedResponse } from '@/types';
 
 export const produtoService = {
-    getAll: async (page: number = 1, limit: number = 10, search?: string): Promise<IPaginatedResponse<IProduto>> => {
+    getAll: async (page: number = 1, limit: number = 25, search?: string): Promise<IPaginatedResponse<IProduto>> => {
         const params = new URLSearchParams({
             page: page.toString(),
             limit: limit.toString(),

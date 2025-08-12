@@ -1,0 +1,9 @@
+import './infrastructure/database/models/PerfilModel';
+import './infrastructure/database/models/RuaModel';
+import './infrastructure/database/models/FornecedorModel';
+import './infrastructure/database/models/PredioModel';
+import './infrastructure/database/models/ProdutoModel';
+import './infrastructure/database/models/UsuarioModel';
+import './infrastructure/database/models/ListaModel';
+import './infrastructure/database/models/EnderecamentoModel';
+//# sourceMappingURL=database-sync.d.ts.map

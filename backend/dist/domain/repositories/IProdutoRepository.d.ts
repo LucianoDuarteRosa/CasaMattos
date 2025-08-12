@@ -1,5 +1,4 @@
 import { IProduto } from '../entities/Produto';
-
 export interface IProdutoRepository {
     create(produto: Omit<IProduto, 'id'>): Promise<IProduto>;
     findById(id: number): Promise<IProduto | null>;
@@ -10,9 +9,10 @@ export interface IProdutoRepository {
     findByDescricao(descricao: string): Promise<IProduto[]>;
     findByFornecedor(idFornecedor: number): Promise<IProduto[]>;
     search(term: string): Promise<IProduto[]>;
-    findWithPagination(
-        page: number,
-        limit: number,
-        search?: string
-    ): Promise<{ produtos: IProduto[], total: number, totalPages: number }>;
+    findWithPagination(page: number, limit: number, search?: string): Promise<{
+        produtos: IProduto[];
+        total: number;
+        totalPages: number;
+    }>;
 }
+//# sourceMappingURL=IProdutoRepository.d.ts.map
