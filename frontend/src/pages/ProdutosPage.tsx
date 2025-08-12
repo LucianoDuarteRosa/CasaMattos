@@ -121,33 +121,56 @@ const ProdutosPage: React.FC = () => {
     });
 
     const columns: GridColDef[] = [
-        { field: 'codInterno', headerName: 'Cód. Interno', width: 120 },
-        { field: 'descricao', headerName: 'Descrição', width: 200, flex: 1 },
-        { field: 'codFabricante', headerName: 'Cód. Fabricante', width: 130 },
+        {
+            field: 'codInterno',
+            headerName: 'Cód. Interno',
+            width: 100,
+            minWidth: 80
+        },
+        {
+            field: 'descricao',
+            headerName: 'Descrição',
+            flex: 1,
+            minWidth: 150
+        },
+        {
+            field: 'codFabricante',
+            headerName: 'Cód. Fab.',
+            width: 100,
+            minWidth: 80
+        },
         {
             field: 'idFornecedor',
             headerName: 'Fornecedor',
-            width: 250,
-            valueFormatter: (params) => getFornecedorInfo(params.value)
+            width: 180,
+            minWidth: 120,
+            valueFormatter: (params) => {
+                const info = getFornecedorInfo(params.value);
+                // Truncar texto longo em telas pequenas
+                return info.length > 25 ? `${info.substring(0, 22)}...` : info;
+            }
         },
         {
             field: 'estoque',
             headerName: 'Estoque',
-            width: 100,
+            width: 80,
+            minWidth: 70,
             type: 'number',
             valueFormatter: (params) => formatBrazilianNumber(params.value)
         },
         {
             field: 'deposito',
             headerName: 'Depósito',
-            width: 100,
+            width: 80,
+            minWidth: 70,
             type: 'number',
             valueFormatter: (params) => formatBrazilianNumber(params.value)
         },
         {
             field: 'quantMinVenda',
-            headerName: 'Qtd Min Venda',
-            width: 120,
+            headerName: 'Qtd Min',
+            width: 80,
+            minWidth: 70,
             type: 'number',
             valueFormatter: (params) => formatBrazilianNumber(params.value)
         },
@@ -155,7 +178,8 @@ const ProdutosPage: React.FC = () => {
             field: 'actions',
             type: 'actions',
             headerName: 'Ações',
-            width: 150,
+            width: 80,
+            minWidth: 70,
             getActions: (params) => [
                 <GridActionsCellItem
                     key="details"
@@ -376,13 +400,29 @@ const ProdutosPage: React.FC = () => {
     };
 
     return (
-        <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+        <Box sx={{
+            height: '100%',
+            display: 'flex',
+            flexDirection: 'column',
+            p: { xs: 1, sm: 2 },
+            maxWidth: '100vw',
+            overflow: 'hidden'
+        }}>
             <Box sx={{ mb: 3 }}>
                 <Typography variant="h4" component="h1" gutterBottom>
                     Produtos
                 </Typography>
 
-                <Box sx={{ display: 'flex', gap: 2, mb: 2, alignItems: 'center' }}>
+                <Box sx={{
+                    display: 'flex',
+                    gap: 1,
+                    mb: 2,
+                    alignItems: 'center',
+                    flexWrap: 'wrap',
+                    '& > *': {
+                        minWidth: 'auto'
+                    }
+                }}>
                     <TextField
                         placeholder="Buscar produtos..."
                         value={searchTerm}
@@ -392,17 +432,24 @@ const ProdutosPage: React.FC = () => {
                                 handleSearch();
                             }
                         }}
-                        sx={{ minWidth: 300 }}
+                        sx={{
+                            flexGrow: 1,
+                            minWidth: { xs: '100%', sm: '200px' },
+                            maxWidth: { xs: '100%', sm: '300px' }
+                        }}
+                        size="small"
                     />
                     <Button
                         variant="outlined"
                         onClick={handleSearch}
+                        size="small"
                     >
                         Buscar
                     </Button>
                     <Button
                         variant="outlined"
                         onClick={loadProdutos}
+                        size="small"
                     >
                         Limpar
                     </Button>
@@ -410,13 +457,20 @@ const ProdutosPage: React.FC = () => {
                         variant="contained"
                         startIcon={<Add />}
                         onClick={handleAdd}
+                        size="small"
                     >
                         Novo Produto
                     </Button>
                 </Box>
             </Box>
 
-            <Paper sx={{ maxHeight: 600, width: '100%' }}>
+            <Paper sx={{
+                height: 600,
+                width: '100%',
+                overflow: 'hidden',
+                display: 'flex',
+                flexDirection: 'column'
+            }}>
                 <DataGrid
                     rows={produtos}
                     columns={columns}
@@ -429,7 +483,20 @@ const ProdutosPage: React.FC = () => {
                     }}
                     disableRowSelectionOnClick
                     localeText={dataGridPtBR}
-                    sx={{ minWidth: 800 }}
+                    sx={{
+                        width: '100%',
+                        height: '100%',
+                        border: 'none',
+                        '& .MuiDataGrid-main': {
+                            overflow: 'hidden'
+                        },
+                        '& .MuiDataGrid-virtualScroller': {
+                            overflow: 'auto'
+                        },
+                        '& .MuiDataGrid-footerContainer': {
+                            borderTop: '1px solid rgba(224, 224, 224, 1)'
+                        }
+                    }}
                 />
             </Paper>
             <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>

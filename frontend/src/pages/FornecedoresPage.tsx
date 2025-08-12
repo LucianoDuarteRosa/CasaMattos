@@ -37,19 +37,35 @@ const FornecedoresPage: React.FC = () => {
     });
 
     const columns: GridColDef[] = [
-        { field: 'id', headerName: 'ID', width: 70 },
-        { field: 'razaoSocial', headerName: 'Razão Social', width: 300, flex: 1 },
+        {
+            field: 'id',
+            headerName: 'ID',
+            width: 60,
+            minWidth: 50
+        },
+        {
+            field: 'razaoSocial',
+            headerName: 'Razão Social',
+            flex: 1,
+            minWidth: 150
+        },
         {
             field: 'cnpj',
             headerName: 'CNPJ',
-            width: 180,
-            valueFormatter: (params) => formatCNPJ(params.value || '')
+            width: 140,
+            minWidth: 120,
+            valueFormatter: (params) => {
+                const formatted = formatCNPJ(params.value || '');
+                // Truncar CNPJ em telas muito pequenas
+                return formatted.length > 18 ? `${formatted.substring(0, 15)}...` : formatted;
+            }
         },
         {
             field: 'actions',
             type: 'actions',
             headerName: 'Ações',
-            width: 120,
+            width: 80,
+            minWidth: 70,
             getActions: (params) => [
                 <GridActionsCellItem
                     key="edit"
@@ -220,7 +236,14 @@ const FornecedoresPage: React.FC = () => {
     };
 
     return (
-        <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+        <Box sx={{
+            height: '100%',
+            display: 'flex',
+            flexDirection: 'column',
+            p: { xs: 1, sm: 2 },
+            maxWidth: '100vw',
+            overflow: 'hidden'
+        }}>
             <Box sx={{ mb: 3 }}>
                 <Typography variant="h4" component="h1" gutterBottom>
                     Fornecedores
@@ -238,7 +261,16 @@ const FornecedoresPage: React.FC = () => {
                     </Alert>
                 )}
 
-                <Box sx={{ display: 'flex', gap: 2, mb: 2, alignItems: 'center' }}>
+                <Box sx={{
+                    display: 'flex',
+                    gap: 1,
+                    mb: 2,
+                    alignItems: 'center',
+                    flexWrap: 'wrap',
+                    '& > *': {
+                        minWidth: 'auto'
+                    }
+                }}>
                     <TextField
                         placeholder="Buscar fornecedores..."
                         value={searchTerm}
@@ -248,17 +280,24 @@ const FornecedoresPage: React.FC = () => {
                                 handleSearch();
                             }
                         }}
-                        sx={{ minWidth: 300 }}
+                        sx={{
+                            flexGrow: 1,
+                            minWidth: { xs: '100%', sm: '200px' },
+                            maxWidth: { xs: '100%', sm: '300px' }
+                        }}
+                        size="small"
                     />
                     <Button
                         variant="outlined"
                         onClick={handleSearch}
+                        size="small"
                     >
                         Buscar
                     </Button>
                     <Button
                         variant="outlined"
                         onClick={loadFornecedores}
+                        size="small"
                     >
                         Limpar
                     </Button>
@@ -266,13 +305,20 @@ const FornecedoresPage: React.FC = () => {
                         variant="contained"
                         startIcon={<Add />}
                         onClick={handleAdd}
+                        size="small"
                     >
                         Novo Fornecedor
                     </Button>
                 </Box>
             </Box>
 
-            <Paper sx={{ maxHeight: 600, width: '100%' }}>
+            <Paper sx={{
+                height: 600,
+                width: '100%',
+                overflow: 'hidden',
+                display: 'flex',
+                flexDirection: 'column'
+            }}>
                 <DataGrid
                     rows={fornecedores}
                     columns={columns}
@@ -285,6 +331,20 @@ const FornecedoresPage: React.FC = () => {
                     }}
                     disableRowSelectionOnClick
                     localeText={dataGridPtBR}
+                    sx={{
+                        width: '100%',
+                        height: '100%',
+                        border: 'none',
+                        '& .MuiDataGrid-main': {
+                            overflow: 'hidden'
+                        },
+                        '& .MuiDataGrid-virtualScroller': {
+                            overflow: 'auto'
+                        },
+                        '& .MuiDataGrid-footerContainer': {
+                            borderTop: '1px solid rgba(224, 224, 224, 1)'
+                        }
+                    }}
                 />
             </Paper>
 
