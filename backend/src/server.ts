@@ -4,6 +4,9 @@ import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import dotenv from 'dotenv';
 import sequelize from './infrastructure/database/connection';
+import authRoutes from './presentation/routes/authRoutes';
+// Importar associações para garantir que sejam carregadas
+import './infrastructure/database/models/associations';
 
 // Carregar variáveis de ambiente
 dotenv.config();
@@ -35,7 +38,7 @@ app.get('/health', (req, res) => {
 });
 
 // Rotas da API
-app.use('/api/auth', (req, res) => res.json({ message: 'Auth routes not implemented yet' }));
+app.use('/api/auth', authRoutes);
 app.use('/api/fornecedores', (req, res) => res.json({ message: 'Fornecedores routes not implemented yet' }));
 app.use('/api/produtos', (req, res) => res.json({ message: 'Produtos routes not implemented yet' }));
 app.use('/api/listas', (req, res) => res.json({ message: 'Listas routes not implemented yet' }));
