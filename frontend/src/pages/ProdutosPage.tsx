@@ -10,11 +10,10 @@ import {
     DialogActions,
     Paper,
     Alert,
-    MenuItem,
     Grid,
 } from '@mui/material';
-import { DataGrid, GridColDef } from '@mui/x-data-grid';
-import { Add } from '@mui/icons-material';
+import { DataGrid, GridColDef, GridActionsCellItem } from '@mui/x-data-grid';
+import { Add, Edit } from '@mui/icons-material';
 import { produtoService } from '@/services/produtoService';
 import { IProduto } from '@/types';
 
@@ -38,6 +37,7 @@ const ProdutosPage: React.FC = () => {
     const [editingProduto, setEditingProduto] = useState<IProduto | null>(null);
     const [error, setError] = useState<string>('');
     const [success, setSuccess] = useState<string>('');
+    const [searchTerm, setSearchTerm] = useState<string>('');
     const [formData, setFormData] = useState<FormData>({
         codInterno: '',
         descricao: '',
@@ -59,16 +59,17 @@ const ProdutosPage: React.FC = () => {
         { field: 'quantCaixas', headerName: 'Qtd Caixas', width: 100, type: 'number' },
         {
             field: 'actions',
+            type: 'actions',
             headerName: 'Ações',
-            width: 150,
-            renderCell: (params) => (
-                <Button
-                    size="small"
+            width: 120,
+            getActions: (params) => [
+                <GridActionsCellItem
+                    key="edit"
+                    icon={<Edit />}
+                    label="Editar"
                     onClick={() => handleEdit(params.row)}
-                >
-                    Editar
-                </Button>
-            ),
+                />,
+            ],
         },
     ];
 
@@ -85,6 +86,25 @@ const ProdutosPage: React.FC = () => {
         } catch (error: any) {
             console.error('Erro ao carregar produtos:', error);
             setError('Erro ao carregar produtos. Tente novamente.');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleSearch = async () => {
+        if (!searchTerm.trim()) {
+            loadProdutos();
+            return;
+        }
+
+        try {
+            setLoading(true);
+            setError('');
+            const data = await produtoService.searchByCodigoOrNome(searchTerm);
+            setProdutos(data);
+        } catch (error: any) {
+            console.error('Erro ao buscar produtos:', error);
+            setError('Erro ao buscar produtos. Tente novamente.');
         } finally {
             setLoading(false);
         }
@@ -202,10 +222,48 @@ const ProdutosPage: React.FC = () => {
 
     return (
         <Box>
-            <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
+            <Box display="flex" justifyContent="flex-start" alignItems="center" mb={3}>
                 <Typography variant="h4">
                     Produtos
                 </Typography>
+            </Box>
+
+            {error && (
+                <Alert severity="error" sx={{ mb: 2 }}>
+                    {error}
+                </Alert>
+            )}
+
+            {success && (
+                <Alert severity="success" sx={{ mb: 2 }}>
+                    {success}
+                </Alert>
+            )}
+
+            <Box sx={{ display: 'flex', gap: 2, mb: 2, alignItems: 'center' }}>
+                <TextField
+                    placeholder="Buscar produtos..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    onKeyPress={(e) => {
+                        if (e.key === 'Enter') {
+                            handleSearch();
+                        }
+                    }}
+                    sx={{ minWidth: 300 }}
+                />
+                <Button
+                    variant="outlined"
+                    onClick={handleSearch}
+                >
+                    Buscar
+                </Button>
+                <Button
+                    variant="outlined"
+                    onClick={loadProdutos}
+                >
+                    Limpar
+                </Button>
                 <Button
                     variant="contained"
                     startIcon={<Add />}
@@ -214,12 +272,6 @@ const ProdutosPage: React.FC = () => {
                     Novo Produto
                 </Button>
             </Box>
-
-            {error && (
-                <Alert severity="error" sx={{ mb: 2 }}>
-                    {error}
-                </Alert>
-            )}
 
             <Paper sx={{ height: 600, width: '100%' }}>
                 <DataGrid

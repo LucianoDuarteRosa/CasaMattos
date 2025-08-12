@@ -6,6 +6,7 @@ import dotenv from 'dotenv';
 import sequelize from './infrastructure/database/connection';
 import authRoutes from './presentation/routes/authRoutes';
 import produtoRoutes from './presentation/routes/produtoRoutes';
+import fornecedorRoutes from './presentation/routes/fornecedorRoutes';
 // Importar associações para garantir que sejam carregadas
 import './infrastructure/database/models/associations';
 
@@ -41,7 +42,7 @@ app.get('/health', (req, res) => {
 // Rotas da API
 app.use('/api/auth', authRoutes);
 app.use('/api/produtos', produtoRoutes);
-app.use('/api/fornecedores', (req, res) => res.json({ message: 'Fornecedores routes not implemented yet' }));
+app.use('/api/fornecedores', fornecedorRoutes);
 app.use('/api/listas', (req, res) => res.json({ message: 'Listas routes not implemented yet' }));
 app.use('/api/enderecamentos', (req, res) => res.json({ message: 'Enderecamentos routes not implemented yet' }));
 

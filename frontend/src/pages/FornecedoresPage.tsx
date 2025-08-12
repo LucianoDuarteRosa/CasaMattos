@@ -1,17 +1,350 @@
-import React from 'react';
-import { Box, Typography } from '@mui/material';
+import React, { useState, useEffect } from 'react';
+import {
+    Box,
+    Typography,
+    Button,
+    TextField,
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    DialogActions,
+    Paper,
+    Alert,
+    Grid,
+    IconButton,
+} from '@mui/material';
+import { DataGrid, GridColDef, GridActionsCellItem } from '@mui/x-data-grid';
+import { Add, Edit, Delete } from '@mui/icons-material';
+import { fornecedorService } from '@/services/fornecedorService';
+import { IFornecedor } from '@/types';
+
+interface FormData {
+    razaoSocial: string;
+    cnpj: string;
+}
 
 const FornecedoresPage: React.FC = () => {
+    const [fornecedores, setFornecedores] = useState<IFornecedor[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [open, setOpen] = useState(false);
+    const [editingFornecedor, setEditingFornecedor] = useState<IFornecedor | null>(null);
+    const [error, setError] = useState<string>('');
+    const [success, setSuccess] = useState<string>('');
+    const [searchTerm, setSearchTerm] = useState<string>('');
+    const [formData, setFormData] = useState<FormData>({
+        razaoSocial: '',
+        cnpj: '',
+    });
+
+    const columns: GridColDef[] = [
+        { field: 'id', headerName: 'ID', width: 70 },
+        { field: 'razaoSocial', headerName: 'Razão Social', width: 300, flex: 1 },
+        { field: 'cnpj', headerName: 'CNPJ', width: 180 },
+        {
+            field: 'createdAt',
+            headerName: 'Criado em',
+            width: 150,
+            valueFormatter: (params) => {
+                if (params.value) {
+                    return new Date(params.value).toLocaleDateString('pt-BR');
+                }
+                return '';
+            },
+        },
+        {
+            field: 'actions',
+            type: 'actions',
+            headerName: 'Ações',
+            width: 120,
+            getActions: (params) => [
+                <GridActionsCellItem
+                    key="edit"
+                    icon={<Edit />}
+                    label="Editar"
+                    onClick={() => handleEdit(params.row)}
+                />,
+                <GridActionsCellItem
+                    key="delete"
+                    icon={<Delete />}
+                    label="Deletar"
+                    onClick={() => handleDelete(params.row)}
+                />,
+            ],
+        },
+    ];
+
+    useEffect(() => {
+        loadFornecedores();
+    }, []);
+
+    const loadFornecedores = async () => {
+        try {
+            setLoading(true);
+            setError('');
+            const data = await fornecedorService.getAll();
+            setFornecedores(data);
+        } catch (error: any) {
+            console.error('Erro ao carregar fornecedores:', error);
+            setError('Erro ao carregar fornecedores. Tente novamente.');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleSearch = async () => {
+        if (!searchTerm.trim()) {
+            loadFornecedores();
+            return;
+        }
+
+        try {
+            setLoading(true);
+            setError('');
+            const data = await fornecedorService.search(searchTerm);
+            setFornecedores(data);
+        } catch (error: any) {
+            console.error('Erro ao buscar fornecedores:', error);
+            setError('Erro ao buscar fornecedores. Tente novamente.');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleEdit = (fornecedor: IFornecedor) => {
+        setEditingFornecedor(fornecedor);
+        setFormData({
+            razaoSocial: fornecedor.razaoSocial,
+            cnpj: fornecedor.cnpj,
+        });
+        setOpen(true);
+    };
+
+    const handleDelete = async (fornecedor: IFornecedor) => {
+        if (window.confirm(`Tem certeza que deseja deletar o fornecedor "${fornecedor.razaoSocial}"?`)) {
+            try {
+                await fornecedorService.delete(fornecedor.id);
+                setSuccess('Fornecedor deletado com sucesso!');
+                loadFornecedores();
+            } catch (error: any) {
+                console.error('Erro ao deletar fornecedor:', error);
+                setError('Erro ao deletar fornecedor. Tente novamente.');
+            }
+        }
+    };
+
+    const handleClose = () => {
+        setOpen(false);
+        setEditingFornecedor(null);
+        setError('');
+        setSuccess('');
+        setFormData({
+            razaoSocial: '',
+            cnpj: '',
+        });
+    };
+
+    const handleAdd = () => {
+        setEditingFornecedor(null);
+        setError('');
+        setSuccess('');
+        setFormData({
+            razaoSocial: '',
+            cnpj: '',
+        });
+        setOpen(true);
+    };
+
+    const handleInputChange = (field: keyof FormData) => (
+        event: React.ChangeEvent<HTMLInputElement>
+    ) => {
+        setFormData(prev => ({
+            ...prev,
+            [field]: event.target.value
+        }));
+    };
+
+    const handleSubmit = async () => {
+        try {
+            setError('');
+            setSuccess('');
+
+            // Validações
+            if (!formData.razaoSocial.trim()) {
+                setError('Razão Social é obrigatória');
+                return;
+            }
+
+            if (!formData.cnpj.trim()) {
+                setError('CNPJ é obrigatório');
+                return;
+            }
+
+            // Validação básica de CNPJ (apenas formato)
+            const cnpjRegex = /^\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2}$/;
+            const cnpjNumeros = formData.cnpj.replace(/\D/g, '');
+
+            if (cnpjNumeros.length !== 14) {
+                setError('CNPJ deve ter 14 dígitos');
+                return;
+            }
+
+            const dadosParaEnvio = {
+                razaoSocial: formData.razaoSocial.trim(),
+                cnpj: formData.cnpj.trim(),
+            };
+
+            if (editingFornecedor) {
+                await fornecedorService.update(editingFornecedor.id, dadosParaEnvio);
+                setSuccess('Fornecedor atualizado com sucesso!');
+            } else {
+                await fornecedorService.create(dadosParaEnvio);
+                setSuccess('Fornecedor criado com sucesso!');
+            }
+
+            handleClose();
+            loadFornecedores();
+        } catch (error: any) {
+            console.error('Erro ao salvar fornecedor:', error);
+            setError(error.response?.data?.message || 'Erro ao salvar fornecedor. Tente novamente.');
+        }
+    };
+
+    const formatCNPJ = (cnpj: string) => {
+        // Remove tudo que não é dígito
+        const nums = cnpj.replace(/\D/g, '');
+
+        // Aplica a máscara do CNPJ
+        return nums.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, '$1.$2.$3/$4-$5');
+    };
+
+    const handleCNPJChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const value = event.target.value;
+        const formattedValue = formatCNPJ(value);
+        setFormData(prev => ({
+            ...prev,
+            cnpj: formattedValue
+        }));
+    };
+
     return (
-        <Box>
-            <Typography variant="h4" gutterBottom>
-                Fornecedores
-            </Typography>
-            <Typography>
-                Página em desenvolvimento...
-            </Typography>
+        <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+            <Box sx={{ mb: 3 }}>
+                <Typography variant="h4" component="h1" gutterBottom>
+                    Fornecedores
+                </Typography>
+
+                {error && (
+                    <Alert severity="error" sx={{ mb: 2 }}>
+                        {error}
+                    </Alert>
+                )}
+
+                {success && (
+                    <Alert severity="success" sx={{ mb: 2 }}>
+                        {success}
+                    </Alert>
+                )}
+
+                <Box sx={{ display: 'flex', gap: 2, mb: 2, alignItems: 'center' }}>
+                    <TextField
+                        placeholder="Buscar fornecedores..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        onKeyPress={(e) => {
+                            if (e.key === 'Enter') {
+                                handleSearch();
+                            }
+                        }}
+                        sx={{ minWidth: 300 }}
+                    />
+                    <Button
+                        variant="outlined"
+                        onClick={handleSearch}
+                    >
+                        Buscar
+                    </Button>
+                    <Button
+                        variant="outlined"
+                        onClick={loadFornecedores}
+                    >
+                        Limpar
+                    </Button>
+                    <Button
+                        variant="contained"
+                        startIcon={<Add />}
+                        onClick={handleAdd}
+                    >
+                        Novo Fornecedor
+                    </Button>
+                </Box>
+            </Box>
+
+            <Paper sx={{ flex: 1, width: '100%' }}>
+                <DataGrid
+                    rows={fornecedores}
+                    columns={columns}
+                    loading={loading}
+                    pageSizeOptions={[25, 50, 100]}
+                    initialState={{
+                        pagination: {
+                            paginationModel: { page: 0, pageSize: 25 },
+                        },
+                    }}
+                    disableRowSelectionOnClick
+                    sx={{ height: '100%' }}
+                />
+            </Paper>
+
+            <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
+                <DialogTitle>
+                    {editingFornecedor ? 'Editar Fornecedor' : 'Novo Fornecedor'}
+                </DialogTitle>
+                <DialogContent>
+                    {error && (
+                        <Alert severity="error" sx={{ mb: 2 }}>
+                            {error}
+                        </Alert>
+                    )}
+
+                    <Grid container spacing={2} sx={{ mt: 1 }}>
+                        <Grid item xs={12}>
+                            <TextField
+                                fullWidth
+                                label="Razão Social *"
+                                value={formData.razaoSocial}
+                                onChange={handleInputChange('razaoSocial')}
+                                placeholder="Digite a razão social"
+                            />
+                        </Grid>
+
+                        <Grid item xs={12}>
+                            <TextField
+                                fullWidth
+                                label="CNPJ *"
+                                value={formData.cnpj}
+                                onChange={handleCNPJChange}
+                                placeholder="00.000.000/0000-00"
+                                inputProps={{ maxLength: 18 }}
+                            />
+                        </Grid>
+                    </Grid>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={handleClose}>
+                        Cancelar
+                    </Button>
+                    <Button
+                        onClick={handleSubmit}
+                        variant="contained"
+                        disabled={!formData.razaoSocial.trim() || !formData.cnpj.trim()}
+                    >
+                        {editingFornecedor ? 'Salvar' : 'Criar'}
+                    </Button>
+                </DialogActions>
+            </Dialog>
         </Box>
     );
 };
 
-export default FornecedoresPage;
+export default FornecedoresPage; 'react';
+
