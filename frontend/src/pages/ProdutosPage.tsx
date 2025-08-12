@@ -16,6 +16,7 @@ import { DataGrid, GridColDef, GridActionsCellItem } from '@mui/x-data-grid';
 import { Add, Edit } from '@mui/icons-material';
 import { produtoService } from '@/services/produtoService';
 import { IProduto } from '@/types';
+import { dataGridPtBR } from '@/utils/dataGridLocale';
 
 interface FormData {
     codInterno: string;
@@ -285,6 +286,8 @@ const ProdutosPage: React.FC = () => {
                         },
                     }}
                     disableRowSelectionOnClick
+                    localeText={dataGridPtBR}
+                    sx={{ minWidth: 600 }}
                 />
             </Paper>
 

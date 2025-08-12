@@ -11,12 +11,12 @@ import {
     Paper,
     Alert,
     Grid,
-    IconButton,
 } from '@mui/material';
 import { DataGrid, GridColDef, GridActionsCellItem } from '@mui/x-data-grid';
 import { Add, Edit, Delete } from '@mui/icons-material';
 import { fornecedorService } from '@/services/fornecedorService';
 import { IFornecedor } from '@/types';
+import { dataGridPtBR } from '@/utils/dataGridLocale';
 
 interface FormData {
     razaoSocial: string;
@@ -180,7 +180,6 @@ const FornecedoresPage: React.FC = () => {
             }
 
             // Validação básica de CNPJ (apenas formato)
-            const cnpjRegex = /^\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2}$/;
             const cnpjNumeros = formData.cnpj.replace(/\D/g, '');
 
             if (cnpjNumeros.length !== 14) {
@@ -291,7 +290,8 @@ const FornecedoresPage: React.FC = () => {
                         },
                     }}
                     disableRowSelectionOnClick
-                    sx={{ height: '100%' }}
+                    localeText={dataGridPtBR}
+                    sx={{ height: '100%', minWidth: 600 }}
                 />
             </Paper>
 
