@@ -39,17 +39,11 @@ const FornecedoresPage: React.FC = () => {
     const columns: GridColDef[] = [
         { field: 'id', headerName: 'ID', width: 70 },
         { field: 'razaoSocial', headerName: 'Razão Social', width: 300, flex: 1 },
-        { field: 'cnpj', headerName: 'CNPJ', width: 180 },
         {
-            field: 'createdAt',
-            headerName: 'Criado em',
-            width: 150,
-            valueFormatter: (params) => {
-                if (params.value) {
-                    return new Date(params.value).toLocaleDateString('pt-BR');
-                }
-                return '';
-            },
+            field: 'cnpj',
+            headerName: 'CNPJ',
+            width: 180,
+            valueFormatter: (params) => formatCNPJ(params.value || '')
         },
         {
             field: 'actions',
@@ -278,7 +272,7 @@ const FornecedoresPage: React.FC = () => {
                 </Box>
             </Box>
 
-            <Paper sx={{ flex: 1, width: '100%' }}>
+            <Paper sx={{ maxHeight: 600, width: '100%' }}>
                 <DataGrid
                     rows={fornecedores}
                     columns={columns}
@@ -291,7 +285,6 @@ const FornecedoresPage: React.FC = () => {
                     }}
                     disableRowSelectionOnClick
                     localeText={dataGridPtBR}
-                    sx={{ height: '100%', minWidth: 600 }}
                 />
             </Paper>
 

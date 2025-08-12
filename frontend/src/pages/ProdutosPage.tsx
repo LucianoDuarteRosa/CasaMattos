@@ -11,11 +11,17 @@ import {
     Paper,
     Alert,
     Grid,
+    Snackbar,
+    Select,
+    MenuItem,
+    FormControl,
+    InputLabel,
 } from '@mui/material';
 import { DataGrid, GridColDef, GridActionsCellItem } from '@mui/x-data-grid';
-import { Add, Edit } from '@mui/icons-material';
+import { Add, Edit, Visibility } from '@mui/icons-material';
 import { produtoService } from '@/services/produtoService';
-import { IProduto } from '@/types';
+import { fornecedorService } from '@/services/fornecedorService';
+import { IProduto, IFornecedor } from '@/types';
 import { dataGridPtBR } from '@/utils/dataGridLocale';
 
 interface FormData {
@@ -32,12 +38,74 @@ interface FormData {
 }
 
 const ProdutosPage: React.FC = () => {
+    // Função para formatar números no padrão brasileiro
+    const formatBrazilianNumber = (value: number | string | null | undefined): string => {
+        if (value === null || value === undefined || value === '') return '0,00';
+        const num = typeof value === 'string' ? parseFloat(value) : value;
+        if (isNaN(num)) return '0,00';
+        return num.toLocaleString('pt-BR', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
+    };
+
+    // Função para formatar valores de moeda no padrão brasileiro
+    const formatBrazilianCurrency = (value: number | string | null | undefined): string => {
+        if (value === null || value === undefined || value === '') return 'R$ 0,00';
+        const num = typeof value === 'string' ? parseFloat(value) : value;
+        if (isNaN(num)) return 'R$ 0,00';
+        return num.toLocaleString('pt-BR', {
+            style: 'currency',
+            currency: 'BRL'
+        });
+    };
+
+    // Função para obter o nome do fornecedor
+    const getFornecedorInfo = (idFornecedor: string | number): string => {
+        if (!idFornecedor) return 'Fornecedor não informado';
+        const fornecedor = fornecedores.find(f => f.id === Number(idFornecedor));
+        if (fornecedor) {
+            return `${fornecedor.razaoSocial} - ${formatCnpj(fornecedor.cnpj)}`;
+        }
+        return `Fornecedor ${idFornecedor}`;
+    };
+
+    // Função para formatar CNPJ
+    const formatCnpj = (cnpj: string): string => {
+        if (!cnpj) return '';
+        const numbers = cnpj.replace(/\D/g, '');
+        if (numbers.length === 14) {
+            return numbers.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5');
+        }
+        return cnpj;
+    };
+
+    // Função para converter formato brasileiro para decimal (para envio ao backend)
+    const brazilianToDecimal = (value: string): string => {
+        if (!value) return '';
+        return value.replace(/\./g, '').replace(',', '.');
+    };
+
+    // Função para converter decimal para formato brasileiro (para exibição)
+    const decimalToBrazilian = (value: string | number): string => {
+        if (!value) return '';
+        const numValue = typeof value === 'string' ? parseFloat(value) : value;
+        if (isNaN(numValue)) return '';
+        return numValue.toFixed(2).replace('.', ',');
+    };
+
     const [produtos, setProdutos] = useState<IProduto[]>([]);
+    const [fornecedores, setFornecedores] = useState<IFornecedor[]>([]);
     const [loading, setLoading] = useState(true);
     const [open, setOpen] = useState(false);
+    const [detailsOpen, setDetailsOpen] = useState(false);
     const [editingProduto, setEditingProduto] = useState<IProduto | null>(null);
+    const [viewingProduto, setViewingProduto] = useState<IProduto | null>(null);
     const [error, setError] = useState<string>('');
     const [success, setSuccess] = useState<string>('');
+    const [snackbarOpen, setSnackbarOpen] = useState(false);
+    const [snackbarMessage, setSnackbarMessage] = useState('');
+    const [snackbarSeverity, setSnackbarSeverity] = useState<'success' | 'error'>('success');
     const [searchTerm, setSearchTerm] = useState<string>('');
     const [formData, setFormData] = useState<FormData>({
         codInterno: '',
@@ -49,21 +117,52 @@ const ProdutosPage: React.FC = () => {
         custo: '',
         codFabricante: '',
         quantCaixas: '',
-        idFornecedor: '1', // Default fornecedor
+        idFornecedor: ' ',
     });
 
     const columns: GridColDef[] = [
-        { field: 'id', headerName: 'ID', width: 70 },
         { field: 'codInterno', headerName: 'Cód. Interno', width: 120 },
         { field: 'descricao', headerName: 'Descrição', width: 200, flex: 1 },
-        { field: 'estoque', headerName: 'Estoque', width: 100, type: 'number' },
-        { field: 'quantCaixas', headerName: 'Qtd Caixas', width: 100, type: 'number' },
+        { field: 'codFabricante', headerName: 'Cód. Fabricante', width: 130 },
+        {
+            field: 'idFornecedor',
+            headerName: 'Fornecedor',
+            width: 250,
+            valueFormatter: (params) => getFornecedorInfo(params.value)
+        },
+        {
+            field: 'estoque',
+            headerName: 'Estoque',
+            width: 100,
+            type: 'number',
+            valueFormatter: (params) => formatBrazilianNumber(params.value)
+        },
+        {
+            field: 'deposito',
+            headerName: 'Depósito',
+            width: 100,
+            type: 'number',
+            valueFormatter: (params) => formatBrazilianNumber(params.value)
+        },
+        {
+            field: 'quantMinVenda',
+            headerName: 'Qtd Min Venda',
+            width: 120,
+            type: 'number',
+            valueFormatter: (params) => formatBrazilianNumber(params.value)
+        },
         {
             field: 'actions',
             type: 'actions',
             headerName: 'Ações',
-            width: 120,
+            width: 150,
             getActions: (params) => [
+                <GridActionsCellItem
+                    key="details"
+                    icon={<Visibility />}
+                    label="Detalhes"
+                    onClick={() => handleDetails(params.row)}
+                />,
                 <GridActionsCellItem
                     key="edit"
                     icon={<Edit />}
@@ -76,7 +175,30 @@ const ProdutosPage: React.FC = () => {
 
     useEffect(() => {
         loadProdutos();
+        loadFornecedores();
     }, []);
+
+    const loadFornecedores = async () => {
+        try {
+            const data = await fornecedorService.getAll();
+            setFornecedores(data);
+        } catch (error: any) {
+            console.error('Erro ao carregar fornecedores:', error);
+        }
+    };
+
+    const showNotification = (message: string, severity: 'success' | 'error' | 'warning' | 'info' = 'info') => {
+        setSnackbarMessage(message);
+        setSnackbarSeverity(severity as 'success' | 'error');
+        setSnackbarOpen(true);
+    };
+
+    const handleSnackbarClose = (_?: React.SyntheticEvent | Event, reason?: string) => {
+        if (reason === 'clickaway') {
+            return;
+        }
+        setSnackbarOpen(false);
+    };
 
     const loadProdutos = async () => {
         try {
@@ -86,7 +208,7 @@ const ProdutosPage: React.FC = () => {
             setProdutos(response.data);
         } catch (error: any) {
             console.error('Erro ao carregar produtos:', error);
-            setError('Erro ao carregar produtos. Tente novamente.');
+            showNotification('Erro ao carregar produtos. Tente novamente.', 'error');
         } finally {
             setLoading(false);
         }
@@ -105,7 +227,7 @@ const ProdutosPage: React.FC = () => {
             setProdutos(data);
         } catch (error: any) {
             console.error('Erro ao buscar produtos:', error);
-            setError('Erro ao buscar produtos. Tente novamente.');
+            showNotification('Erro ao buscar produtos. Tente novamente.', 'error');
         } finally {
             setLoading(false);
         }
@@ -116,16 +238,21 @@ const ProdutosPage: React.FC = () => {
         setFormData({
             codInterno: produto.codInterno.toString(),
             descricao: produto.descricao,
-            quantMinVenda: produto.quantMinVenda.toString(),
+            quantMinVenda: decimalToBrazilian(produto.quantMinVenda),
             codBarras: produto.codBarras || '',
-            deposito: produto.deposito.toString(),
-            estoque: produto.estoque.toString(),
-            custo: produto.custo?.toString() || '',
+            deposito: decimalToBrazilian(produto.deposito),
+            estoque: decimalToBrazilian(produto.estoque),
+            custo: produto.custo ? decimalToBrazilian(produto.custo) : '',
             codFabricante: produto.codFabricante || '',
             quantCaixas: produto.quantCaixas?.toString() || '',
             idFornecedor: produto.idFornecedor.toString(),
         });
         setOpen(true);
+    };
+
+    const handleDetails = (produto: IProduto) => {
+        setViewingProduto(produto);
+        setDetailsOpen(true);
     };
 
     const handleClose = () => {
@@ -143,8 +270,13 @@ const ProdutosPage: React.FC = () => {
             custo: '',
             codFabricante: '',
             quantCaixas: '',
-            idFornecedor: '1',
+            idFornecedor: '',
         });
+    };
+
+    const handleDetailsClose = () => {
+        setDetailsOpen(false);
+        setViewingProduto(null);
     };
 
     const handleAdd = () => {
@@ -161,7 +293,7 @@ const ProdutosPage: React.FC = () => {
             custo: '',
             codFabricante: '',
             quantCaixas: '',
-            idFornecedor: '1',
+            idFornecedor: ' ',
         });
         setOpen(true);
     };
@@ -172,6 +304,29 @@ const ProdutosPage: React.FC = () => {
         setFormData(prev => ({
             ...prev,
             [field]: event.target.value
+        }));
+    };
+
+    // Handler para campos numéricos com formatação brasileira
+    const handleNumericInputChange = (field: keyof FormData) => (
+        event: React.ChangeEvent<HTMLInputElement>
+    ) => {
+        let value = event.target.value;
+
+        // Permitir apenas números, vírgula e ponto
+        value = value.replace(/[^0-9.,]/g, '');
+
+        // Substituir ponto por vírgula para formatação brasileira
+        value = value.replace('.', ',');
+
+        // Evitar múltiplas vírgulas
+        if ((value.match(/,/g) || []).length > 1) {
+            return;
+        }
+
+        setFormData(prev => ({
+            ...prev,
+            [field]: value
         }));
     };
 
@@ -190,11 +345,11 @@ const ProdutosPage: React.FC = () => {
             const produtoData = {
                 codInterno: parseInt(formData.codInterno),
                 descricao: formData.descricao,
-                quantMinVenda: parseInt(formData.quantMinVenda),
+                quantMinVenda: parseFloat(brazilianToDecimal(formData.quantMinVenda)),
                 codBarras: formData.codBarras || undefined,
-                deposito: parseInt(formData.deposito),
-                estoque: parseInt(formData.estoque),
-                custo: formData.custo ? parseFloat(formData.custo) : undefined,
+                deposito: parseFloat(brazilianToDecimal(formData.deposito)),
+                estoque: parseFloat(brazilianToDecimal(formData.estoque)),
+                custo: formData.custo ? parseFloat(brazilianToDecimal(formData.custo)) : undefined,
                 codFabricante: formData.codFabricante || undefined,
                 quantCaixas: formData.quantCaixas ? parseInt(formData.quantCaixas) : undefined,
                 idFornecedor: parseInt(formData.idFornecedor),
@@ -202,79 +357,66 @@ const ProdutosPage: React.FC = () => {
 
             if (editingProduto) {
                 await produtoService.update(editingProduto.id, produtoData);
-                setSuccess('Produto atualizado com sucesso!');
+                showNotification('Produto atualizado com sucesso!', 'success');
             } else {
                 await produtoService.create(produtoData);
-                setSuccess('Produto criado com sucesso!');
+                showNotification('Produto criado com sucesso!', 'success');
             }
 
+            // Recarrega os produtos para mostrar as mudanças
             await loadProdutos();
 
-            // Fecha o diálogo após um pequeno delay para mostrar a mensagem de sucesso
-            setTimeout(() => {
-                handleClose();
-            }, 1500);
+            // Fecha o diálogo imediatamente
+            handleClose();
 
         } catch (error: any) {
             console.error('Erro ao salvar produto:', error);
-            setError(error.response?.data?.message || 'Erro ao salvar produto. Tente novamente.');
+            showNotification(error.response?.data?.message || 'Erro ao salvar produto. Tente novamente.', 'error');
         }
     };
 
     return (
-        <Box>
-            <Box display="flex" justifyContent="flex-start" alignItems="center" mb={3}>
-                <Typography variant="h4">
+        <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+            <Box sx={{ mb: 3 }}>
+                <Typography variant="h4" component="h1" gutterBottom>
                     Produtos
                 </Typography>
+
+                <Box sx={{ display: 'flex', gap: 2, mb: 2, alignItems: 'center' }}>
+                    <TextField
+                        placeholder="Buscar produtos..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        onKeyPress={(e) => {
+                            if (e.key === 'Enter') {
+                                handleSearch();
+                            }
+                        }}
+                        sx={{ minWidth: 300 }}
+                    />
+                    <Button
+                        variant="outlined"
+                        onClick={handleSearch}
+                    >
+                        Buscar
+                    </Button>
+                    <Button
+                        variant="outlined"
+                        onClick={loadProdutos}
+                    >
+                        Limpar
+                    </Button>
+                    <Button
+                        variant="contained"
+                        startIcon={<Add />}
+                        onClick={handleAdd}
+                    >
+                        Novo Produto
+                    </Button>
+                </Box>
             </Box>
 
-            {error && (
-                <Alert severity="error" sx={{ mb: 2 }}>
-                    {error}
-                </Alert>
-            )}
-
-            {success && (
-                <Alert severity="success" sx={{ mb: 2 }}>
-                    {success}
-                </Alert>
-            )}
-
-            <Box sx={{ display: 'flex', gap: 2, mb: 2, alignItems: 'center' }}>
-                <TextField
-                    placeholder="Buscar produtos..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    onKeyPress={(e) => {
-                        if (e.key === 'Enter') {
-                            handleSearch();
-                        }
-                    }}
-                    sx={{ minWidth: 300 }}
-                />
-                <Button
-                    variant="outlined"
-                    onClick={handleSearch}
-                >
-                    Buscar
-                </Button>
-                <Button
-                    variant="outlined"
-                    onClick={loadProdutos}
-                >
-                    Limpar
-                </Button>
-                <Button
-                    variant="contained"
-                    startIcon={<Add />}
-                    onClick={handleAdd}
-                >
-                    Novo Produto
-                </Button>
-            </Box>
-
-            <Paper sx={{ height: 600, width: '100%' }}>
+            <Paper sx={{ maxHeight: 600, width: '100%' }}>
                 <DataGrid
                     rows={produtos}
                     columns={columns}
@@ -287,10 +429,9 @@ const ProdutosPage: React.FC = () => {
                     }}
                     disableRowSelectionOnClick
                     localeText={dataGridPtBR}
-                    sx={{ minWidth: 600 }}
+                    sx={{ minWidth: 800 }}
                 />
             </Paper>
-
             <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
                 <DialogTitle>
                     {editingProduto ? 'Editar Produto' : 'Novo Produto'}
@@ -321,15 +462,30 @@ const ProdutosPage: React.FC = () => {
                                 />
                             </Grid>
                             <Grid item xs={12} sm={6}>
-                                <TextField
-                                    margin="normal"
-                                    required
-                                    fullWidth
-                                    label="Fornecedor ID"
-                                    type="number"
-                                    value={formData.idFornecedor}
-                                    onChange={handleInputChange('idFornecedor')}
-                                />
+                                <FormControl fullWidth margin="normal" required>
+                                    <InputLabel>Fornecedor</InputLabel>
+                                    <Select
+                                        value={formData.idFornecedor}
+                                        label="Fornecedor"
+                                        onChange={(e) => setFormData({ ...formData, idFornecedor: e.target.value })}
+                                        displayEmpty
+                                        renderValue={(selected) => {
+                                            if (!selected) {
+                                                return <em>Selecione um fornecedor</em>;
+                                            }
+                                            return getFornecedorInfo(selected);
+                                        }}
+                                    >
+                                        <MenuItem value=" ">
+                                            <em>Selecione um fornecedor</em>
+                                        </MenuItem>
+                                        {fornecedores.map((fornecedor) => (
+                                            <MenuItem key={fornecedor.id} value={fornecedor.id.toString()}>
+                                                {fornecedor.razaoSocial} - {formatCnpj(fornecedor.cnpj)}
+                                            </MenuItem>
+                                        ))}
+                                    </Select>
+                                </FormControl>
                             </Grid>
                             <Grid item xs={12}>
                                 <TextField
@@ -347,9 +503,9 @@ const ProdutosPage: React.FC = () => {
                                     required
                                     fullWidth
                                     label="Quantidade Mínima de Venda"
-                                    type="number"
                                     value={formData.quantMinVenda}
-                                    onChange={handleInputChange('quantMinVenda')}
+                                    onChange={handleNumericInputChange('quantMinVenda')}
+                                    placeholder="0,00"
                                 />
                             </Grid>
                             <Grid item xs={12} sm={6}>
@@ -367,9 +523,9 @@ const ProdutosPage: React.FC = () => {
                                     required
                                     fullWidth
                                     label="Depósito"
-                                    type="number"
                                     value={formData.deposito}
-                                    onChange={handleInputChange('deposito')}
+                                    onChange={handleNumericInputChange('deposito')}
+                                    placeholder="0,00"
                                 />
                             </Grid>
                             <Grid item xs={12} sm={6}>
@@ -378,9 +534,9 @@ const ProdutosPage: React.FC = () => {
                                     required
                                     fullWidth
                                     label="Estoque"
-                                    type="number"
                                     value={formData.estoque}
-                                    onChange={handleInputChange('estoque')}
+                                    onChange={handleNumericInputChange('estoque')}
+                                    placeholder="0,00"
                                 />
                             </Grid>
                             <Grid item xs={12} sm={6}>
@@ -388,10 +544,9 @@ const ProdutosPage: React.FC = () => {
                                     margin="normal"
                                     fullWidth
                                     label="Custo"
-                                    type="number"
-                                    inputProps={{ step: "0.01" }}
                                     value={formData.custo}
-                                    onChange={handleInputChange('custo')}
+                                    onChange={handleNumericInputChange('custo')}
+                                    placeholder="0,00"
                                 />
                             </Grid>
                             <Grid item xs={12} sm={6}>
@@ -423,6 +578,175 @@ const ProdutosPage: React.FC = () => {
                     </Button>
                 </DialogActions>
             </Dialog>
+
+            {/* Modal de Detalhes */}
+            <Dialog open={detailsOpen} onClose={handleDetailsClose} maxWidth="md" fullWidth>
+                <DialogTitle>
+                    Detalhes do Produto
+                </DialogTitle>
+                <DialogContent>
+                    {viewingProduto && (
+                        <Box component="div" sx={{ mt: 1 }}>
+                            <Grid container spacing={2}>
+                                <Grid item xs={12} sm={6}>
+                                    <TextField
+                                        margin="normal"
+                                        fullWidth
+                                        label="ID"
+                                        value={viewingProduto.id}
+                                        InputProps={{ readOnly: true }}
+                                        variant="filled"
+                                    />
+                                </Grid>
+                                <Grid item xs={12} sm={6}>
+                                    <TextField
+                                        margin="normal"
+                                        fullWidth
+                                        label="Código Interno"
+                                        value={viewingProduto.codInterno}
+                                        InputProps={{ readOnly: true }}
+                                        variant="filled"
+                                    />
+                                </Grid>
+                                <Grid item xs={12}>
+                                    <TextField
+                                        margin="normal"
+                                        fullWidth
+                                        label="Descrição"
+                                        value={viewingProduto.descricao}
+                                        InputProps={{ readOnly: true }}
+                                        variant="filled"
+                                    />
+                                </Grid>
+                                <Grid item xs={12} sm={6}>
+                                    <TextField
+                                        margin="normal"
+                                        fullWidth
+                                        label="Quantidade Mínima de Venda"
+                                        value={formatBrazilianNumber(viewingProduto.quantMinVenda)}
+                                        InputProps={{ readOnly: true }}
+                                        variant="filled"
+                                    />
+                                </Grid>
+                                <Grid item xs={12} sm={6}>
+                                    <TextField
+                                        margin="normal"
+                                        fullWidth
+                                        label="Código de Barras"
+                                        value={viewingProduto.codBarras || 'Não informado'}
+                                        InputProps={{ readOnly: true }}
+                                        variant="filled"
+                                    />
+                                </Grid>
+                                <Grid item xs={12} sm={6}>
+                                    <TextField
+                                        margin="normal"
+                                        fullWidth
+                                        label="Depósito"
+                                        value={formatBrazilianNumber(viewingProduto.deposito)}
+                                        InputProps={{ readOnly: true }}
+                                        variant="filled"
+                                    />
+                                </Grid>
+                                <Grid item xs={12} sm={6}>
+                                    <TextField
+                                        margin="normal"
+                                        fullWidth
+                                        label="Estoque"
+                                        value={formatBrazilianNumber(viewingProduto.estoque)}
+                                        InputProps={{ readOnly: true }}
+                                        variant="filled"
+                                    />
+                                </Grid>
+                                <Grid item xs={12} sm={6}>
+                                    <TextField
+                                        margin="normal"
+                                        fullWidth
+                                        label="Custo"
+                                        value={viewingProduto.custo ? formatBrazilianCurrency(viewingProduto.custo) : 'Não informado'}
+                                        InputProps={{ readOnly: true }}
+                                        variant="filled"
+                                    />
+                                </Grid>
+                                <Grid item xs={12} sm={6}>
+                                    <TextField
+                                        margin="normal"
+                                        fullWidth
+                                        label="Código Fabricante"
+                                        value={viewingProduto.codFabricante || 'Não informado'}
+                                        InputProps={{ readOnly: true }}
+                                        variant="filled"
+                                    />
+                                </Grid>
+                                <Grid item xs={12} sm={6}>
+                                    <TextField
+                                        margin="normal"
+                                        fullWidth
+                                        label="Quantidade de Caixas"
+                                        value={viewingProduto.quantCaixas || 'Não informado'}
+                                        InputProps={{ readOnly: true }}
+                                        variant="filled"
+                                    />
+                                </Grid>
+                                <Grid item xs={12} sm={6}>
+                                    <TextField
+                                        margin="normal"
+                                        fullWidth
+                                        label="Fornecedor"
+                                        value={getFornecedorInfo(viewingProduto.idFornecedor)}
+                                        InputProps={{ readOnly: true }}
+                                        variant="filled"
+                                    />
+                                </Grid>
+                                <Grid item xs={12} sm={6}>
+                                    <TextField
+                                        margin="normal"
+                                        fullWidth
+                                        label="Criado em"
+                                        value={viewingProduto.createdAt ? new Date(viewingProduto.createdAt).toLocaleString('pt-BR') : 'Não informado'}
+                                        InputProps={{ readOnly: true }}
+                                        variant="filled"
+                                    />
+                                </Grid>
+                                {viewingProduto.updatedAt && (
+                                    <Grid item xs={12} sm={6}>
+                                        <TextField
+                                            margin="normal"
+                                            fullWidth
+                                            label="Atualizado em"
+                                            value={new Date(viewingProduto.updatedAt).toLocaleString('pt-BR')}
+                                            InputProps={{ readOnly: true }}
+                                            variant="filled"
+                                        />
+                                    </Grid>
+                                )}
+                            </Grid>
+                        </Box>
+                    )}
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={handleDetailsClose}>
+                        Fechar
+                    </Button>
+                </DialogActions>
+            </Dialog>
+
+            {/* Snackbar para notificações */}
+            <Snackbar
+                open={snackbarOpen}
+                autoHideDuration={4000}
+                onClose={handleSnackbarClose}
+                anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+            >
+                <Alert
+                    onClose={handleSnackbarClose}
+                    severity={snackbarSeverity}
+                    sx={{ width: '100%' }}
+                    variant="filled"
+                >
+                    {snackbarMessage}
+                </Alert>
+            </Snackbar>
         </Box>
     );
 };
