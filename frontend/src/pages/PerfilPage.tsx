@@ -17,6 +17,7 @@ import {
     FormControlLabel,
     IconButton,
     InputAdornment,
+    Snackbar,
 } from '@mui/material';
 import {
     Edit as EditIcon,
@@ -26,8 +27,8 @@ import {
     Upload as UploadIcon,
     OpenInNew as OpenInNewIcon,
 } from '@mui/icons-material';
-import { useSnackbar } from 'notistack';
 import { usuarioService } from '@/services/usuarioService';
+import { authService } from '@/services/authService';
 import { SERVER_BASE_URL } from '@/services/api';
 import { IUsuario, UpdateUsuarioData, UpdateUsuarioSenhaData } from '@/types';
 
@@ -41,7 +42,22 @@ const PerfilPage: React.FC<PerfilPageProps> = ({ isDarkMode, toggleDarkMode }) =
     const [loading, setLoading] = useState(true);
     const [openEditDialog, setOpenEditDialog] = useState(false);
     const [openPasswordDialog, setOpenPasswordDialog] = useState(false);
-    const { enqueueSnackbar } = useSnackbar();
+    const [snackbarOpen, setSnackbarOpen] = useState(false);
+    const [snackbarMessage, setSnackbarMessage] = useState('');
+    const [snackbarSeverity, setSnackbarSeverity] = useState<'success' | 'error'>('success');
+
+    const showNotification = (message: string, severity: 'success' | 'error' | 'warning' | 'info' = 'info') => {
+        setSnackbarMessage(message);
+        setSnackbarSeverity(severity as 'success' | 'error');
+        setSnackbarOpen(true);
+    };
+
+    const handleSnackbarClose = (_?: React.SyntheticEvent | Event, reason?: string) => {
+        if (reason === 'clickaway') {
+            return;
+        }
+        setSnackbarOpen(false);
+    };
 
     // Estados para formulários
     const [editData, setEditData] = useState<UpdateUsuarioData>({
@@ -78,19 +94,10 @@ const PerfilPage: React.FC<PerfilPageProps> = ({ isDarkMode, toggleDarkMode }) =
             });
         } catch (error: any) {
             console.error('Erro ao carregar perfil:', error);
-            enqueueSnackbar('Erro ao carregar perfil do usuário', { variant: 'error' });
+            showNotification('Erro ao carregar perfil do usuário', 'error');
         } finally {
             setLoading(false);
         }
-    };
-
-    const getSaudacao = () => {
-        const hora = new Date().getHours();
-        const nome = usuario?.nickname || usuario?.nomeCompleto || '';
-
-        if (hora < 12) return `Bom dia, ${nome}! ☀️`;
-        if (hora < 18) return `Boa tarde, ${nome}! 🌤️`;
-        return `Boa noite, ${nome}! 🌙`;
     };
 
     const handleEditProfile = () => {
@@ -120,13 +127,17 @@ const PerfilPage: React.FC<PerfilPageProps> = ({ isDarkMode, toggleDarkMode }) =
             if (selectedFile) {
                 try {
                     await usuarioService.uploadImage(usuario.id, selectedFile);
-                    enqueueSnackbar('Perfil e imagem atualizados com sucesso!', { variant: 'success' });
+                    // Atualizar localStorage com a nova imagem
+                    await authService.refreshCurrentUser();
+                    showNotification('Perfil e imagem atualizados com sucesso!', 'success');
                 } catch (uploadError: any) {
                     console.error('Erro no upload da imagem:', uploadError);
-                    enqueueSnackbar('Perfil atualizado, mas erro ao fazer upload da imagem', { variant: 'warning' });
+                    showNotification('Perfil atualizado, mas erro ao fazer upload da imagem', 'warning');
                 }
             } else {
-                enqueueSnackbar('Perfil atualizado com sucesso!', { variant: 'success' });
+                // Se mudou nome ou outras informações, atualizar localStorage
+                await authService.refreshCurrentUser();
+                showNotification('Perfil atualizado com sucesso!', 'success');
             }
 
             setUsuario(updatedUser);
@@ -136,7 +147,7 @@ const PerfilPage: React.FC<PerfilPageProps> = ({ isDarkMode, toggleDarkMode }) =
             // Recarregar os dados do perfil para refletir as mudanças
             await loadUserProfile();
         } catch (error: any) {
-            enqueueSnackbar(error.response?.data?.error || 'Erro ao atualizar perfil', { variant: 'error' });
+            showNotification(error.response?.data?.error || 'Erro ao atualizar perfil', 'error');
         }
     };
 
@@ -144,16 +155,16 @@ const PerfilPage: React.FC<PerfilPageProps> = ({ isDarkMode, toggleDarkMode }) =
         if (!usuario) return;
 
         if (passwordData.novaSenha.length < 6) {
-            enqueueSnackbar('A nova senha deve ter pelo menos 6 caracteres', { variant: 'warning' });
+            showNotification('A nova senha deve ter pelo menos 6 caracteres', 'warning');
             return;
         }
 
         try {
             await usuarioService.updatePassword(usuario.id, passwordData);
             setOpenPasswordDialog(false);
-            enqueueSnackbar('Senha alterada com sucesso!', { variant: 'success' });
+            showNotification('Senha alterada com sucesso!', 'success');
         } catch (error: any) {
-            enqueueSnackbar(error.response?.data?.error || 'Erro ao alterar senha', { variant: 'error' });
+            showNotification(error.response?.data?.error || 'Erro ao alterar senha', 'error');
         }
     };
 
@@ -178,13 +189,13 @@ const PerfilPage: React.FC<PerfilPageProps> = ({ isDarkMode, toggleDarkMode }) =
         if (file) {
             // Verificar se é uma imagem
             if (!file.type.startsWith('image/')) {
-                enqueueSnackbar('Por favor, selecione apenas arquivos de imagem', { variant: 'warning' });
+                showNotification('Por favor, selecione apenas arquivos de imagem', 'warning');
                 return;
             }
 
             // Verificar tamanho (5MB máximo)
             if (file.size > 5 * 1024 * 1024) {
-                enqueueSnackbar('Arquivo muito grande. Tamanho máximo: 5MB', { variant: 'warning' });
+                showNotification('Arquivo muito grande. Tamanho máximo: 5MB', 'warning');
                 return;
             }
 
@@ -222,13 +233,6 @@ const PerfilPage: React.FC<PerfilPageProps> = ({ isDarkMode, toggleDarkMode }) =
 
     return (
         <Box sx={{ p: 3, maxWidth: 800, mx: 'auto' }}>
-            {/* Cabeçalho com saudação */}
-            <Box sx={{ mb: 4, textAlign: 'center' }}>
-                <Typography variant="subtitle1" color="text.secondary">
-                    Gerencie suas informações pessoais e preferências
-                </Typography>
-            </Box>
-
             {/* Card do perfil */}
             <Paper sx={{ p: 4, mb: 3 }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
@@ -475,6 +479,23 @@ const PerfilPage: React.FC<PerfilPageProps> = ({ isDarkMode, toggleDarkMode }) =
                     </Button>
                 </DialogActions>
             </Dialog>
+
+            {/* Snackbar para notificações */}
+            <Snackbar
+                open={snackbarOpen}
+                autoHideDuration={4000}
+                onClose={handleSnackbarClose}
+                anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+            >
+                <Alert
+                    onClose={handleSnackbarClose}
+                    severity={snackbarSeverity}
+                    sx={{ width: '100%' }}
+                    variant="filled"
+                >
+                    {snackbarMessage}
+                </Alert>
+            </Snackbar>
         </Box>
     );
 };

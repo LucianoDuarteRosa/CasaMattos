@@ -160,15 +160,6 @@ const UsuariosPage: React.FC = () => {
                 if (selectedFile) {
                     try {
                         await usuarioService.uploadImage(editingUsuario.id, selectedFile);
-
-                        // Se é o próprio usuário logado, atualizar dados no localStorage
-                        if (currentUser && currentUser.id === editingUsuario.id) {
-                            try {
-                                await authService.refreshCurrentUser();
-                            } catch (refreshError) {
-                                console.error('Erro ao recarregar dados do usuário:', refreshError);
-                            }
-                        }
                         showNotification('Usuário e imagem atualizados com sucesso!', 'success');
                     } catch (uploadError) {
                         console.error('Erro no upload da imagem:', uploadError);
@@ -176,6 +167,15 @@ const UsuariosPage: React.FC = () => {
                     }
                 } else {
                     showNotification('Usuário atualizado com sucesso!', 'success');
+                }
+
+                // Se é o próprio usuário logado, sempre atualizar dados no localStorage
+                if (currentUser && currentUser.id === editingUsuario.id) {
+                    try {
+                        await authService.refreshCurrentUser();
+                    } catch (refreshError) {
+                        console.error('Erro ao recarregar dados do usuário:', refreshError);
+                    }
                 }
             } else {
                 savedUsuario = await usuarioService.create(formData);
