@@ -19,7 +19,17 @@ const app = express();
 const PORT = process.env.PORT || 3001;
 
 // Middlewares de segurança
-app.use(helmet());
+app.use(helmet({
+    contentSecurityPolicy: {
+        directives: {
+            defaultSrc: ["'self'"],
+            imgSrc: ["'self'", "data:", "http://localhost:5173", "http://localhost:5174"],
+            styleSrc: ["'self'", "'unsafe-inline'"],
+            scriptSrc: ["'self'"],
+        },
+    },
+    crossOriginResourcePolicy: { policy: "cross-origin" }
+}));
 app.use(cors({
     origin: [
         process.env.CORS_ORIGIN || 'http://localhost:5173',
@@ -44,8 +54,13 @@ app.get('/health', (req, res) => {
     res.json({ status: 'OK', timestamp: new Date().toISOString() });
 });
 
-// Servir arquivos estáticos (imagens de upload)
-app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+// Servir arquivos estáticos (imagens de upload) com cabeçalhos CORS apropriados
+app.use('/uploads', (req, res, next) => {
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Methods', 'GET');
+    res.header('Access-Control-Allow-Headers', 'Content-Type');
+    next();
+}, express.static(path.join(__dirname, '../uploads')));
 
 // Rotas da API
 app.use('/api/auth', authRoutes);

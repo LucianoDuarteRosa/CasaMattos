@@ -34,6 +34,7 @@ import {
 } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { authService } from '@/services/authService';
+import { SERVER_BASE_URL } from '@/services/api';
 
 const drawerWidth = 240;
 
@@ -57,15 +58,11 @@ const Layout: React.FC<Props> = ({ children, isDarkMode, toggleDarkMode }) => {
     useEffect(() => {
         const loadUserData = async () => {
             const user = authService.getCurrentUser();
-            console.log('Layout - Usuário do localStorage:', user);
-            console.log('Layout - imagemUrl do localStorage:', user?.imagemUrl);
-            
+
             // Se o usuário existe mas não tem imagemUrl, tentar recarregar do servidor
             if (user && !user.imagemUrl) {
-                console.log('Layout - Usuário sem imagemUrl, recarregando do servidor...');
                 try {
                     const refreshedUser = await authService.refreshCurrentUser();
-                    console.log('Layout - Usuário recarregado:', refreshedUser);
                     setCurrentUser(refreshedUser);
                 } catch (error) {
                     console.error('Layout - Erro ao recarregar usuário:', error);
@@ -81,13 +78,11 @@ const Layout: React.FC<Props> = ({ children, isDarkMode, toggleDarkMode }) => {
         // Escutar mudanças no localStorage
         const handleStorageChange = () => {
             const updatedUser = authService.getCurrentUser();
-            console.log('Layout - Usuário atualizado via storage:', updatedUser);
-            console.log('Layout - Nova imagemUrl:', updatedUser?.imagemUrl);
             setCurrentUser(updatedUser);
         };
 
         window.addEventListener('storage', handleStorageChange);
-        
+
         // Também escutar eventos customizados para mudanças locais
         window.addEventListener('userUpdated', handleStorageChange);
 
@@ -95,7 +90,7 @@ const Layout: React.FC<Props> = ({ children, isDarkMode, toggleDarkMode }) => {
             window.removeEventListener('storage', handleStorageChange);
             window.removeEventListener('userUpdated', handleStorageChange);
         };
-    }, []);    const isAdmin = currentUser?.idPerfil === 1;
+    }, []); const isAdmin = currentUser?.idPerfil === 1;
 
     // Criar menu baseado no perfil do usuário
     const getMenuItems = () => {
@@ -215,15 +210,10 @@ const Layout: React.FC<Props> = ({ children, isDarkMode, toggleDarkMode }) => {
                     >
                         <Avatar
                             sx={{ width: 32, height: 32 }}
-                            src={currentUser?.imagemUrl ? `http://localhost:3001${currentUser.imagemUrl}` : ''}
+                            src={currentUser?.imagemUrl ? `${SERVER_BASE_URL}${currentUser.imagemUrl}` : ''}
                             alt={currentUser?.nomeCompleto}
                         >
-                            {(() => {
-                                console.log('Avatar - currentUser:', currentUser);
-                                console.log('Avatar - imagemUrl:', currentUser?.imagemUrl);
-                                console.log('Avatar - URL completa:', currentUser?.imagemUrl ? `http://localhost:3001${currentUser.imagemUrl}` : 'sem URL');
-                                return currentUser?.nomeCompleto?.charAt(0).toUpperCase() || <AccountCircle />;
-                            })()}
+                            {currentUser?.nomeCompleto?.charAt(0).toUpperCase() || <AccountCircle />}
                         </Avatar>
                     </IconButton>
 

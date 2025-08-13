@@ -24,6 +24,7 @@ import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon, Lock as LockIco
 import { useSnackbar } from 'notistack';
 import { usuarioService } from '../services/usuarioService';
 import { authService } from '../services/authService';
+import { SERVER_BASE_URL } from '../services/api';
 import { IUsuario, CreateUsuarioData, UpdateUsuarioData, UpdateUsuarioSenhaData, IPerfil } from '../types';
 import { dataGridPtBR } from '../utils/dataGridLocale';
 
@@ -144,7 +145,7 @@ const UsuariosPage: React.FC = () => {
                 if (selectedFile) {
                     try {
                         await usuarioService.uploadImage(editingUsuario.id, selectedFile);
-                        
+
                         // Se é o próprio usuário logado, atualizar dados no localStorage
                         if (currentUser && currentUser.id === editingUsuario.id) {
                             try {
@@ -152,7 +153,7 @@ const UsuariosPage: React.FC = () => {
                             } catch (refreshError) {
                                 console.error('Erro ao recarregar dados do usuário:', refreshError);
                             }
-                        }                        enqueueSnackbar('Usuário e imagem atualizados com sucesso!', { variant: 'success' });
+                        } enqueueSnackbar('Usuário e imagem atualizados com sucesso!', { variant: 'success' });
                     } catch (uploadError) {
                         console.error('Erro no upload da imagem:', uploadError);
                         enqueueSnackbar('Usuário atualizado, mas erro ao fazer upload da imagem', { variant: 'warning' });
@@ -167,7 +168,7 @@ const UsuariosPage: React.FC = () => {
                 if (selectedFile) {
                     try {
                         await usuarioService.uploadImage(savedUsuario.id, selectedFile);
-                        
+
                         // Se é o próprio usuário logado (improvável para criação, mas por segurança)
                         if (currentUser && currentUser.id === savedUsuario.id) {
                             try {
@@ -175,7 +176,7 @@ const UsuariosPage: React.FC = () => {
                             } catch (refreshError) {
                                 console.error('Erro ao recarregar dados do usuário:', refreshError);
                             }
-                        }                        enqueueSnackbar('Usuário criado e imagem enviada com sucesso!', { variant: 'success' });
+                        } enqueueSnackbar('Usuário criado e imagem enviada com sucesso!', { variant: 'success' });
                     } catch (uploadError) {
                         console.error('Erro no upload da imagem:', uploadError);
                         enqueueSnackbar('Usuário criado, mas erro ao fazer upload da imagem', { variant: 'warning' });
@@ -225,7 +226,10 @@ const UsuariosPage: React.FC = () => {
     // Função para abrir URL da imagem no navegador
     const handleOpenImageUrl = () => {
         if (formData.imagemUrl) {
-            window.open(formData.imagemUrl, '_blank');
+            const fullImageUrl = formData.imagemUrl.startsWith('http')
+                ? formData.imagemUrl
+                : `${SERVER_BASE_URL}${formData.imagemUrl}`;
+            window.open(fullImageUrl, '_blank');
         }
     };
 
@@ -306,7 +310,7 @@ const UsuariosPage: React.FC = () => {
             width: 60,
             renderCell: (params) => (
                 <Avatar
-                    src={params.row.imagemUrl ? `http://localhost:3001${params.row.imagemUrl}` : ''}
+                    src={params.row.imagemUrl ? `${SERVER_BASE_URL}${params.row.imagemUrl}` : ''}
                     sx={{ width: 32, height: 32 }}
                 >
                     {params.row.nomeCompleto.charAt(0).toUpperCase()}
@@ -541,7 +545,7 @@ const UsuariosPage: React.FC = () => {
                         {formData.imagemUrl && (
                             <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
                                 <Avatar
-                                    src={formData.imagemUrl.startsWith('data:') ? formData.imagemUrl : `http://localhost:3001${formData.imagemUrl}`}
+                                    src={formData.imagemUrl.startsWith('data:') ? formData.imagemUrl : `${SERVER_BASE_URL}${formData.imagemUrl}`}
                                     sx={{ width: 80, height: 80 }}
                                 >
                                     {formData.nomeCompleto.charAt(0).toUpperCase()}
