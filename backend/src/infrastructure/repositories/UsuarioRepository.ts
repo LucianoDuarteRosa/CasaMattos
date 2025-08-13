@@ -1,6 +1,7 @@
 import { IUsuarioRepository } from '../../domain/repositories/IUsuarioRepository';
 import { IUsuario } from '../../domain/entities/Usuario';
 import UsuarioModel from '../database/models/UsuarioModel';
+import PerfilModel from '../database/models/PerfilModel';
 
 export class UsuarioRepository implements IUsuarioRepository {
     async create(usuario: Omit<IUsuario, 'id'>): Promise<IUsuario> {
@@ -9,12 +10,21 @@ export class UsuarioRepository implements IUsuarioRepository {
     }
 
     async findById(id: number): Promise<IUsuario | null> {
-        const result = await UsuarioModel.findByPk(id);
+        const result = await UsuarioModel.findByPk(id, {
+            include: [{
+                model: PerfilModel,
+                as: 'perfil'
+            }]
+        });
         return result ? this.toEntity(result) : null;
     }
 
     async findAll(): Promise<IUsuario[]> {
         const results = await UsuarioModel.findAll({
+            include: [{
+                model: PerfilModel,
+                as: 'perfil'
+            }],
             order: [['nomeCompleto', 'ASC']]
         });
         return results.map(this.toEntity);
@@ -44,7 +54,7 @@ export class UsuarioRepository implements IUsuarioRepository {
         return results.map(this.toEntity);
     }
 
-    private toEntity(model: UsuarioModel): IUsuario {
+    private toEntity(model: any): IUsuario {
         return {
             id: model.id,
             nomeCompleto: model.nomeCompleto,
@@ -54,6 +64,12 @@ export class UsuarioRepository implements IUsuarioRepository {
             senha: model.senha,
             ativo: model.ativo,
             idPerfil: model.idPerfil,
+            perfil: model.perfil ? {
+                id: model.perfil.id,
+                nomePerfil: model.perfil.nomePerfil,
+                createdAt: model.perfil.createdAt,
+                updatedAt: model.perfil.updatedAt,
+            } : undefined,
             imagemUrl: model.imagemUrl,
             createdAt: model.createdAt,
             updatedAt: model.updatedAt,

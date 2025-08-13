@@ -1,3 +1,5 @@
+import { IPerfil } from './Perfil';
+
 export interface IUsuario {
     id: number;
     nomeCompleto: string;
@@ -7,6 +9,7 @@ export interface IUsuario {
     senha: string;
     ativo: boolean;
     idPerfil: number;
+    perfil?: IPerfil;
     imagemUrl?: string;
     createdAt?: Date;
     updatedAt?: Date;
