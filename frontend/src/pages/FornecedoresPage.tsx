@@ -238,44 +238,32 @@ const FornecedoresPage: React.FC = () => {
 
     return (
         <Box sx={{
-            height: '100%',
-            display: 'flex',
-            flexDirection: 'column',
             width: '100%',
             overflow: 'hidden',
-            // Compensar o padding do Layout
-            m: -3,
+            m: -1.5,
             p: { xs: 1, sm: 2 },
             maxWidth: '100vw',
             boxSizing: 'border-box'
         }}>
-            <Box sx={{ mb: 3 }}>
-                <Typography variant="h4" component="h1" gutterBottom>
-                    Fornecedores
-                </Typography>
+            <Typography variant="h4" gutterBottom>
+                Fornecedores
+            </Typography>
 
-                {error && (
-                    <Alert severity="error" sx={{ mb: 2 }}>
-                        {error}
-                    </Alert>
-                )}
+            {error && (
+                <Alert severity="error" sx={{ mb: 2 }}>
+                    {error}
+                </Alert>
+            )}
 
-                {success && (
-                    <Alert severity="success" sx={{ mb: 2 }}>
-                        {success}
-                    </Alert>
-                )}
+            {success && (
+                <Alert severity="success" sx={{ mb: 2 }}>
+                    {success}
+                </Alert>
+            )}
 
-                <Box sx={{
-                    display: 'flex',
-                    gap: 1,
-                    mb: 2,
-                    alignItems: 'center',
-                    flexWrap: 'wrap',
-                    '& > *': {
-                        minWidth: 'auto'
-                    }
-                }}>
+            {/* Barra de pesquisa e botão de novo fornecedor */}
+            <Box sx={{ display: 'flex', gap: 2, mb: 3, flexWrap: 'wrap' }}>
+                <Box sx={{ display: 'flex', gap: 1, flex: 1, minWidth: '200px' }}>
                     <TextField
                         placeholder="Buscar fornecedores..."
                         value={searchTerm}
@@ -285,36 +273,32 @@ const FornecedoresPage: React.FC = () => {
                                 handleSearch();
                             }
                         }}
-                        sx={{
-                            flexGrow: 1,
-                            minWidth: { xs: '100%', sm: '200px' },
-                            maxWidth: { xs: '100%', sm: '300px' }
-                        }}
-                        size="small"
+                        sx={{ flex: 1 }}
                     />
                     <Button
                         variant="outlined"
                         onClick={handleSearch}
-                        size="small"
+                        disabled={loading}
                     >
                         Buscar
                     </Button>
                     <Button
                         variant="outlined"
                         onClick={loadFornecedores}
-                        size="small"
+                        disabled={loading}
                     >
                         Limpar
                     </Button>
-                    <Button
-                        variant="contained"
-                        startIcon={<Add />}
-                        onClick={handleAdd}
-                        size="small"
-                    >
-                        Novo Fornecedor
-                    </Button>
                 </Box>
+                <Button
+                    variant="contained"
+                    startIcon={<Add />}
+                    onClick={handleAdd}
+                    sx={{ minWidth: '120px' }}
+                    size="medium"
+                >
+                    Novo Fornecedor
+                </Button>
             </Box>
 
             <Paper sx={dataGridStyles.paperContainer}>

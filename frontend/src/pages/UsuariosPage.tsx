@@ -369,32 +369,20 @@ const UsuariosPage: React.FC = () => {
 
     return (
         <Box sx={{
-            height: '100%',
-            display: 'flex',
-            flexDirection: 'column',
             width: '100%',
             overflow: 'hidden',
-            // Compensar o padding do Layout
-            m: -3,
+            m: -1.5,
             p: { xs: 1, sm: 2 },
             maxWidth: '100vw',
             boxSizing: 'border-box'
         }}>
-            <Box sx={{ mb: 3 }}>
-                <Typography variant="h4" component="h1" gutterBottom>
-                    Usuários
-                </Typography>
+            <Typography variant="h4" gutterBottom>
+                Usuários
+            </Typography>
 
-                <Box sx={{
-                    display: 'flex',
-                    gap: 1,
-                    mb: 2,
-                    alignItems: 'center',
-                    flexWrap: 'wrap',
-                    '& > *': {
-                        minWidth: 'auto'
-                    }
-                }}>
+            {/* Barra de pesquisa e botão de novo usuário */}
+            <Box sx={{ display: 'flex', gap: 2, mb: 3, flexWrap: 'wrap' }}>
+                <Box sx={{ display: 'flex', gap: 1, flex: 1, minWidth: '200px' }}>
                     <TextField
                         placeholder="Buscar usuários..."
                         value={searchTerm}
@@ -404,52 +392,45 @@ const UsuariosPage: React.FC = () => {
                                 handleSearch();
                             }
                         }}
-                        sx={{
-                            flexGrow: 1,
-                            minWidth: { xs: '100%', sm: '200px' },
-                            maxWidth: { xs: '100%', sm: '300px' }
-                        }}
-                        size="small"
+                        sx={{ flex: 1 }}
                     />
                     <Button
                         variant="outlined"
                         onClick={handleSearch}
-                        size="small"
+                        disabled={loading}
                     >
                         Buscar
                     </Button>
                     <Button
                         variant="outlined"
                         onClick={loadUsuarios}
-                        size="small"
+                        disabled={loading}
                     >
                         Limpar
                     </Button>
-                    <Button
-                        variant="contained"
-                        startIcon={<AddIcon />}
-                        onClick={() => handleOpenDialog()}
-                        size="small"
-                    >
-                        Novo Usuário
-                    </Button>
                 </Box>
+                <Button
+                    variant="contained"
+                    startIcon={<AddIcon />}
+                    onClick={() => handleOpenDialog()}
+                    sx={{ minWidth: '120px' }}
+                    size="medium"
+                >
+                    Novo Usuário
+                </Button>
             </Box>
-            <Paper sx={{
-                maxHeight: 700,
-                width: '100%',
-                ...dataGridStyles.paperContainer,
-            }}>
+            <Paper sx={dataGridStyles.paperContainer}>
                 <DataGrid
                     rows={usuarios}
                     columns={columns}
                     loading={loading}
-                    autoHeight
-                    disableRowSelectionOnClick
+                    pageSizeOptions={[25, 50, 100]}
                     initialState={{
-                        pagination: { paginationModel: { pageSize: 10 } }
+                        pagination: {
+                            paginationModel: { page: 0, pageSize: 25 },
+                        },
                     }}
-                    pageSizeOptions={[5, 10, 25]}
+                    disableRowSelectionOnClick
                     localeText={dataGridPtBR}
                     sx={dataGridStyles.dataGridSx}
                 />
