@@ -158,8 +158,9 @@ const UsuariosPage: React.FC = () => {
                     email: formData.email,
                     telefone: formData.telefone,
                     idPerfil: formData.idPerfil,
-                    imagemUrl: selectedFile ? '' : (formData.imagemUrl?.startsWith('data:') ? '' : formData.imagemUrl) // Se tem arquivo selecionado ou é base64, não enviar URL
+                    imagemUrl: selectedFile ? '' : (formData.imagemUrl || '') // Se tem arquivo, limpar para que o upload defina; senão, manter atual
                 };
+
                 savedUsuario = await usuarioService.update(editingUsuario.id, updateData);
 
                 // Se há um arquivo selecionado, fazer upload
@@ -184,7 +185,6 @@ const UsuariosPage: React.FC = () => {
                     }
                 }
             } else {
-                // Para criação, não enviar dados base64 via JSON
                 const createData: CreateUsuarioData = {
                     nomeCompleto: formData.nomeCompleto,
                     nickname: formData.nickname,
@@ -192,8 +192,9 @@ const UsuariosPage: React.FC = () => {
                     telefone: formData.telefone,
                     senha: formData.senha,
                     idPerfil: formData.idPerfil,
-                    imagemUrl: selectedFile ? '' : (formData.imagemUrl?.startsWith('data:') ? '' : formData.imagemUrl) // Se tem arquivo ou é base64, não enviar
+                    imagemUrl: selectedFile ? '' : (formData.imagemUrl || '') // Se tem arquivo, limpar; senão, usar valor do form
                 };
+
                 savedUsuario = await usuarioService.create(createData);
 
                 // Se há um arquivo selecionado, fazer upload
@@ -365,7 +366,7 @@ const UsuariosPage: React.FC = () => {
                 email: usuario.email,
                 telefone: usuario.telefone,
                 idPerfil: usuario.idPerfil,
-                imagemUrl: usuario.imagemUrl,
+                imagemUrl: usuario.imagemUrl || '', // Sempre incluir a URL atual
                 ativo: !currentValue // Alternar o valor
             };
 

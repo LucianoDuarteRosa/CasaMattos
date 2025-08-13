@@ -114,14 +114,16 @@ const PerfilPage: React.FC<PerfilPageProps> = ({ isDarkMode, toggleDarkMode }) =
         if (!usuario) return;
 
         try {
-            // Primeiro, atualizar os dados do perfil (sem arquivo)
-            const updatedUser = await usuarioService.update(usuario.id, {
+            // Atualizar os dados do perfil incluindo a imagemUrl atual
+            const updateData: UpdateUsuarioData = {
                 nomeCompleto: editData.nomeCompleto,
                 nickname: editData.nickname,
                 email: editData.email,
                 telefone: editData.telefone,
-                imagemUrl: selectedFile ? '' : editData.imagemUrl // Se tem arquivo, não enviar URL
-            });
+                imagemUrl: selectedFile ? '' : (editData.imagemUrl || '') // Se tem arquivo, limpar; senão, manter atual
+            };
+
+            const updatedUser = await usuarioService.update(usuario.id, updateData);
 
             // Se há um arquivo selecionado, fazer upload
             if (selectedFile) {

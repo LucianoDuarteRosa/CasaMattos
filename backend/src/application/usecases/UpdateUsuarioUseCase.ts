@@ -40,6 +40,7 @@ export class UpdateUsuarioUseCase {
             }
         }
 
+        // Atualizar diretamente com os dados enviados - o frontend agora sempre envia a imagemUrl correta
         const updatedUser = await this.usuarioRepository.update(id, request);
         if (!updatedUser) {
             throw new Error('Erro ao atualizar usuário');

@@ -31,12 +31,10 @@ export class UsuarioRepository implements IUsuarioRepository {
     }
 
     async update(id: number, data: Partial<IUsuario>): Promise<IUsuario | null> {
-        await UsuarioModel.update(data, { where: { id } });
+        const [affectedCount] = await UsuarioModel.update(data, { where: { id } });
         const updated = await UsuarioModel.findByPk(id);
         return updated ? this.toEntity(updated) : null;
-    }
-
-    async delete(id: number): Promise<boolean> {
+    } async delete(id: number): Promise<boolean> {
         const result = await UsuarioModel.destroy({ where: { id } });
         return result > 0;
     }
@@ -70,7 +68,7 @@ export class UsuarioRepository implements IUsuarioRepository {
                 createdAt: model.perfil.createdAt,
                 updatedAt: model.perfil.updatedAt,
             } : undefined,
-            imagemUrl: model.imagemUrl,
+            imagemUrl: model.imagemUrl || '', // Garantir que nunca seja null/undefined
             createdAt: model.createdAt,
             updatedAt: model.updatedAt,
         };

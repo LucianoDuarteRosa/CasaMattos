@@ -29,7 +29,7 @@ export class UsuarioController {
     // Função utilitária para remover imagem do sistema de arquivos
     private removeImageFile(imagemUrl: string): void {
         console.log(`🔍 Iniciando remoção de imagem: ${imagemUrl}`);
-        
+
         if (imagemUrl && !imagemUrl.startsWith('http')) {
             try {
                 // Limpar a imagemUrl removendo barras extras
@@ -164,15 +164,12 @@ export class UsuarioController {
 
     async uploadImage(req: AuthenticatedRequest, res: Response): Promise<void> {
         try {
-            console.log(`📤 Upload iniciado...`);
-            
             if (!req.file) {
                 res.status(400).json({ error: 'Nenhum arquivo foi enviado' });
                 return;
             }
 
             const userId = parseInt(req.params.id);
-            console.log(`👤 Usuário: ${userId} | Arquivo: ${req.file.filename}`);
 
             // Verificar se o usuário pode atualizar esta imagem
             if (req.user!.idPerfil !== 1 && req.user!.id !== userId) {
@@ -182,25 +179,28 @@ export class UsuarioController {
 
             // Buscar o usuário atual para obter a imagem anterior
             const currentUser = await getUsuarioUseCase.execute(userId, req.user!.idPerfil);
-            console.log(`📋 Imagem anterior: ${currentUser?.imagemUrl || 'nenhuma'}`);
+            console.log(`📋 Usuário atual completo:`, JSON.stringify(currentUser, null, 2));
+            console.log(`� Imagem anterior: ${currentUser?.imagemUrl || 'nenhuma'}`);
 
-            // Remover imagem anterior se existir
-            if (currentUser?.imagemUrl) {
-                console.log(`🗑️  Removendo imagem anterior...`);
-                this.removeImageFile(currentUser.imagemUrl);
-            }
-
-            // Construir URL da nova imagem
+            // Construir URL da nova imagem ANTES de remover a anterior
             const imageUrl = `/uploads/${req.file.filename}`;
             console.log(`🆕 Nova imagem: ${imageUrl}`);
 
-            // Atualizar apenas a imagemUrl no banco
+            // Atualizar apenas a imagemUrl no banco ANTES de remover o arquivo físico
+            console.log(`🔄 Atualizando usuário ${userId} com imagemUrl: ${imageUrl}`);
             const updatedUsuario = await updateUsuarioUseCase.execute(
                 userId,
                 { imagemUrl: imageUrl },
                 req.user!.idPerfil,
                 req.user!.id
             );
+            console.log(`✅ Usuário atualizado:`, JSON.stringify(updatedUsuario, null, 2));
+
+            // Remover imagem anterior APENAS APÓS atualizar o banco
+            if (currentUser?.imagemUrl && currentUser.imagemUrl !== imageUrl) {
+                console.log(`🗑️  Removendo imagem anterior após atualização...`);
+                this.removeImageFile(currentUser.imagemUrl);
+            }
 
             console.log(`✅ Upload concluído!`);
             res.json({
