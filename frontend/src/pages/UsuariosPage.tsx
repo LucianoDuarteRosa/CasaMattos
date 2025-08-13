@@ -320,11 +320,47 @@ const UsuariosPage: React.FC = () => {
         );
     }
 
+    const handleToggleAtivo = async (id: number, currentValue: boolean) => {
+        // Impedir que o usuário logado se desative
+        if (currentUser && currentUser.id === id && currentValue) {
+            showNotification('Você não pode desativar sua própria conta', 'error');
+            return;
+        }
+
+        // Se está desativando um usuário, pedir confirmação
+        if (currentValue && !window.confirm('Tem certeza que deseja desativar este usuário?')) {
+            return;
+        }
+
+        try {
+            // Buscar os dados atuais do usuário
+            const usuario = usuarios.find(u => u.id === id);
+            if (!usuario) return;
+
+            const updateData: UpdateUsuarioData = {
+                nomeCompleto: usuario.nomeCompleto,
+                nickname: usuario.nickname,
+                email: usuario.email,
+                telefone: usuario.telefone,
+                idPerfil: usuario.idPerfil,
+                imagemUrl: usuario.imagemUrl,
+                ativo: !currentValue // Alternar o valor
+            };
+
+            await usuarioService.update(id, updateData);
+            showNotification(`Usuário ${!currentValue ? 'ativado' : 'desativado'} com sucesso!`, 'success');
+            loadUsuarios();
+        } catch (error: any) {
+            showNotification(error.response?.data?.error || 'Erro ao alterar status do usuário', 'error');
+        }
+    };
+
     const columns: GridColDef[] = [
         {
             field: 'avatar',
             headerName: '',
-            width: 60,
+            width: 80,
+            flex: 0,
             renderCell: (params) => (
                 <Avatar
                     src={params.row.imagemUrl ? `${SERVER_BASE_URL}${params.row.imagemUrl}` : ''}
@@ -336,15 +372,16 @@ const UsuariosPage: React.FC = () => {
             sortable: false,
             filterable: false
         },
-        { field: 'id', headerName: 'ID', width: 70 },
-        { field: 'nomeCompleto', headerName: 'Nome Completo', width: 200 },
-        { field: 'nickname', headerName: 'Nickname', width: 150 },
-        { field: 'email', headerName: 'Email', width: 200 },
-        { field: 'telefone', headerName: 'Telefone', width: 150 },
+        { field: 'id', headerName: 'ID', width: 70, flex: 0 },
+        { field: 'nomeCompleto', headerName: 'Nome Completo', flex: 1, minWidth: 200 },
+        { field: 'nickname', headerName: 'Nickname', flex: 0.8, minWidth: 150 },
+        { field: 'email', headerName: 'Email', flex: 1.2, minWidth: 200 },
+        { field: 'telefone', headerName: 'Telefone', flex: 0.8, minWidth: 150 },
         {
             field: 'idPerfil',
             headerName: 'Perfil',
-            width: 120,
+            flex: 0.6,
+            minWidth: 120,
             renderCell: (params) => (
                 perfis.find(p => p.id === params.value)?.nomePerfil || 'Desconhecido'
             )
@@ -353,15 +390,22 @@ const UsuariosPage: React.FC = () => {
             field: 'ativo',
             headerName: 'Ativo',
             width: 100,
+            flex: 0,
             renderCell: (params) => (
-                <Switch checked={params.value} disabled />
+                <Switch
+                    checked={params.value}
+                    onChange={() => handleToggleAtivo(params.row.id, params.value)}
+                    color="primary"
+                    disabled={currentUser && currentUser.id === params.row.id}
+                />
             )
         },
         {
             field: 'actions',
             type: 'actions',
             headerName: 'Ações',
-            width: 150,
+            flex: 0.8,
+            minWidth: 150,
             getActions: (params) => [
                 <GridActionsCellItem
                     icon={<EditIcon />}
@@ -448,7 +492,15 @@ const UsuariosPage: React.FC = () => {
                     }}
                     disableRowSelectionOnClick
                     localeText={dataGridPtBR}
-                    sx={dataGridStyles.dataGridSx}
+                    sx={{
+                        ...dataGridStyles.dataGridSx,
+                        '& .MuiDataGrid-columnHeaders': {
+                            backgroundColor: 'rgba(0, 0, 0, 0.04)',
+                        },
+                        '& .MuiDataGrid-row:hover': {
+                            backgroundColor: 'rgba(0, 0, 0, 0.04)',
+                        }
+                    }}
                 />
             </Paper>
 
