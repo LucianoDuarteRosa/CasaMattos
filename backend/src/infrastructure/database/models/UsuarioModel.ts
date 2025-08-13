@@ -10,6 +10,7 @@ export interface UsuarioAttributes {
     senha: string;
     ativo: boolean;
     idPerfil: number;
+    imagemUrl?: string;
 }
 
 export interface UsuarioCreationAttributes extends Omit<UsuarioAttributes, 'id'> { }
@@ -24,6 +25,7 @@ class UsuarioModel extends Model<UsuarioAttributes, UsuarioCreationAttributes>
     public senha!: string;
     public ativo!: boolean;
     public idPerfil!: number;
+    public imagemUrl?: string;
 
     public readonly createdAt!: Date;
     public readonly updatedAt!: Date;
@@ -69,6 +71,10 @@ UsuarioModel.init(
                 model: 'Perfis',
                 key: 'id',
             },
+        },
+        imagemUrl: {
+            type: DataTypes.STRING(500),
+            allowNull: true,
         },
     },
     {

@@ -317,7 +317,7 @@ const FornecedoresPage: React.FC = () => {
             </Box>
 
             <Paper sx={{
-                height: 600,
+                maxHeight: 700,
                 width: '100%',
                 overflow: 'hidden',
                 display: 'flex',

@@ -7,6 +7,7 @@ export interface IUsuario {
     senha: string;
     ativo: boolean;
     idPerfil: number;
+    imagemUrl?: string;
     createdAt?: Date;
     updatedAt?: Date;
 }
@@ -21,6 +22,7 @@ export class Usuario implements IUsuario {
         public ativo: boolean,
         public idPerfil: number,
         public telefone?: string,
+        public imagemUrl?: string,
         public createdAt?: Date,
         public updatedAt?: Date
     ) { }
@@ -35,6 +37,7 @@ export class Usuario implements IUsuario {
             data.ativo,
             data.idPerfil,
             data.telefone,
+            data.imagemUrl,
             data.createdAt,
             data.updatedAt
         );

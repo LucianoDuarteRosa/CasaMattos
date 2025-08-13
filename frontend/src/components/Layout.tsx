@@ -28,6 +28,7 @@ import {
     AccountCircle,
     Logout,
     Settings,
+    People,
 } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { authService } from '@/services/authService';
@@ -36,19 +37,11 @@ const drawerWidth = 240;
 
 interface Props {
     children: React.ReactNode;
+    isDarkMode?: boolean;
+    toggleDarkMode?: () => void;
 }
 
-const menuItems = [
-    { text: 'Dashboard', icon: <Dashboard />, path: '/dashboard' },
-    { text: 'Produtos', icon: <Inventory />, path: '/produtos' },
-    { text: 'Fornecedores', icon: <Business />, path: '/fornecedores' },
-    { text: 'Ruas', icon: <LocationOn />, path: '/ruas' },
-    { text: 'Prédios', icon: <LocationOn />, path: '/predios' },
-    { text: 'Endereçamentos', icon: <LocationOn />, path: '/enderecamentos' },
-    { text: 'Listas', icon: <Assignment />, path: '/listas' },
-];
-
-const Layout: React.FC<Props> = ({ children }) => {
+const Layout: React.FC<Props> = ({ children, isDarkMode, toggleDarkMode }) => {
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('md'));
     const navigate = useNavigate();
@@ -56,6 +49,39 @@ const Layout: React.FC<Props> = ({ children }) => {
 
     const [mobileOpen, setMobileOpen] = useState(false);
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+
+    // Obter dados do usuário atual
+    const currentUser = authService.getCurrentUser();
+    const isAdmin = currentUser?.idPerfil === 1;
+
+    // Criar menu baseado no perfil do usuário
+    const getMenuItems = () => {
+        const baseItems = [
+            { text: 'Dashboard', icon: <Dashboard />, path: '/dashboard' },
+            { text: 'Produtos', icon: <Inventory />, path: '/produtos' },
+            { text: 'Fornecedores', icon: <Business />, path: '/fornecedores' },
+            { text: 'Ruas', icon: <LocationOn />, path: '/ruas' },
+            { text: 'Prédios', icon: <LocationOn />, path: '/predios' },
+            { text: 'Endereçamentos', icon: <LocationOn />, path: '/enderecamentos' },
+            { text: 'Listas', icon: <Assignment />, path: '/listas' },
+        ];
+
+        // Adicionar menu de usuários apenas para administradores
+        if (isAdmin) {
+            baseItems.push({ text: 'Usuários', icon: <People />, path: '/usuarios' });
+        }
+
+        return baseItems;
+    };
+
+    const getSaudacao = () => {
+        const hora = new Date().getHours();
+        const nome = currentUser?.nickname || currentUser?.nomeCompleto || 'Usuário';
+
+        if (hora < 12) return `Bom dia, ${nome}! ☀️`;
+        if (hora < 18) return `Boa tarde, ${nome}! 🌤️`;
+        return `Boa noite, ${nome}! 🌙`;
+    };
 
     const handleDrawerToggle = () => {
         setMobileOpen(!mobileOpen);
@@ -76,11 +102,18 @@ const Layout: React.FC<Props> = ({ children }) => {
         setAnchorEl(null);
     };
 
+    const handlePerfil = () => {
+        navigate('/perfil');
+        handleProfileMenuClose();
+    };
+
     const handleLogout = () => {
         authService.logout();
         navigate('/login');
         handleProfileMenuClose();
     };
+
+    const menuItems = getMenuItems();
 
     const drawer = (
         <div>
@@ -126,7 +159,7 @@ const Layout: React.FC<Props> = ({ children }) => {
                         <MenuIcon />
                     </IconButton>
                     <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
-                        Sistema de Gestão
+                        {getSaudacao()}
                     </Typography>
 
                     <IconButton
@@ -137,8 +170,12 @@ const Layout: React.FC<Props> = ({ children }) => {
                         onClick={handleProfileMenuOpen}
                         color="inherit"
                     >
-                        <Avatar sx={{ width: 32, height: 32 }}>
-                            <AccountCircle />
+                        <Avatar
+                            sx={{ width: 32, height: 32 }}
+                            src={currentUser?.imagemUrl}
+                            alt={currentUser?.nomeCompleto}
+                        >
+                            {currentUser?.nomeCompleto?.charAt(0).toUpperCase() || <AccountCircle />}
                         </Avatar>
                     </IconButton>
 
@@ -148,11 +185,11 @@ const Layout: React.FC<Props> = ({ children }) => {
                         onClose={handleProfileMenuClose}
                         onClick={handleProfileMenuClose}
                     >
-                        <MenuItem>
+                        <MenuItem onClick={handlePerfil}>
                             <ListItemIcon>
                                 <Settings fontSize="small" />
                             </ListItemIcon>
-                            <ListItemText primary="Configurações" />
+                            <ListItemText primary="Meu Perfil" />
                         </MenuItem>
                         <MenuItem onClick={handleLogout}>
                             <ListItemIcon>

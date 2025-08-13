@@ -48,24 +48,6 @@ export interface ILista {
     updatedAt?: string;
 }
 
-export interface IEnderecamento {
-    id: number;
-    tonalidade: string;
-    bitola: string;
-    lote?: string;
-    observacao?: string;
-    quantCaixas?: number;
-    disponivel: boolean;
-    idProduto: number;
-    idLista?: number;
-    idPredio: number;
-    produto?: IProduto;
-    lista?: ILista;
-    predio?: IPredio;
-    createdAt?: string;
-    updatedAt?: string;
-}
-
 export interface IPerfil {
     id: number;
     nomePerfil: string;
@@ -82,6 +64,50 @@ export interface IUsuario {
     ativo: boolean;
     idPerfil: number;
     perfil?: IPerfil;
+    imagemUrl?: string;
+    createdAt?: string;
+    updatedAt?: string;
+}
+
+export interface CreateUsuarioData {
+    nomeCompleto: string;
+    nickname: string;
+    email: string;
+    telefone?: string;
+    senha: string;
+    idPerfil: number;
+    imagemUrl?: string;
+}
+
+export interface UpdateUsuarioData {
+    nomeCompleto?: string;
+    nickname?: string;
+    email?: string;
+    telefone?: string;
+    ativo?: boolean;
+    idPerfil?: number;
+    imagemUrl?: string;
+}
+
+export interface UpdateUsuarioSenhaData {
+    senhaAtual: string;
+    novaSenha: string;
+}
+
+export interface IEnderecamento {
+    id: number;
+    tonalidade: string;
+    bitola: string;
+    lote?: string;
+    observacao?: string;
+    quantCaixas?: number;
+    disponivel: boolean;
+    idProduto: number;
+    idLista?: number;
+    idPredio: number;
+    produto?: IProduto;
+    lista?: ILista;
+    predio?: IPredio;
     createdAt?: string;
     updatedAt?: string;
 }
