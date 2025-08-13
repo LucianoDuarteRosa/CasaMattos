@@ -146,15 +146,6 @@ const RuasPage: React.FC = () => {
             sortable: true
         },
         {
-            field: 'createdAt',
-            headerName: 'Data de Criação',
-            width: 180,
-            sortable: true,
-            valueGetter: (params) => {
-                return params.value ? new Date(params.value).toLocaleString('pt-BR') : '';
-            }
-        },
-        {
             field: 'actions',
             headerName: 'Ações',
             type: 'actions',

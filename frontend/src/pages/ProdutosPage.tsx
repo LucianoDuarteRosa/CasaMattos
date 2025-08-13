@@ -524,7 +524,7 @@ const ProdutosPage: React.FC = () => {
                                     </Select>
                                 </FormControl>
                             </Grid>
-                            <Grid item xs={12}>
+                            <Grid item xs={12} sm={6}>
                                 <TextField
                                     margin="normal"
                                     required

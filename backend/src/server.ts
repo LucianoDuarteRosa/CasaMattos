@@ -10,6 +10,7 @@ import produtoRoutes from './presentation/routes/produtoRoutes';
 import fornecedorRoutes from './presentation/routes/fornecedorRoutes';
 import { usuarioRoutes } from './presentation/routes/usuarioRoutes';
 import { ruaRoutes } from './presentation/routes/ruaRoutes';
+import { predioRoutes } from './presentation/routes/predioRoutes';
 // Importar associações para garantir que sejam carregadas
 import './infrastructure/database/models/associations';
 
@@ -69,6 +70,7 @@ app.use('/api/produtos', produtoRoutes);
 app.use('/api/fornecedores', fornecedorRoutes);
 app.use('/api/usuarios', usuarioRoutes);
 app.use('/api/ruas', ruaRoutes);
+app.use('/api/predios', predioRoutes);
 app.use('/api/listas', (req, res) => res.json({ message: 'Listas routes not implemented yet' }));
 app.use('/api/enderecamentos', (req, res) => res.json({ message: 'Enderecamentos routes not implemented yet' }));
 
