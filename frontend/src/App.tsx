@@ -59,7 +59,43 @@ const App: React.FC = () => {
             },
         },
         typography: {
-            fontFamily: 'Roboto, Arial, sans-serif',
+            fontFamily: '"DM Sans Local", "DM Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif',
+            h1: {
+                fontFamily: '"DM Sans Local", "DM Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", sans-serif',
+                fontWeight: 700,
+            },
+            h2: {
+                fontFamily: '"DM Sans Local", "DM Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", sans-serif',
+                fontWeight: 600,
+            },
+            h3: {
+                fontFamily: '"DM Sans Local", "DM Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", sans-serif',
+                fontWeight: 600,
+            },
+            h4: {
+                fontFamily: '"DM Sans Local", "DM Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", sans-serif',
+                fontWeight: 600,
+            },
+            h5: {
+                fontFamily: '"DM Sans Local", "DM Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", sans-serif',
+                fontWeight: 500,
+            },
+            h6: {
+                fontFamily: '"DM Sans Local", "DM Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", sans-serif',
+                fontWeight: 500,
+            },
+            body1: {
+                fontFamily: '"DM Sans Local", "DM Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", sans-serif',
+                fontWeight: 400,
+            },
+            body2: {
+                fontFamily: '"DM Sans Local", "DM Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", sans-serif',
+                fontWeight: 400,
+            },
+            button: {
+                fontFamily: '"DM Sans Local", "DM Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", sans-serif',
+                fontWeight: 500,
+            },
         },
     });
 
