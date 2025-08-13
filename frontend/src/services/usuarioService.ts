@@ -46,5 +46,18 @@ export const usuarioService = {
     async listPerfis(): Promise<IPerfil[]> {
         const response = await api.get('/perfis');
         return response.data;
+    },
+
+    // Upload de imagem do usuário
+    async uploadImage(id: number, file: File): Promise<{ imagemUrl: string; message: string }> {
+        const formData = new FormData();
+        formData.append('image', file);
+
+        const response = await api.post(`/usuarios/${id}/upload-image`, formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+            },
+        });
+        return response.data;
     }
 };

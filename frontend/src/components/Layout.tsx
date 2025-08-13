@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     AppBar,
     Box,
@@ -51,10 +51,51 @@ const Layout: React.FC<Props> = ({ children, isDarkMode, toggleDarkMode }) => {
 
     const [mobileOpen, setMobileOpen] = useState(false);
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+    const [currentUser, setCurrentUser] = useState<any>(null);
 
-    // Obter dados do usuário atual
-    const currentUser = authService.getCurrentUser();
-    const isAdmin = currentUser?.idPerfil === 1;
+    // Obter dados do usuário atual e escutar mudanças no localStorage
+    useEffect(() => {
+        const loadUserData = async () => {
+            const user = authService.getCurrentUser();
+            console.log('Layout - Usuário do localStorage:', user);
+            console.log('Layout - imagemUrl do localStorage:', user?.imagemUrl);
+            
+            // Se o usuário existe mas não tem imagemUrl, tentar recarregar do servidor
+            if (user && !user.imagemUrl) {
+                console.log('Layout - Usuário sem imagemUrl, recarregando do servidor...');
+                try {
+                    const refreshedUser = await authService.refreshCurrentUser();
+                    console.log('Layout - Usuário recarregado:', refreshedUser);
+                    setCurrentUser(refreshedUser);
+                } catch (error) {
+                    console.error('Layout - Erro ao recarregar usuário:', error);
+                    setCurrentUser(user);
+                }
+            } else {
+                setCurrentUser(user);
+            }
+        };
+
+        loadUserData();
+
+        // Escutar mudanças no localStorage
+        const handleStorageChange = () => {
+            const updatedUser = authService.getCurrentUser();
+            console.log('Layout - Usuário atualizado via storage:', updatedUser);
+            console.log('Layout - Nova imagemUrl:', updatedUser?.imagemUrl);
+            setCurrentUser(updatedUser);
+        };
+
+        window.addEventListener('storage', handleStorageChange);
+        
+        // Também escutar eventos customizados para mudanças locais
+        window.addEventListener('userUpdated', handleStorageChange);
+
+        return () => {
+            window.removeEventListener('storage', handleStorageChange);
+            window.removeEventListener('userUpdated', handleStorageChange);
+        };
+    }, []);    const isAdmin = currentUser?.idPerfil === 1;
 
     // Criar menu baseado no perfil do usuário
     const getMenuItems = () => {
@@ -174,10 +215,15 @@ const Layout: React.FC<Props> = ({ children, isDarkMode, toggleDarkMode }) => {
                     >
                         <Avatar
                             sx={{ width: 32, height: 32 }}
-                            src={currentUser?.imagemUrl}
+                            src={currentUser?.imagemUrl ? `http://localhost:3001${currentUser.imagemUrl}` : ''}
                             alt={currentUser?.nomeCompleto}
                         >
-                            {currentUser?.nomeCompleto?.charAt(0).toUpperCase() || <AccountCircle />}
+                            {(() => {
+                                console.log('Avatar - currentUser:', currentUser);
+                                console.log('Avatar - imagemUrl:', currentUser?.imagemUrl);
+                                console.log('Avatar - URL completa:', currentUser?.imagemUrl ? `http://localhost:3001${currentUser.imagemUrl}` : 'sem URL');
+                                return currentUser?.nomeCompleto?.charAt(0).toUpperCase() || <AccountCircle />;
+                            })()}
                         </Avatar>
                     </IconButton>
 

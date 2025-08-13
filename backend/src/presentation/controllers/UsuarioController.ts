@@ -117,4 +117,40 @@ export class UsuarioController {
             res.status(400).json({ error: error.message });
         }
     }
+
+    async uploadImage(req: AuthenticatedRequest, res: Response): Promise<void> {
+        try {
+            if (!req.file) {
+                res.status(400).json({ error: 'Nenhum arquivo foi enviado' });
+                return;
+            }
+
+            const userId = parseInt(req.params.id);
+
+            // Verificar se o usuário pode atualizar esta imagem
+            if (req.user!.idPerfil !== 1 && req.user!.id !== userId) {
+                res.status(403).json({ error: 'Sem permissão para atualizar imagem de outro usuário' });
+                return;
+            }
+
+            // Construir URL da imagem
+            const imageUrl = `/uploads/${req.file.filename}`;
+
+            // Atualizar apenas a imagemUrl no banco
+            const updatedUsuario = await updateUsuarioUseCase.execute(
+                userId,
+                { imagemUrl: imageUrl },
+                req.user!.idPerfil,
+                req.user!.id
+            );
+
+            res.json({
+                message: 'Imagem enviada com sucesso',
+                imagemUrl: imageUrl,
+                usuario: updatedUsuario
+            });
+        } catch (error: any) {
+            res.status(400).json({ error: error.message });
+        }
+    }
 }

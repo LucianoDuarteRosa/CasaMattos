@@ -3,6 +3,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import dotenv from 'dotenv';
+import path from 'path';
 import sequelize from './infrastructure/database/connection';
 import authRoutes from './presentation/routes/authRoutes';
 import produtoRoutes from './presentation/routes/produtoRoutes';
@@ -42,6 +43,9 @@ app.use(express.urlencoded({ extended: true }));
 app.get('/health', (req, res) => {
     res.json({ status: 'OK', timestamp: new Date().toISOString() });
 });
+
+// Servir arquivos estáticos (imagens de upload)
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 // Rotas da API
 app.use('/api/auth', authRoutes);

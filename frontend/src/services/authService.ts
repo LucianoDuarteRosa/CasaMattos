@@ -24,5 +24,24 @@ export const authService = {
     setAuthData: (token: string, user: any) => {
         localStorage.setItem('token', token);
         localStorage.setItem('user', JSON.stringify(user));
+    },
+
+    updateCurrentUser: (updatedUser: any) => {
+        localStorage.setItem('user', JSON.stringify(updatedUser));
+        // Disparar evento customizado para componentes que escutam mudanças
+        window.dispatchEvent(new Event('userUpdated'));
+    },
+
+    // Recarregar dados do usuário do servidor
+    async refreshCurrentUser(): Promise<any> {
+        try {
+            const response = await api.get('/usuarios/me/profile');
+            const updatedUser = response.data;
+            this.updateCurrentUser(updatedUser);
+            return updatedUser;
+        } catch (error) {
+            console.error('Erro ao recarregar dados do usuário:', error);
+            return this.getCurrentUser();
+        }
     }
 };

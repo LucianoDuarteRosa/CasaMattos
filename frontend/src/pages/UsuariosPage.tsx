@@ -15,10 +15,12 @@ import {
     Switch,
     Alert,
     Avatar,
-    Paper
+    Paper,
+    IconButton,
+    InputAdornment
 } from '@mui/material';
 import { DataGrid, GridColDef, GridActionsCellItem } from '@mui/x-data-grid';
-import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon, Lock as LockIcon } from '@mui/icons-material';
+import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon, Lock as LockIcon, OpenInNew as OpenInNewIcon, Upload as UploadIcon } from '@mui/icons-material';
 import { useSnackbar } from 'notistack';
 import { usuarioService } from '../services/usuarioService';
 import { authService } from '../services/authService';
@@ -49,6 +51,7 @@ const UsuariosPage: React.FC = () => {
         senhaAtual: '',
         novaSenha: ''
     });
+    const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [currentUser, setCurrentUser] = useState<any>(null);
 
     const { enqueueSnackbar } = useSnackbar();
@@ -89,6 +92,7 @@ const UsuariosPage: React.FC = () => {
     };
 
     const handleOpenDialog = (usuario?: IUsuario) => {
+        setSelectedFile(null); // Limpar arquivo selecionado
         if (usuario) {
             setEditingUsuario(usuario);
             setFormData({
@@ -118,10 +122,13 @@ const UsuariosPage: React.FC = () => {
     const handleCloseDialog = () => {
         setDialogOpen(false);
         setEditingUsuario(null);
+        setSelectedFile(null);
     };
 
     const handleSubmit = async () => {
         try {
+            let savedUsuario: IUsuario;
+
             if (editingUsuario) {
                 const updateData: UpdateUsuarioData = {
                     nomeCompleto: formData.nomeCompleto,
@@ -129,14 +136,55 @@ const UsuariosPage: React.FC = () => {
                     email: formData.email,
                     telefone: formData.telefone,
                     idPerfil: formData.idPerfil,
-                    imagemUrl: formData.imagemUrl
+                    imagemUrl: selectedFile ? '' : formData.imagemUrl // Se tem arquivo, não enviar URL
                 };
-                await usuarioService.update(editingUsuario.id, updateData);
-                enqueueSnackbar('Usuário atualizado com sucesso!', { variant: 'success' });
+                savedUsuario = await usuarioService.update(editingUsuario.id, updateData);
+
+                // Se há um arquivo selecionado, fazer upload
+                if (selectedFile) {
+                    try {
+                        await usuarioService.uploadImage(editingUsuario.id, selectedFile);
+                        
+                        // Se é o próprio usuário logado, atualizar dados no localStorage
+                        if (currentUser && currentUser.id === editingUsuario.id) {
+                            try {
+                                await authService.refreshCurrentUser();
+                            } catch (refreshError) {
+                                console.error('Erro ao recarregar dados do usuário:', refreshError);
+                            }
+                        }                        enqueueSnackbar('Usuário e imagem atualizados com sucesso!', { variant: 'success' });
+                    } catch (uploadError) {
+                        console.error('Erro no upload da imagem:', uploadError);
+                        enqueueSnackbar('Usuário atualizado, mas erro ao fazer upload da imagem', { variant: 'warning' });
+                    }
+                } else {
+                    enqueueSnackbar('Usuário atualizado com sucesso!', { variant: 'success' });
+                }
             } else {
-                await usuarioService.create(formData);
-                enqueueSnackbar('Usuário criado com sucesso!', { variant: 'success' });
+                savedUsuario = await usuarioService.create(formData);
+
+                // Se há um arquivo selecionado, fazer upload
+                if (selectedFile) {
+                    try {
+                        await usuarioService.uploadImage(savedUsuario.id, selectedFile);
+                        
+                        // Se é o próprio usuário logado (improvável para criação, mas por segurança)
+                        if (currentUser && currentUser.id === savedUsuario.id) {
+                            try {
+                                await authService.refreshCurrentUser();
+                            } catch (refreshError) {
+                                console.error('Erro ao recarregar dados do usuário:', refreshError);
+                            }
+                        }                        enqueueSnackbar('Usuário criado e imagem enviada com sucesso!', { variant: 'success' });
+                    } catch (uploadError) {
+                        console.error('Erro no upload da imagem:', uploadError);
+                        enqueueSnackbar('Usuário criado, mas erro ao fazer upload da imagem', { variant: 'warning' });
+                    }
+                } else {
+                    enqueueSnackbar('Usuário criado com sucesso!', { variant: 'success' });
+                }
             }
+
             handleCloseDialog();
             loadUsuarios();
         } catch (error: any) {
@@ -171,6 +219,44 @@ const UsuariosPage: React.FC = () => {
             setPasswordDialogOpen(false);
         } catch (error: any) {
             enqueueSnackbar(error.response?.data?.error || 'Erro ao alterar senha', { variant: 'error' });
+        }
+    };
+
+    // Função para abrir URL da imagem no navegador
+    const handleOpenImageUrl = () => {
+        if (formData.imagemUrl) {
+            window.open(formData.imagemUrl, '_blank');
+        }
+    };
+
+    // Função para selecionar arquivo de imagem
+    const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (file) {
+            // Verificar se é uma imagem
+            if (!file.type.startsWith('image/')) {
+                enqueueSnackbar('Por favor, selecione apenas arquivos de imagem', { variant: 'error' });
+                return;
+            }
+
+            // Verificar tamanho do arquivo (máximo 5MB)
+            if (file.size > 5 * 1024 * 1024) {
+                enqueueSnackbar('O arquivo deve ter no máximo 5MB', { variant: 'error' });
+                return;
+            }
+
+            // Salvar o arquivo selecionado
+            setSelectedFile(file);
+
+            // Criar URL temporária para preview
+            const reader = new FileReader();
+            reader.onload = () => {
+                setFormData(prev => ({
+                    ...prev,
+                    imagemUrl: reader.result as string
+                }));
+            };
+            reader.readAsDataURL(file);
         }
     };
 
@@ -220,7 +306,7 @@ const UsuariosPage: React.FC = () => {
             width: 60,
             renderCell: (params) => (
                 <Avatar
-                    src={params.row.imagemUrl}
+                    src={params.row.imagemUrl ? `http://localhost:3001${params.row.imagemUrl}` : ''}
                     sx={{ width: 32, height: 32 }}
                 >
                     {params.row.nomeCompleto.charAt(0).toUpperCase()}
@@ -411,13 +497,57 @@ const UsuariosPage: React.FC = () => {
                             onChange={(e) => setFormData(prev => ({ ...prev, telefone: e.target.value }))}
                             margin="normal"
                         />
-                        <TextField
-                            fullWidth
-                            label="URL da Imagem"
-                            value={formData.imagemUrl}
-                            onChange={(e) => setFormData(prev => ({ ...prev, imagemUrl: e.target.value }))}
-                            margin="normal"
-                        />
+
+                        {/* Campo de URL da Imagem com botões de funcionalidade */}
+                        <Box sx={{ display: 'flex', gap: 1, alignItems: 'end', mt: 2 }}>
+                            <TextField
+                                fullWidth
+                                label="URL da Imagem"
+                                value={formData.imagemUrl}
+                                onChange={(e) => setFormData(prev => ({ ...prev, imagemUrl: e.target.value }))}
+                                InputProps={{
+                                    endAdornment: (
+                                        <InputAdornment position="end">
+                                            <IconButton
+                                                onClick={handleOpenImageUrl}
+                                                disabled={!formData.imagemUrl}
+                                                title="Abrir imagem no navegador"
+                                            >
+                                                <OpenInNewIcon />
+                                            </IconButton>
+                                        </InputAdornment>
+                                    ),
+                                }}
+                            />
+                            <input
+                                accept="image/*"
+                                style={{ display: 'none' }}
+                                id="image-upload"
+                                type="file"
+                                onChange={handleFileSelect}
+                            />
+                            <label htmlFor="image-upload">
+                                <IconButton
+                                    component="span"
+                                    title="Selecionar arquivo de imagem"
+                                    sx={{ mb: 1 }}
+                                >
+                                    <UploadIcon />
+                                </IconButton>
+                            </label>
+                        </Box>
+
+                        {/* Preview da imagem */}
+                        {formData.imagemUrl && (
+                            <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
+                                <Avatar
+                                    src={formData.imagemUrl.startsWith('data:') ? formData.imagemUrl : `http://localhost:3001${formData.imagemUrl}`}
+                                    sx={{ width: 80, height: 80 }}
+                                >
+                                    {formData.nomeCompleto.charAt(0).toUpperCase()}
+                                </Avatar>
+                            </Box>
+                        )}
                         {!editingUsuario && (
                             <TextField
                                 fullWidth
