@@ -49,9 +49,10 @@ export class AuthController {
             // Gerar JWT token
             const token = jwt.sign(
                 {
+                    id: usuario.id,
                     userId: usuario.id,
                     email: usuario.email,
-                    perfilId: usuario.idPerfil
+                    idPerfil: usuario.idPerfil
                 },
                 process.env.JWT_SECRET || 'casa-mattos-secret-key',
                 { expiresIn: '8h' }
