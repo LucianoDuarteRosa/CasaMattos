@@ -399,3 +399,9 @@ FodyWeavers.xsd
 
 # JetBrains Rider
 *.sln.iml
+
+# Backend uploads directory
+backend/uploads/
+
+# Keep the uploads folder structure but ignore its contents
+!backend/uploads/.gitkeep

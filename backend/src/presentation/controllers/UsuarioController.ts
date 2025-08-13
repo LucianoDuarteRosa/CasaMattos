@@ -1,4 +1,6 @@
 import { Request, Response } from 'express';
+import fs from 'fs';
+import path from 'path';
 import { CreateUsuarioUseCase } from '../../application/usecases/CreateUsuarioUseCase';
 import { ListUsuariosUseCase } from '../../application/usecases/ListUsuariosUseCase';
 import { GetUsuarioUseCase } from '../../application/usecases/GetUsuarioUseCase';
@@ -24,7 +26,32 @@ interface AuthenticatedRequest extends Request {
 }
 
 export class UsuarioController {
-    async create(req: AuthenticatedRequest, res: Response): Promise<void> {
+    // Função utilitária para remover imagem do sistema de arquivos
+    private removeImageFile(imagemUrl: string): void {
+        if (imagemUrl && !imagemUrl.startsWith('http')) {
+            try {
+                // Limpar a imagemUrl removendo barras extras
+                let cleanUrl = imagemUrl;
+                if (cleanUrl.startsWith('/uploads/')) {
+                    cleanUrl = cleanUrl.replace('/uploads/', '');
+                } else if (cleanUrl.startsWith('uploads/')) {
+                    cleanUrl = cleanUrl.replace('uploads/', '');
+                }
+                
+                const imagePath = path.join(__dirname, '../../../uploads', cleanUrl);
+
+                if (fs.existsSync(imagePath)) {
+                    fs.unlinkSync(imagePath);
+                    console.log(`✓ Imagem removida: ${path.basename(imagePath)}`);
+                } else {
+                    console.log(`✗ Arquivo não encontrado: ${path.basename(imagePath)}`);
+                }
+            } catch (error) {
+                console.error('Erro ao remover imagem:', error);
+                // Não falhar a operação se não conseguir apagar a imagem
+            }
+        }
+    }    async create(req: AuthenticatedRequest, res: Response): Promise<void> {
         try {
             const usuario = await createUsuarioUseCase.execute(req.body, req.user!.idPerfil);
 
@@ -93,7 +120,17 @@ export class UsuarioController {
     async delete(req: AuthenticatedRequest, res: Response): Promise<void> {
         try {
             const id = parseInt(req.params.id);
+
+            // Buscar o usuário antes de deletar para obter a imagem
+            const userToDelete = await getUsuarioUseCase.execute(id, req.user!.idPerfil);
+
+            // Executar a deleção do usuário
             await deleteUsuarioUseCase.execute(id, req.user!.idPerfil);
+
+            // Remover imagem se existir
+            if (userToDelete?.imagemUrl) {
+                this.removeImageFile(userToDelete.imagemUrl);
+            }
 
             res.json({ message: 'Usuário deletado com sucesso' });
         } catch (error: any) {
@@ -133,7 +170,15 @@ export class UsuarioController {
                 return;
             }
 
-            // Construir URL da imagem
+            // Buscar o usuário atual para obter a imagem anterior
+            const currentUser = await getUsuarioUseCase.execute(userId, req.user!.idPerfil);
+
+            // Remover imagem anterior se existir
+            if (currentUser?.imagemUrl) {
+                this.removeImageFile(currentUser.imagemUrl);
+            }
+
+            // Construir URL da nova imagem
             const imageUrl = `/uploads/${req.file.filename}`;
 
             // Atualizar apenas a imagemUrl no banco
@@ -150,6 +195,7 @@ export class UsuarioController {
                 usuario: updatedUsuario
             });
         } catch (error: any) {
+            console.error('❌ Erro no upload:', error);
             res.status(400).json({ error: error.message });
         }
     }

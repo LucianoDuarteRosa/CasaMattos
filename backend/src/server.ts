@@ -46,9 +46,9 @@ const limiter = rateLimit({
 });
 app.use(limiter);
 
-// Parser do body
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+// Parser do body - aumentar limite para suportar imagens em base64
+app.use(express.json({ limit: '10mb' })); // Aumentar para 10MB
+app.use(express.urlencoded({ extended: true, limit: '10mb' })); // Também para URL encoded
 
 // Rota de health check
 app.get('/health', (req, res) => {

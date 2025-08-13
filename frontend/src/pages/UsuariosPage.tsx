@@ -109,6 +109,7 @@ const UsuariosPage: React.FC = () => {
 
     const handleOpenDialog = (usuario?: IUsuario) => {
         setSelectedFile(null); // Limpar arquivo selecionado
+        setPreviewUrl(''); // Limpar preview URL
         if (usuario) {
             setEditingUsuario(usuario);
             setFormData({
@@ -139,6 +140,11 @@ const UsuariosPage: React.FC = () => {
         setDialogOpen(false);
         setEditingUsuario(null);
         setSelectedFile(null);
+        // Limpar preview URL para evitar memory leaks
+        if (previewUrl) {
+            URL.revokeObjectURL(previewUrl);
+            setPreviewUrl('');
+        }
     };
 
     const handleSubmit = async () => {
@@ -152,7 +158,7 @@ const UsuariosPage: React.FC = () => {
                     email: formData.email,
                     telefone: formData.telefone,
                     idPerfil: formData.idPerfil,
-                    imagemUrl: selectedFile ? '' : formData.imagemUrl // Se tem arquivo, não enviar URL
+                    imagemUrl: selectedFile ? '' : (formData.imagemUrl?.startsWith('data:') ? '' : formData.imagemUrl) // Se tem arquivo selecionado ou é base64, não enviar URL
                 };
                 savedUsuario = await usuarioService.update(editingUsuario.id, updateData);
 
@@ -178,7 +184,17 @@ const UsuariosPage: React.FC = () => {
                     }
                 }
             } else {
-                savedUsuario = await usuarioService.create(formData);
+                // Para criação, não enviar dados base64 via JSON
+                const createData: CreateUsuarioData = {
+                    nomeCompleto: formData.nomeCompleto,
+                    nickname: formData.nickname,
+                    email: formData.email,
+                    telefone: formData.telefone,
+                    senha: formData.senha,
+                    idPerfil: formData.idPerfil,
+                    imagemUrl: selectedFile ? '' : (formData.imagemUrl?.startsWith('data:') ? '' : formData.imagemUrl) // Se tem arquivo ou é base64, não enviar
+                };
+                savedUsuario = await usuarioService.create(createData);
 
                 // Se há um arquivo selecionado, fazer upload
                 if (selectedFile) {
@@ -250,6 +266,9 @@ const UsuariosPage: React.FC = () => {
         }
     };
 
+    // Estado para preview da imagem sem base64
+    const [previewUrl, setPreviewUrl] = useState<string>('');
+
     // Função para selecionar arquivo de imagem
     const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
@@ -266,26 +285,29 @@ const UsuariosPage: React.FC = () => {
                 return;
             }
 
+            // Limpar preview anterior se existir
+            if (previewUrl) {
+                URL.revokeObjectURL(previewUrl);
+            }
+
             // Salvar o arquivo selecionado
             setSelectedFile(file);
 
-            // Criar URL temporária para preview
-            const reader = new FileReader();
-            reader.onload = () => {
-                setFormData(prev => ({
-                    ...prev,
-                    imagemUrl: reader.result as string
-                }));
-            };
-            reader.readAsDataURL(file);
+            // Criar URL temporária para preview (sem base64)
+            const objectUrl = URL.createObjectURL(file);
+            setPreviewUrl(objectUrl);
+
+            // Limpar a URL da imagem do formulário para evitar conflitos
+            setFormData(prev => ({
+                ...prev,
+                imagemUrl: '' // Limpar URL quando arquivo é selecionado
+            }));
         }
     };
 
-    // Verificação de acesso de admin - adicionar debug
+    // Verificação de acesso de admin
     useEffect(() => {
         const user = authService.getCurrentUser();
-        console.log('Debug - Current user:', user);
-        console.log('Debug - idPerfil:', user?.idPerfil, typeof user?.idPerfil);
         setCurrentUser(user);
 
         // Só carregar usuários se for admin
@@ -585,10 +607,10 @@ const UsuariosPage: React.FC = () => {
                         </Box>
 
                         {/* Preview da imagem */}
-                        {formData.imagemUrl && (
+                        {(formData.imagemUrl || previewUrl) && (
                             <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
                                 <Avatar
-                                    src={formData.imagemUrl.startsWith('data:') ? formData.imagemUrl : `${SERVER_BASE_URL}${formData.imagemUrl}`}
+                                    src={previewUrl || (formData.imagemUrl?.startsWith('data:') ? formData.imagemUrl : `${SERVER_BASE_URL}${formData.imagemUrl}`)}
                                     sx={{ width: 80, height: 80 }}
                                 >
                                     {formData.nomeCompleto.charAt(0).toUpperCase()}
