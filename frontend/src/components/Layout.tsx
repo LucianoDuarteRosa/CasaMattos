@@ -27,8 +27,10 @@ import {
     Assignment,
     AccountCircle,
     Logout,
-    Settings,
+    Person,
     People,
+    DarkMode,
+    LightMode,
 } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { authService } from '@/services/authService';
@@ -187,9 +189,15 @@ const Layout: React.FC<Props> = ({ children, isDarkMode, toggleDarkMode }) => {
                     >
                         <MenuItem onClick={handlePerfil}>
                             <ListItemIcon>
-                                <Settings fontSize="small" />
+                                <Person fontSize="small" />
                             </ListItemIcon>
                             <ListItemText primary="Meu Perfil" />
+                        </MenuItem>
+                        <MenuItem onClick={toggleDarkMode}>
+                            <ListItemIcon>
+                                {isDarkMode ? <LightMode fontSize="small" /> : <DarkMode fontSize="small" />}
+                            </ListItemIcon>
+                            <ListItemText primary={isDarkMode ? "Modo Claro" : "Modo Escuro"} />
                         </MenuItem>
                         <MenuItem onClick={handleLogout}>
                             <ListItemIcon>

@@ -53,19 +53,6 @@ const UsuariosPage: React.FC = () => {
 
     const { enqueueSnackbar } = useSnackbar();
 
-    useEffect(() => {
-        const user = authService.getCurrentUser();
-        setCurrentUser(user);
-
-        // Verificar se é admin
-        if (user?.idPerfil !== 1) {
-            enqueueSnackbar('Acesso negado. Apenas administradores podem acessar esta página.', { variant: 'error' });
-            return;
-        }
-
-        loadUsuarios();
-    }, []);
-
     const loadUsuarios = async () => {
         try {
             setLoading(true);
@@ -193,10 +180,20 @@ const UsuariosPage: React.FC = () => {
         console.log('Debug - Current user:', user);
         console.log('Debug - idPerfil:', user?.idPerfil, typeof user?.idPerfil);
         setCurrentUser(user);
+
+        // Só carregar usuários se for admin
+        if (user && user.idPerfil === 1) {
+            loadUsuarios();
+        }
     }, []);
 
+    // Se o usuário ainda não foi carregado, mostra loading
+    if (!currentUser) {
+        return <Box>Carregando...</Box>;
+    }
+
     // Se não é admin, mostrar mensagem de acesso negado
-    if (currentUser && currentUser.idPerfil !== 1) {
+    if (currentUser.idPerfil !== 1) {
         return (
             <Box
                 sx={{
@@ -209,6 +206,8 @@ const UsuariosPage: React.FC = () => {
             >
                 <Alert severity="error">
                     Acesso negado. Apenas administradores podem acessar esta página.
+                    <br />
+                    Seu perfil: {currentUser.idPerfil} - Tipo: {typeof currentUser.idPerfil}
                 </Alert>
             </Box>
         );
