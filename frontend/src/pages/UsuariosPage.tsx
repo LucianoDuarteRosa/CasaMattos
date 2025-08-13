@@ -158,9 +158,8 @@ const UsuariosPage: React.FC = () => {
                     email: formData.email,
                     telefone: formData.telefone,
                     idPerfil: formData.idPerfil,
-                    imagemUrl: selectedFile ? '' : (formData.imagemUrl || '') // Se tem arquivo, limpar para que o upload defina; senão, manter atual
+                    imagemUrl: selectedFile ? (editingUsuario.imagemUrl || '') : (formData.imagemUrl || editingUsuario.imagemUrl || '')
                 };
-
                 savedUsuario = await usuarioService.update(editingUsuario.id, updateData);
 
                 // Se há um arquivo selecionado, fazer upload
@@ -169,7 +168,6 @@ const UsuariosPage: React.FC = () => {
                         await usuarioService.uploadImage(editingUsuario.id, selectedFile);
                         showNotification('Usuário e imagem atualizados com sucesso!', 'success');
                     } catch (uploadError) {
-                        console.error('Erro no upload da imagem:', uploadError);
                         showNotification('Usuário atualizado, mas erro ao fazer upload da imagem', 'warning');
                     }
                 } else {
@@ -181,7 +179,7 @@ const UsuariosPage: React.FC = () => {
                     try {
                         await authService.refreshCurrentUser();
                     } catch (refreshError) {
-                        console.error('Erro ao recarregar dados do usuário:', refreshError);
+                        // Erro silencioso ao recarregar dados do usuário
                     }
                 }
             } else {
@@ -207,12 +205,11 @@ const UsuariosPage: React.FC = () => {
                             try {
                                 await authService.refreshCurrentUser();
                             } catch (refreshError) {
-                                console.error('Erro ao recarregar dados do usuário:', refreshError);
+                                // Erro silencioso ao recarregar dados do usuário
                             }
                         }
                         showNotification('Usuário criado e imagem enviada com sucesso!', 'success');
                     } catch (uploadError) {
-                        console.error('Erro no upload da imagem:', uploadError);
                         showNotification('Usuário criado, mas erro ao fazer upload da imagem', 'warning');
                     }
                 } else {
@@ -298,11 +295,7 @@ const UsuariosPage: React.FC = () => {
             const objectUrl = URL.createObjectURL(file);
             setPreviewUrl(objectUrl);
 
-            // Limpar a URL da imagem do formulário para evitar conflitos
-            setFormData(prev => ({
-                ...prev,
-                imagemUrl: '' // Limpar URL quando arquivo é selecionado
-            }));
+            // Não limpar a imagemUrl do formData para preservar a URL original
         }
     };
 
