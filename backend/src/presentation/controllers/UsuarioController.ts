@@ -28,6 +28,8 @@ interface AuthenticatedRequest extends Request {
 export class UsuarioController {
     // Função utilitária para remover imagem do sistema de arquivos
     private removeImageFile(imagemUrl: string): void {
+        console.log(`🔍 Iniciando remoção de imagem: ${imagemUrl}`);
+        
         if (imagemUrl && !imagemUrl.startsWith('http')) {
             try {
                 // Limpar a imagemUrl removendo barras extras
@@ -37,21 +39,26 @@ export class UsuarioController {
                 } else if (cleanUrl.startsWith('uploads/')) {
                     cleanUrl = cleanUrl.replace('uploads/', '');
                 }
-                
+
                 const imagePath = path.join(__dirname, '../../../uploads', cleanUrl);
+                console.log(`📂 Tentando excluir: ${imagePath}`);
 
                 if (fs.existsSync(imagePath)) {
                     fs.unlinkSync(imagePath);
-                    console.log(`✓ Imagem removida: ${path.basename(imagePath)}`);
+                    console.log(`✅ Imagem removida com sucesso: ${cleanUrl}`);
                 } else {
-                    console.log(`✗ Arquivo não encontrado: ${path.basename(imagePath)}`);
+                    console.log(`❌ Arquivo não encontrado: ${cleanUrl}`);
                 }
             } catch (error) {
-                console.error('Erro ao remover imagem:', error);
+                console.error('❌ Erro ao remover imagem:', error);
                 // Não falhar a operação se não conseguir apagar a imagem
             }
+        } else {
+            console.log(`ℹ️  URL externa ou inválida, não removendo: ${imagemUrl}`);
         }
-    }    async create(req: AuthenticatedRequest, res: Response): Promise<void> {
+    }
+
+    async create(req: AuthenticatedRequest, res: Response): Promise<void> {
         try {
             const usuario = await createUsuarioUseCase.execute(req.body, req.user!.idPerfil);
 
@@ -157,12 +164,15 @@ export class UsuarioController {
 
     async uploadImage(req: AuthenticatedRequest, res: Response): Promise<void> {
         try {
+            console.log(`📤 Upload iniciado...`);
+            
             if (!req.file) {
                 res.status(400).json({ error: 'Nenhum arquivo foi enviado' });
                 return;
             }
 
             const userId = parseInt(req.params.id);
+            console.log(`👤 Usuário: ${userId} | Arquivo: ${req.file.filename}`);
 
             // Verificar se o usuário pode atualizar esta imagem
             if (req.user!.idPerfil !== 1 && req.user!.id !== userId) {
@@ -172,14 +182,17 @@ export class UsuarioController {
 
             // Buscar o usuário atual para obter a imagem anterior
             const currentUser = await getUsuarioUseCase.execute(userId, req.user!.idPerfil);
+            console.log(`📋 Imagem anterior: ${currentUser?.imagemUrl || 'nenhuma'}`);
 
             // Remover imagem anterior se existir
             if (currentUser?.imagemUrl) {
+                console.log(`🗑️  Removendo imagem anterior...`);
                 this.removeImageFile(currentUser.imagemUrl);
             }
 
             // Construir URL da nova imagem
             const imageUrl = `/uploads/${req.file.filename}`;
+            console.log(`🆕 Nova imagem: ${imageUrl}`);
 
             // Atualizar apenas a imagemUrl no banco
             const updatedUsuario = await updateUsuarioUseCase.execute(
@@ -189,6 +202,7 @@ export class UsuarioController {
                 req.user!.id
             );
 
+            console.log(`✅ Upload concluído!`);
             res.json({
                 message: 'Imagem enviada com sucesso',
                 imagemUrl: imageUrl,
