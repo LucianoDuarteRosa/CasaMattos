@@ -16,15 +16,19 @@ import {
     Switch,
     FormControlLabel,
     IconButton,
+    InputAdornment,
 } from '@mui/material';
 import {
     Edit as EditIcon,
     Key as KeyIcon,
     Brightness4 as DarkIcon,
     Brightness7 as LightIcon,
+    Upload as UploadIcon,
+    OpenInNew as OpenInNewIcon,
 } from '@mui/icons-material';
 import { useSnackbar } from 'notistack';
 import { usuarioService } from '@/services/usuarioService';
+import { SERVER_BASE_URL } from '@/services/api';
 import { IUsuario, UpdateUsuarioData, UpdateUsuarioSenhaData } from '@/types';
 
 interface PerfilPageProps {
@@ -52,6 +56,9 @@ const PerfilPage: React.FC<PerfilPageProps> = ({ isDarkMode, toggleDarkMode }) =
         senhaAtual: '',
         novaSenha: ''
     });
+
+    // Estados para upload de imagem
+    const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
     useEffect(() => {
         loadUserProfile();
@@ -87,6 +94,7 @@ const PerfilPage: React.FC<PerfilPageProps> = ({ isDarkMode, toggleDarkMode }) =
     };
 
     const handleEditProfile = () => {
+        setSelectedFile(null); // Limpar arquivo selecionado
         setOpenEditDialog(true);
     };
 
@@ -99,10 +107,31 @@ const PerfilPage: React.FC<PerfilPageProps> = ({ isDarkMode, toggleDarkMode }) =
         if (!usuario) return;
 
         try {
-            const updatedUser = await usuarioService.update(usuario.id, editData);
+            // Primeiro, atualizar os dados do perfil (sem arquivo)
+            const updatedUser = await usuarioService.update(usuario.id, {
+                nomeCompleto: editData.nomeCompleto,
+                nickname: editData.nickname,
+                email: editData.email,
+                telefone: editData.telefone,
+                imagemUrl: selectedFile ? '' : editData.imagemUrl // Se tem arquivo, não enviar URL
+            });
+
+            // Se há um arquivo selecionado, fazer upload
+            if (selectedFile) {
+                try {
+                    await usuarioService.uploadImage(usuario.id, selectedFile);
+                    enqueueSnackbar('Perfil e imagem atualizados com sucesso!', { variant: 'success' });
+                } catch (uploadError: any) {
+                    console.error('Erro no upload da imagem:', uploadError);
+                    enqueueSnackbar('Perfil atualizado, mas erro ao fazer upload da imagem', { variant: 'warning' });
+                }
+            } else {
+                enqueueSnackbar('Perfil atualizado com sucesso!', { variant: 'success' });
+            }
+
             setUsuario(updatedUser);
+            setSelectedFile(null);
             setOpenEditDialog(false);
-            enqueueSnackbar('Perfil atualizado com sucesso!', { variant: 'success' });
 
             // Recarregar os dados do perfil para refletir as mudanças
             await loadUserProfile();
@@ -133,6 +162,46 @@ const PerfilPage: React.FC<PerfilPageProps> = ({ isDarkMode, toggleDarkMode }) =
         return new Date(dateString).toLocaleDateString('pt-BR');
     };
 
+    // Função para abrir URL da imagem no navegador
+    const handleOpenImageUrl = () => {
+        if (editData.imagemUrl) {
+            const fullImageUrl = editData.imagemUrl.startsWith('http')
+                ? editData.imagemUrl
+                : `${SERVER_BASE_URL}${editData.imagemUrl}`;
+            window.open(fullImageUrl, '_blank');
+        }
+    };
+
+    // Função para selecionar arquivo de imagem
+    const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (file) {
+            // Verificar se é uma imagem
+            if (!file.type.startsWith('image/')) {
+                enqueueSnackbar('Por favor, selecione apenas arquivos de imagem', { variant: 'warning' });
+                return;
+            }
+
+            // Verificar tamanho (5MB máximo)
+            if (file.size > 5 * 1024 * 1024) {
+                enqueueSnackbar('Arquivo muito grande. Tamanho máximo: 5MB', { variant: 'warning' });
+                return;
+            }
+
+            setSelectedFile(file);
+
+            // Criar preview local
+            const reader = new FileReader();
+            reader.onload = () => {
+                setEditData({
+                    ...editData,
+                    imagemUrl: reader.result as string
+                });
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
     if (loading) {
         return (
             <Box sx={{ p: 3, display: 'flex', justifyContent: 'center' }}>
@@ -155,9 +224,6 @@ const PerfilPage: React.FC<PerfilPageProps> = ({ isDarkMode, toggleDarkMode }) =
         <Box sx={{ p: 3, maxWidth: 800, mx: 'auto' }}>
             {/* Cabeçalho com saudação */}
             <Box sx={{ mb: 4, textAlign: 'center' }}>
-                <Typography variant="h4" component="h1" gutterBottom>
-                    {getSaudacao()}
-                </Typography>
                 <Typography variant="subtitle1" color="text.secondary">
                     Gerencie suas informações pessoais e preferências
                 </Typography>
@@ -167,7 +233,7 @@ const PerfilPage: React.FC<PerfilPageProps> = ({ isDarkMode, toggleDarkMode }) =
             <Paper sx={{ p: 4, mb: 3 }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
                     <Avatar
-                        src={usuario.imagemUrl}
+                        src={usuario.imagemUrl ? `${SERVER_BASE_URL}${usuario.imagemUrl}` : ''}
                         alt={usuario.nomeCompleto}
                         sx={{ width: 120, height: 120, mr: 3, fontSize: '3rem' }}
                     >
@@ -311,14 +377,54 @@ const PerfilPage: React.FC<PerfilPageProps> = ({ isDarkMode, toggleDarkMode }) =
                             />
                         </Grid>
                         <Grid item xs={12}>
+                            <Typography variant="subtitle1" gutterBottom>
+                                Imagem de Perfil
+                            </Typography>
                             <TextField
                                 fullWidth
-                                label="URL da Imagem de Perfil"
+                                label="URL da Imagem"
                                 value={editData.imagemUrl}
                                 onChange={(e) => setEditData({ ...editData, imagemUrl: e.target.value })}
-                                placeholder="https://exemplo.com/minha-foto.jpg"
-                                helperText="Cole o link de uma imagem para usar como foto de perfil"
+                                placeholder="https://exemplo.com/minha-foto.jpg ou faça upload"
+                                helperText="Cole o link de uma imagem ou use o botão para fazer upload"
+                                InputProps={{
+                                    endAdornment: (
+                                        <InputAdornment position="end">
+                                            <IconButton
+                                                onClick={handleOpenImageUrl}
+                                                disabled={!editData.imagemUrl}
+                                                title="Abrir imagem"
+                                            >
+                                                <OpenInNewIcon />
+                                            </IconButton>
+                                            <input
+                                                accept="image/*"
+                                                style={{ display: 'none' }}
+                                                id="upload-image"
+                                                type="file"
+                                                onChange={handleFileSelect}
+                                            />
+                                            <label htmlFor="upload-image">
+                                                <IconButton component="span" title="Fazer upload">
+                                                    <UploadIcon />
+                                                </IconButton>
+                                            </label>
+                                        </InputAdornment>
+                                    )
+                                }}
                             />
+
+                            {/* Preview da imagem */}
+                            {editData.imagemUrl && (
+                                <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
+                                    <Avatar
+                                        src={editData.imagemUrl.startsWith('data:') ? editData.imagemUrl : `${SERVER_BASE_URL}${editData.imagemUrl}`}
+                                        sx={{ width: 80, height: 80 }}
+                                    >
+                                        {(editData.nomeCompleto || 'U').charAt(0).toUpperCase()}
+                                    </Avatar>
+                                </Box>
+                            )}
                         </Grid>
                     </Grid>
                 </DialogContent>

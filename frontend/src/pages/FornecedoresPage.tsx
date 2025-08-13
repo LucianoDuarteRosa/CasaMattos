@@ -17,6 +17,7 @@ import { Add, Edit, Delete } from '@mui/icons-material';
 import { fornecedorService } from '@/services/fornecedorService';
 import { IFornecedor } from '@/types';
 import { dataGridPtBR } from '@/utils/dataGridLocale';
+import { dataGridStyles } from '@/utils/dataGridStyles';
 
 interface FormData {
     razaoSocial: string;
@@ -316,13 +317,7 @@ const FornecedoresPage: React.FC = () => {
                 </Box>
             </Box>
 
-            <Paper sx={{
-                maxHeight: 700,
-                width: '100%',
-                overflow: 'hidden',
-                display: 'flex',
-                flexDirection: 'column'
-            }}>
+            <Paper sx={dataGridStyles.paperContainer}>
                 <DataGrid
                     rows={fornecedores}
                     columns={columns}
@@ -335,20 +330,7 @@ const FornecedoresPage: React.FC = () => {
                     }}
                     disableRowSelectionOnClick
                     localeText={dataGridPtBR}
-                    sx={{
-                        width: '100%',
-                        height: '100%',
-                        border: 'none',
-                        '& .MuiDataGrid-main': {
-                            overflow: 'hidden'
-                        },
-                        '& .MuiDataGrid-virtualScroller': {
-                            overflow: 'auto'
-                        },
-                        '& .MuiDataGrid-footerContainer': {
-                            borderTop: '1px solid rgba(224, 224, 224, 1)'
-                        }
-                    }}
+                    sx={dataGridStyles.dataGridSx}
                 />
             </Paper>
 

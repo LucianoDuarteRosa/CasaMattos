@@ -23,6 +23,7 @@ import { produtoService } from '@/services/produtoService';
 import { fornecedorService } from '@/services/fornecedorService';
 import { IProduto, IFornecedor } from '@/types';
 import { dataGridPtBR } from '@/utils/dataGridLocale';
+import { dataGridStyles } from '@/utils/dataGridStyles';
 
 interface FormData {
     codInterno: string;
@@ -468,13 +469,7 @@ const ProdutosPage: React.FC = () => {
                 </Box>
             </Box>
 
-            <Paper sx={{
-                maxHeight: 700,
-                width: '100%',
-                overflow: 'hidden',
-                display: 'flex',
-                flexDirection: 'column'
-            }}>
+            <Paper sx={dataGridStyles.paperContainer}>
                 <DataGrid
                     rows={produtos}
                     columns={columns}
@@ -487,20 +482,7 @@ const ProdutosPage: React.FC = () => {
                     }}
                     disableRowSelectionOnClick
                     localeText={dataGridPtBR}
-                    sx={{
-                        width: '100%',
-                        height: '100%',
-                        border: 'none',
-                        '& .MuiDataGrid-main': {
-                            overflow: 'hidden'
-                        },
-                        '& .MuiDataGrid-virtualScroller': {
-                            overflow: 'auto'
-                        },
-                        '& .MuiDataGrid-footerContainer': {
-                            borderTop: '1px solid rgba(224, 224, 224, 1)'
-                        }
-                    }}
+                    sx={dataGridStyles.dataGridSx}
                 />
             </Paper>
             <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>

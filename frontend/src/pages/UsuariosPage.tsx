@@ -27,6 +27,7 @@ import { authService } from '../services/authService';
 import { SERVER_BASE_URL } from '../services/api';
 import { IUsuario, CreateUsuarioData, UpdateUsuarioData, UpdateUsuarioSenhaData, IPerfil } from '../types';
 import { dataGridPtBR } from '../utils/dataGridLocale';
+import { dataGridStyles } from '../utils/dataGridStyles';
 
 const UsuariosPage: React.FC = () => {
     const [usuarios, setUsuarios] = useState<IUsuario[]>([]);
@@ -437,9 +438,7 @@ const UsuariosPage: React.FC = () => {
             <Paper sx={{
                 maxHeight: 700,
                 width: '100%',
-                overflow: 'hidden',
-                display: 'flex',
-                flexDirection: 'column'
+                ...dataGridStyles.paperContainer,
             }}>
                 <DataGrid
                     rows={usuarios}
@@ -452,12 +451,7 @@ const UsuariosPage: React.FC = () => {
                     }}
                     pageSizeOptions={[5, 10, 25]}
                     localeText={dataGridPtBR}
-                    sx={{
-                        border: 'none',
-                        '& .MuiDataGrid-cell': {
-                            borderBottom: '1px solid rgba(224, 224, 224, 1)'
-                        }
-                    }}
+                    sx={dataGridStyles.dataGridSx}
                 />
             </Paper>
 
