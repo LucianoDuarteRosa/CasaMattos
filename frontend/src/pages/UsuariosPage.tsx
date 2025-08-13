@@ -17,11 +17,11 @@ import {
     Avatar,
     Paper,
     IconButton,
-    InputAdornment
+    InputAdornment,
+    Snackbar
 } from '@mui/material';
 import { DataGrid, GridColDef, GridActionsCellItem } from '@mui/x-data-grid';
 import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon, Lock as LockIcon, OpenInNew as OpenInNewIcon, Upload as UploadIcon } from '@mui/icons-material';
-import { useSnackbar } from 'notistack';
 import { usuarioService } from '../services/usuarioService';
 import { authService } from '../services/authService';
 import { SERVER_BASE_URL } from '../services/api';
@@ -55,8 +55,22 @@ const UsuariosPage: React.FC = () => {
     });
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [currentUser, setCurrentUser] = useState<any>(null);
+    const [snackbarOpen, setSnackbarOpen] = useState(false);
+    const [snackbarMessage, setSnackbarMessage] = useState('');
+    const [snackbarSeverity, setSnackbarSeverity] = useState<'success' | 'error'>('success');
 
-    const { enqueueSnackbar } = useSnackbar();
+    const showNotification = (message: string, severity: 'success' | 'error' | 'warning' | 'info' = 'info') => {
+        setSnackbarMessage(message);
+        setSnackbarSeverity(severity as 'success' | 'error');
+        setSnackbarOpen(true);
+    };
+
+    const handleSnackbarClose = (_?: React.SyntheticEvent | Event, reason?: string) => {
+        if (reason === 'clickaway') {
+            return;
+        }
+        setSnackbarOpen(false);
+    };
 
     const loadUsuarios = async () => {
         try {
@@ -64,7 +78,7 @@ const UsuariosPage: React.FC = () => {
             const data = await usuarioService.list();
             setUsuarios(data);
         } catch (error: any) {
-            enqueueSnackbar(error.response?.data?.error || 'Erro ao carregar usuários', { variant: 'error' });
+            showNotification(error.response?.data?.error || 'Erro ao carregar usuários', 'error');
         } finally {
             setLoading(false);
         }
@@ -87,7 +101,7 @@ const UsuariosPage: React.FC = () => {
             );
             setUsuarios(filtered);
         } catch (error: any) {
-            enqueueSnackbar(error.response?.data?.error || 'Erro ao buscar usuários', { variant: 'error' });
+            showNotification(error.response?.data?.error || 'Erro ao buscar usuários', 'error');
         } finally {
             setLoading(false);
         }
@@ -154,13 +168,14 @@ const UsuariosPage: React.FC = () => {
                             } catch (refreshError) {
                                 console.error('Erro ao recarregar dados do usuário:', refreshError);
                             }
-                        } enqueueSnackbar('Usuário e imagem atualizados com sucesso!', { variant: 'success' });
+                        }
+                        showNotification('Usuário e imagem atualizados com sucesso!', 'success');
                     } catch (uploadError) {
                         console.error('Erro no upload da imagem:', uploadError);
-                        enqueueSnackbar('Usuário atualizado, mas erro ao fazer upload da imagem', { variant: 'warning' });
+                        showNotification('Usuário atualizado, mas erro ao fazer upload da imagem', 'warning');
                     }
                 } else {
-                    enqueueSnackbar('Usuário atualizado com sucesso!', { variant: 'success' });
+                    showNotification('Usuário atualizado com sucesso!', 'success');
                 }
             } else {
                 savedUsuario = await usuarioService.create(formData);
@@ -177,20 +192,21 @@ const UsuariosPage: React.FC = () => {
                             } catch (refreshError) {
                                 console.error('Erro ao recarregar dados do usuário:', refreshError);
                             }
-                        } enqueueSnackbar('Usuário criado e imagem enviada com sucesso!', { variant: 'success' });
+                        }
+                        showNotification('Usuário criado e imagem enviada com sucesso!', 'success');
                     } catch (uploadError) {
                         console.error('Erro no upload da imagem:', uploadError);
-                        enqueueSnackbar('Usuário criado, mas erro ao fazer upload da imagem', { variant: 'warning' });
+                        showNotification('Usuário criado, mas erro ao fazer upload da imagem', 'warning');
                     }
                 } else {
-                    enqueueSnackbar('Usuário criado com sucesso!', { variant: 'success' });
+                    showNotification('Usuário criado com sucesso!', 'success');
                 }
             }
 
             handleCloseDialog();
             loadUsuarios();
         } catch (error: any) {
-            enqueueSnackbar(error.response?.data?.error || 'Erro ao salvar usuário', { variant: 'error' });
+            showNotification(error.response?.data?.error || 'Erro ao salvar usuário', 'error');
         }
     };
 
@@ -198,10 +214,10 @@ const UsuariosPage: React.FC = () => {
         if (window.confirm('Tem certeza que deseja deletar este usuário?')) {
             try {
                 await usuarioService.delete(id);
-                enqueueSnackbar('Usuário deletado com sucesso!', { variant: 'success' });
+                showNotification('Usuário deletado com sucesso!', 'success');
                 loadUsuarios();
             } catch (error: any) {
-                enqueueSnackbar(error.response?.data?.error || 'Erro ao deletar usuário', { variant: 'error' });
+                showNotification(error.response?.data?.error || 'Erro ao deletar usuário', 'error');
             }
         }
     };
@@ -217,10 +233,10 @@ const UsuariosPage: React.FC = () => {
 
         try {
             await usuarioService.updatePassword(editingUsuario.id, passwordData);
-            enqueueSnackbar('Senha alterada com sucesso!', { variant: 'success' });
+            showNotification('Senha alterada com sucesso!', 'success');
             setPasswordDialogOpen(false);
         } catch (error: any) {
-            enqueueSnackbar(error.response?.data?.error || 'Erro ao alterar senha', { variant: 'error' });
+            showNotification(error.response?.data?.error || 'Erro ao alterar senha', 'error');
         }
     };
 
@@ -240,13 +256,13 @@ const UsuariosPage: React.FC = () => {
         if (file) {
             // Verificar se é uma imagem
             if (!file.type.startsWith('image/')) {
-                enqueueSnackbar('Por favor, selecione apenas arquivos de imagem', { variant: 'error' });
+                showNotification('Por favor, selecione apenas arquivos de imagem', 'error');
                 return;
             }
 
             // Verificar tamanho do arquivo (máximo 5MB)
             if (file.size > 5 * 1024 * 1024) {
-                enqueueSnackbar('O arquivo deve ter no máximo 5MB', { variant: 'error' });
+                showNotification('O arquivo deve ter no máximo 5MB', 'error');
                 return;
             }
 
@@ -588,6 +604,23 @@ const UsuariosPage: React.FC = () => {
                     </Button>
                 </DialogActions>
             </Dialog>
+
+            {/* Snackbar para notificações */}
+            <Snackbar
+                open={snackbarOpen}
+                autoHideDuration={4000}
+                onClose={handleSnackbarClose}
+                anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+            >
+                <Alert
+                    onClose={handleSnackbarClose}
+                    severity={snackbarSeverity}
+                    sx={{ width: '100%' }}
+                    variant="filled"
+                >
+                    {snackbarMessage}
+                </Alert>
+            </Snackbar>
         </Box>
     );
 };

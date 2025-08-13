@@ -11,7 +11,6 @@ import {
     Paper,
     Alert,
     Snackbar,
-    IconButton,
     Tooltip,
 } from '@mui/material';
 import { DataGrid, GridColDef, GridActionsCellItem } from '@mui/x-data-grid';
@@ -33,9 +32,23 @@ const RuasPage: React.FC = () => {
     const [formData, setFormData] = useState<FormData>({
         nomeRua: '',
     });
-    const [error, setError] = useState<string | null>(null);
-    const [success, setSuccess] = useState<string | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
+    const [snackbarOpen, setSnackbarOpen] = useState(false);
+    const [snackbarMessage, setSnackbarMessage] = useState('');
+    const [snackbarSeverity, setSnackbarSeverity] = useState<'success' | 'error'>('success');
+
+    const showNotification = (message: string, severity: 'success' | 'error' | 'warning' | 'info' = 'info') => {
+        setSnackbarMessage(message);
+        setSnackbarSeverity(severity as 'success' | 'error');
+        setSnackbarOpen(true);
+    };
+
+    const handleSnackbarClose = (_?: React.SyntheticEvent | Event, reason?: string) => {
+        if (reason === 'clickaway') {
+            return;
+        }
+        setSnackbarOpen(false);
+    };
 
     useEffect(() => {
         loadRuas();
@@ -48,7 +61,7 @@ const RuasPage: React.FC = () => {
             setRuas(data);
         } catch (error) {
             console.error('Erro ao carregar ruas:', error);
-            setError('Erro ao carregar ruas');
+            showNotification('Erro ao carregar ruas', 'error');
         } finally {
             setLoading(false);
         }
@@ -61,7 +74,7 @@ const RuasPage: React.FC = () => {
             setRuas(data);
         } catch (error) {
             console.error('Erro ao buscar ruas:', error);
-            setError('Erro ao buscar ruas');
+            showNotification('Erro ao buscar ruas', 'error');
         } finally {
             setLoading(false);
         }
@@ -76,16 +89,16 @@ const RuasPage: React.FC = () => {
         try {
             if (editingRua) {
                 await ruaService.update(editingRua.id, formData);
-                setSuccess('Rua atualizada com sucesso!');
+                showNotification('Rua atualizada com sucesso!', 'success');
             } else {
                 await ruaService.create(formData);
-                setSuccess('Rua criada com sucesso!');
+                showNotification('Rua criada com sucesso!', 'success');
             }
             handleClose();
             await loadRuas();
         } catch (error: any) {
             console.error('Erro ao salvar rua:', error);
-            setError(error.response?.data?.error || 'Erro ao salvar rua');
+            showNotification(error.response?.data?.error || 'Erro ao salvar rua', 'error');
         }
     };
 
@@ -101,11 +114,11 @@ const RuasPage: React.FC = () => {
         if (window.confirm('Tem certeza que deseja excluir esta rua?')) {
             try {
                 await ruaService.delete(id);
-                setSuccess('Rua excluída com sucesso!');
+                showNotification('Rua excluída com sucesso!', 'success');
                 await loadRuas();
             } catch (error: any) {
                 console.error('Erro ao excluir rua:', error);
-                setError(error.response?.data?.error || 'Erro ao excluir rua');
+                showNotification(error.response?.data?.error || 'Erro ao excluir rua', 'error');
             }
         }
     };
@@ -276,26 +289,20 @@ const RuasPage: React.FC = () => {
                 </DialogActions>
             </Dialog>
 
-            {/* Snackbars para feedback */}
+            {/* Snackbar para notificações */}
             <Snackbar
-                open={!!error}
-                autoHideDuration={6000}
-                onClose={() => setError(null)}
-                anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-            >
-                <Alert onClose={() => setError(null)} severity="error">
-                    {error}
-                </Alert>
-            </Snackbar>
-
-            <Snackbar
-                open={!!success}
+                open={snackbarOpen}
                 autoHideDuration={4000}
-                onClose={() => setSuccess(null)}
-                anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+                onClose={handleSnackbarClose}
+                anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
             >
-                <Alert onClose={() => setSuccess(null)} severity="success">
-                    {success}
+                <Alert
+                    onClose={handleSnackbarClose}
+                    severity={snackbarSeverity}
+                    sx={{ width: '100%' }}
+                    variant="filled"
+                >
+                    {snackbarMessage}
                 </Alert>
             </Snackbar>
         </Box>

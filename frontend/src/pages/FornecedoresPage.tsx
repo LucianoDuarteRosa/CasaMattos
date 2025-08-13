@@ -9,8 +9,9 @@ import {
     DialogContent,
     DialogActions,
     Paper,
-    Alert,
     Grid,
+    Snackbar,
+    Alert,
 } from '@mui/material';
 import { DataGrid, GridColDef, GridActionsCellItem } from '@mui/x-data-grid';
 import { Add, Edit, Delete } from '@mui/icons-material';
@@ -29,13 +30,27 @@ const FornecedoresPage: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [open, setOpen] = useState(false);
     const [editingFornecedor, setEditingFornecedor] = useState<IFornecedor | null>(null);
-    const [error, setError] = useState<string>('');
-    const [success, setSuccess] = useState<string>('');
     const [searchTerm, setSearchTerm] = useState<string>('');
+    const [snackbarOpen, setSnackbarOpen] = useState(false);
+    const [snackbarMessage, setSnackbarMessage] = useState('');
+    const [snackbarSeverity, setSnackbarSeverity] = useState<'success' | 'error'>('success');
     const [formData, setFormData] = useState<FormData>({
         razaoSocial: '',
         cnpj: '',
     });
+
+    const showNotification = (message: string, severity: 'success' | 'error' | 'warning' | 'info' = 'info') => {
+        setSnackbarMessage(message);
+        setSnackbarSeverity(severity as 'success' | 'error');
+        setSnackbarOpen(true);
+    };
+
+    const handleSnackbarClose = (_?: React.SyntheticEvent | Event, reason?: string) => {
+        if (reason === 'clickaway') {
+            return;
+        }
+        setSnackbarOpen(false);
+    };
 
     const columns: GridColDef[] = [
         {
@@ -53,8 +68,8 @@ const FornecedoresPage: React.FC = () => {
         {
             field: 'cnpj',
             headerName: 'CNPJ',
-            width: 140,
-            minWidth: 120,
+            width: 170,
+            minWidth: 150,
             valueFormatter: (params) => {
                 const formatted = formatCNPJ(params.value || '');
                 // Truncar CNPJ em telas muito pequenas
@@ -91,12 +106,11 @@ const FornecedoresPage: React.FC = () => {
     const loadFornecedores = async () => {
         try {
             setLoading(true);
-            setError('');
             const data = await fornecedorService.getAll();
             setFornecedores(data);
         } catch (error: any) {
             console.error('Erro ao carregar fornecedores:', error);
-            setError('Erro ao carregar fornecedores. Tente novamente.');
+            showNotification('Erro ao carregar fornecedores. Tente novamente.', 'error');
         } finally {
             setLoading(false);
         }
@@ -110,12 +124,11 @@ const FornecedoresPage: React.FC = () => {
 
         try {
             setLoading(true);
-            setError('');
             const data = await fornecedorService.search(searchTerm);
             setFornecedores(data);
         } catch (error: any) {
             console.error('Erro ao buscar fornecedores:', error);
-            setError('Erro ao buscar fornecedores. Tente novamente.');
+            showNotification('Erro ao buscar fornecedores. Tente novamente.', 'error');
         } finally {
             setLoading(false);
         }
@@ -134,11 +147,11 @@ const FornecedoresPage: React.FC = () => {
         if (window.confirm(`Tem certeza que deseja deletar o fornecedor "${fornecedor.razaoSocial}"?`)) {
             try {
                 await fornecedorService.delete(fornecedor.id);
-                setSuccess('Fornecedor deletado com sucesso!');
+                showNotification('Fornecedor deletado com sucesso!', 'success');
                 loadFornecedores();
             } catch (error: any) {
                 console.error('Erro ao deletar fornecedor:', error);
-                setError('Erro ao deletar fornecedor. Tente novamente.');
+                showNotification('Erro ao deletar fornecedor. Tente novamente.', 'error');
             }
         }
     };
@@ -146,8 +159,6 @@ const FornecedoresPage: React.FC = () => {
     const handleClose = () => {
         setOpen(false);
         setEditingFornecedor(null);
-        setError('');
-        setSuccess('');
         setFormData({
             razaoSocial: '',
             cnpj: '',
@@ -156,8 +167,6 @@ const FornecedoresPage: React.FC = () => {
 
     const handleAdd = () => {
         setEditingFornecedor(null);
-        setError('');
-        setSuccess('');
         setFormData({
             razaoSocial: '',
             cnpj: '',
@@ -176,17 +185,14 @@ const FornecedoresPage: React.FC = () => {
 
     const handleSubmit = async () => {
         try {
-            setError('');
-            setSuccess('');
-
             // Validações
             if (!formData.razaoSocial.trim()) {
-                setError('Razão Social é obrigatória');
+                showNotification('Razão Social é obrigatória', 'error');
                 return;
             }
 
             if (!formData.cnpj.trim()) {
-                setError('CNPJ é obrigatório');
+                showNotification('CNPJ é obrigatório', 'error');
                 return;
             }
 
@@ -194,7 +200,7 @@ const FornecedoresPage: React.FC = () => {
             const cnpjNumeros = formData.cnpj.replace(/\D/g, '');
 
             if (cnpjNumeros.length !== 14) {
-                setError('CNPJ deve ter 14 dígitos');
+                showNotification('CNPJ deve ter 14 dígitos', 'error');
                 return;
             }
 
@@ -205,17 +211,17 @@ const FornecedoresPage: React.FC = () => {
 
             if (editingFornecedor) {
                 await fornecedorService.update(editingFornecedor.id, dadosParaEnvio);
-                setSuccess('Fornecedor atualizado com sucesso!');
+                showNotification('Fornecedor atualizado com sucesso!', 'success');
             } else {
                 await fornecedorService.create(dadosParaEnvio);
-                setSuccess('Fornecedor criado com sucesso!');
+                showNotification('Fornecedor criado com sucesso!', 'success');
             }
 
             handleClose();
             loadFornecedores();
         } catch (error: any) {
             console.error('Erro ao salvar fornecedor:', error);
-            setError(error.response?.data?.message || 'Erro ao salvar fornecedor. Tente novamente.');
+            showNotification(error.response?.data?.message || 'Erro ao salvar fornecedor. Tente novamente.', 'error');
         }
     };
 
@@ -248,18 +254,6 @@ const FornecedoresPage: React.FC = () => {
             <Typography variant="h4" gutterBottom>
                 Fornecedores
             </Typography>
-
-            {error && (
-                <Alert severity="error" sx={{ mb: 2 }}>
-                    {error}
-                </Alert>
-            )}
-
-            {success && (
-                <Alert severity="success" sx={{ mb: 2 }}>
-                    {success}
-                </Alert>
-            )}
 
             {/* Barra de pesquisa e botão de novo fornecedor */}
             <Box sx={{ display: 'flex', gap: 2, mb: 3, flexWrap: 'wrap' }}>
@@ -323,12 +317,6 @@ const FornecedoresPage: React.FC = () => {
                     {editingFornecedor ? 'Editar Fornecedor' : 'Novo Fornecedor'}
                 </DialogTitle>
                 <DialogContent>
-                    {error && (
-                        <Alert severity="error" sx={{ mb: 2 }}>
-                            {error}
-                        </Alert>
-                    )}
-
                     <Grid container spacing={2} sx={{ mt: 1 }}>
                         <Grid item xs={12}>
                             <TextField
@@ -365,6 +353,23 @@ const FornecedoresPage: React.FC = () => {
                     </Button>
                 </DialogActions>
             </Dialog>
+
+            {/* Snackbar para notificações */}
+            <Snackbar
+                open={snackbarOpen}
+                autoHideDuration={4000}
+                onClose={handleSnackbarClose}
+                anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+            >
+                <Alert
+                    onClose={handleSnackbarClose}
+                    severity={snackbarSeverity}
+                    sx={{ width: '100%' }}
+                    variant="filled"
+                >
+                    {snackbarMessage}
+                </Alert>
+            </Snackbar>
         </Box>
     );
 };
