@@ -404,9 +404,13 @@ const ProdutosPage: React.FC = () => {
             height: '100%',
             display: 'flex',
             flexDirection: 'column',
+            width: '100%',
+            overflow: 'hidden',
+            // Compensar o padding do Layout
+            m: -3,
             p: { xs: 1, sm: 2 },
             maxWidth: '100vw',
-            overflow: 'hidden'
+            boxSizing: 'border-box'
         }}>
             <Box sx={{ mb: 3 }}>
                 <Typography variant="h4" component="h1" gutterBottom>

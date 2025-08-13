@@ -200,6 +200,7 @@ const Layout: React.FC<Props> = ({ children }) => {
                 sx={{
                     flexGrow: 1,
                     p: 3,
+                    pr: 0, // Remove padding right
                     width: { md: `calc(100% - ${drawerWidth}px)` },
                 }}
             >
