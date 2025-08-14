@@ -61,8 +61,8 @@ const EnderecamentosPage: React.FC = () => {
         observacao: '',
         quantCaixas: '',
         disponivel: true,
-        idProduto: '',
-        idPredio: '',
+        idProduto: ' ',
+        idPredio: ' ',
     });
 
     // Função para obter informações do produto
@@ -314,8 +314,8 @@ const EnderecamentosPage: React.FC = () => {
             observacao: '',
             quantCaixas: '',
             disponivel: true,
-            idProduto: '',
-            idPredio: '',
+            idProduto: ' ',
+            idPredio: ' ',
         });
     };
 
@@ -335,8 +335,8 @@ const EnderecamentosPage: React.FC = () => {
             observacao: '',
             quantCaixas: '',
             disponivel: true,
-            idProduto: '',
-            idPredio: '',
+            idProduto: ' ',
+            idPredio: ' ',
         });
         setOpen(true);
     };
@@ -366,7 +366,8 @@ const EnderecamentosPage: React.FC = () => {
             setSuccess('');
 
             // Validação básica
-            if (!formData.tonalidade || !formData.bitola || !formData.idProduto || !formData.idPredio) {
+            if (!formData.tonalidade || !formData.bitola || !formData.idProduto || !formData.idPredio ||
+                formData.idProduto.trim() === '' || formData.idPredio.trim() === '') {
                 setError('Preencha todos os campos obrigatórios');
                 return;
             }
@@ -500,26 +501,6 @@ const EnderecamentosPage: React.FC = () => {
                     <Box component="form" sx={{ mt: 1 }}>
                         <Grid container spacing={2}>
                             <Grid item xs={12} sm={6}>
-                                <TextField
-                                    margin="normal"
-                                    required
-                                    fullWidth
-                                    label="Tonalidade"
-                                    value={formData.tonalidade}
-                                    onChange={handleInputChange('tonalidade')}
-                                />
-                            </Grid>
-                            <Grid item xs={12} sm={6}>
-                                <TextField
-                                    margin="normal"
-                                    required
-                                    fullWidth
-                                    label="Bitola"
-                                    value={formData.bitola}
-                                    onChange={handleInputChange('bitola')}
-                                />
-                            </Grid>
-                            <Grid item xs={12} sm={6}>
                                 <FormControl fullWidth margin="normal" required>
                                     <InputLabel>Produto</InputLabel>
                                     <Select
@@ -535,7 +516,7 @@ const EnderecamentosPage: React.FC = () => {
                                             return getProdutoInfo(produto);
                                         }}
                                     >
-                                        <MenuItem value="">
+                                        <MenuItem value=" ">
                                             <em>Selecione um produto</em>
                                         </MenuItem>
                                         {produtos.map((produto) => (
@@ -562,7 +543,7 @@ const EnderecamentosPage: React.FC = () => {
                                             return getPredioInfo(predio);
                                         }}
                                     >
-                                        <MenuItem value="">
+                                        <MenuItem value=" ">
                                             <em>Selecione um prédio</em>
                                         </MenuItem>
                                         {predios.map((predio) => (
@@ -572,6 +553,26 @@ const EnderecamentosPage: React.FC = () => {
                                         ))}
                                     </Select>
                                 </FormControl>
+                            </Grid>
+                            <Grid item xs={12} sm={6}>
+                                <TextField
+                                    margin="normal"
+                                    required
+                                    fullWidth
+                                    label="Tonalidade"
+                                    value={formData.tonalidade}
+                                    onChange={handleInputChange('tonalidade')}
+                                />
+                            </Grid>
+                            <Grid item xs={12} sm={6}>
+                                <TextField
+                                    margin="normal"
+                                    required
+                                    fullWidth
+                                    label="Bitola"
+                                    value={formData.bitola}
+                                    onChange={handleInputChange('bitola')}
+                                />
                             </Grid>
                             <Grid item xs={12} sm={6}>
                                 <TextField
@@ -603,17 +604,7 @@ const EnderecamentosPage: React.FC = () => {
                                     onChange={handleInputChange('observacao')}
                                 />
                             </Grid>
-                            <Grid item xs={12}>
-                                <FormControlLabel
-                                    control={
-                                        <Checkbox
-                                            checked={formData.disponivel}
-                                            onChange={(e) => setFormData({ ...formData, disponivel: e.target.checked })}
-                                        />
-                                    }
-                                    label="Disponível"
-                                />
-                            </Grid>
+
                         </Grid>
                     </Box>
                 </DialogContent>
