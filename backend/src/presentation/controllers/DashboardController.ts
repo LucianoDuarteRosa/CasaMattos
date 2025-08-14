@@ -57,7 +57,10 @@ export class DashboardController {
                 success: true,
                 data: {
                     produtosComEstoque: (produtosComEstoque[0] as any).total || 0,
-                    metragemTotal: parseFloat((metragemTotal[0] as any).total || 0).toFixed(2),
+                    metragemTotal: parseFloat((metragemTotal[0] as any).total || 0).toLocaleString('pt-BR', {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2
+                    }),
                     enderecamentosDisponiveis: (enderecamentosDisponiveis[0] as any).total || 0,
                     listasAtivas: (listasAtivas[0] as any).total || 0
                 }
@@ -74,15 +77,17 @@ export class DashboardController {
 
     async getProdutosPontaEstoque(req: Request, res: Response): Promise<void> {
         try {
-            // Produtos com pouco estoque (menos que 10% da quantidade mínima de venda)
+            // Produtos em ponta de estoque: menos de 10 * quantMinVenda no total (estoque + deposito)
             const produtosPontaEstoque = await sequelize.query(`
                 SELECT p.id, p."descricao", p."deposito", p."estoque", 
                        p."quantMinVenda", f."razaoSocial" as fornecedor,
-                       (p."deposito" + p."estoque") as "totalDisponivel"
+                       (p."deposito" + p."estoque") as "totalDisponivel",
+                       (p."quantMinVenda" * 10) as "limiteMinimo"
                 FROM "Produtos" p
                 LEFT JOIN "Fornecedores" f ON p."idFornecedor" = f.id
-                WHERE (p."deposito" + p."estoque") <= (p."quantMinVenda" * 0.1)
+                WHERE (p."deposito" + p."estoque") < (p."quantMinVenda" * 10)
                   AND (p."deposito" + p."estoque") > 0
+                  AND p."deposito" = 0
                 ORDER BY (p."deposito" + p."estoque") ASC
                 LIMIT 10
             `, {
@@ -105,17 +110,20 @@ export class DashboardController {
 
     async getProdutosEstoqueBaixoSeparacao(req: Request, res: Response): Promise<void> {
         try {
-            // Produtos com estoque baixo na separação (estoque < 20% do depósito)
+            // Produtos com estoque baixo na separação 
+            // Regra: estoque < 50% de (quantMinVenda * quantCaixas)
+            // Só aparecem produtos que tenham estoque no depósito (deposito > 0)
             const produtosEstoqueBaixo = await sequelize.query(`
                 SELECT p.id, p."descricao", p."deposito", p."estoque", 
-                       p."quantMinVenda", f."razaoSocial" as fornecedor,
-                       CAST(ROUND(CAST((p."estoque" / NULLIF(p."deposito", 0)) * 100 AS NUMERIC), 2) AS FLOAT) as "percentualEstoque"
+                       p."quantMinVenda", p."quantCaixas", f."razaoSocial" as fornecedor,
+                       (p."quantMinVenda" * COALESCE(p."quantCaixas", 1)) as "limiteCalculado",
+                       ((p."quantMinVenda" * COALESCE(p."quantCaixas", 1)) * 0.5) as "cinquentaPorcento"
                 FROM "Produtos" p
                 LEFT JOIN "Fornecedores" f ON p."idFornecedor" = f.id
                 WHERE p."deposito" > 0 
                   AND p."estoque" > 0
-                  AND (p."estoque" / p."deposito") < 0.2
-                ORDER BY (p."estoque" / p."deposito") ASC
+                  AND p."estoque" < ((p."quantMinVenda" * COALESCE(p."quantCaixas", 1)) * 0.5)
+                ORDER BY p."estoque" ASC
                 LIMIT 10
             `, {
                 type: QueryTypes.SELECT

@@ -179,10 +179,10 @@ const DashboardPage: React.FC = () => {
                                                     </Typography>
                                                 </TableCell>
                                                 <TableCell align="right">
-                                                    {produto.totalDisponivel}
+                                                    {produto.totalDisponivel.toLocaleString('pt-BR', { maximumFractionDigits: 2 })}
                                                 </TableCell>
                                                 <TableCell align="right">
-                                                    {produto.quantMinVenda}
+                                                    {produto.quantMinVenda.toLocaleString('pt-BR', { maximumFractionDigits: 2 })}
                                                 </TableCell>
                                             </TableRow>
                                         ))}
@@ -208,8 +208,9 @@ const DashboardPage: React.FC = () => {
                                     <TableHead>
                                         <TableRow>
                                             <TableCell>Descrição</TableCell>
-                                            <TableCell align="right">Estoque</TableCell>
-                                            <TableCell align="right">%</TableCell>
+                                            <TableCell align="right">Estoque Atual</TableCell>
+                                            <TableCell align="right">Limite 50%</TableCell>
+                                            <TableCell align="right">Status</TableCell>
                                         </TableRow>
                                     </TableHead>
                                     <TableBody>
@@ -224,12 +225,15 @@ const DashboardPage: React.FC = () => {
                                                     </Typography>
                                                 </TableCell>
                                                 <TableCell align="right">
-                                                    {produto.estoque}/{produto.deposito}
+                                                    {produto.estoque.toLocaleString('pt-BR', { maximumFractionDigits: 2 })}
+                                                </TableCell>
+                                                <TableCell align="right">
+                                                    {produto.cinquentaPorcento.toLocaleString('pt-BR', { maximumFractionDigits: 2 })}
                                                 </TableCell>
                                                 <TableCell align="right" sx={{
-                                                    color: produto.percentualEstoque < 10 ? 'error.main' : 'warning.main'
+                                                    color: 'error.main'
                                                 }}>
-                                                    {produto.percentualEstoque}%
+                                                    Baixo
                                                 </TableCell>
                                             </TableRow>
                                         ))}

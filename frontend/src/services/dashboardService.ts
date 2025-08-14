@@ -23,8 +23,10 @@ export interface ProdutoEstoqueBaixo {
     deposito: number;
     estoque: number;
     quantMinVenda: number;
+    quantCaixas: number;
     fornecedor: string;
-    percentualEstoque: number;
+    limiteCalculado: number;
+    cinquentaPorcento: number;
 }
 
 export const dashboardService = {
