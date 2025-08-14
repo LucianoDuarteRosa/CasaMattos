@@ -116,7 +116,11 @@ export class ListaRepository implements IListaRepository {
                     }]
                 }
             ],
-            order: [['createdAt', 'DESC']]
+            order: [
+                [{ model: PredioModel, as: 'predio' }, { model: RuaModel, as: 'rua' }, 'nomeRua', 'ASC'],
+                [{ model: PredioModel, as: 'predio' }, 'nomePredio', 'ASC'],
+                ['id', 'ASC']
+            ]
         });
 
         return enderecamentos.map(enderecamento => this.mapEnderecamentoToEntity(enderecamento));

@@ -25,6 +25,7 @@ import { IPredio, IRua } from '@/types';
 import { dataGridPtBR } from '@/utils/dataGridLocale';
 import { dataGridStyles } from '@/utils/dataGridStyles';
 import { useUppercaseForm } from '@/hooks';
+import { UppercaseTextField } from '@/components/UppercaseTextField';
 
 interface FormData {
     nomePredio: string;
@@ -253,15 +254,10 @@ const PrediosPage: React.FC = () => {
             {/* Barra de pesquisa e botão de novo prédio */}
             <Box sx={{ display: 'flex', gap: 2, mb: 3, flexWrap: 'wrap' }}>
                 <Box sx={{ display: 'flex', gap: 1, flex: 1, minWidth: '200px' }}>
-                    <TextField
+                    <UppercaseTextField
                         placeholder="Buscar por nome do prédio..."
                         value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        onKeyPress={(e) => {
-                            if (e.key === 'Enter') {
-                                handleSearch();
-                            }
-                        }}
+                        onChange={(value) => setSearchTerm(value)}
                         sx={{ flex: 1 }}
                     />
                     <Button

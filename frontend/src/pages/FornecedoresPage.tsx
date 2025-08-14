@@ -20,6 +20,7 @@ import { IFornecedor } from '@/types';
 import { dataGridPtBR } from '@/utils/dataGridLocale';
 import { dataGridStyles } from '@/utils/dataGridStyles';
 import { useUppercaseForm } from '@/hooks';
+import { UppercaseTextField } from '@/components/UppercaseTextField';
 
 interface FormData {
     razaoSocial: string;
@@ -256,10 +257,10 @@ const FornecedoresPage: React.FC = () => {
             {/* Barra de pesquisa e botão de novo fornecedor */}
             <Box sx={{ display: 'flex', gap: 2, mb: 3, flexWrap: 'wrap' }}>
                 <Box sx={{ display: 'flex', gap: 1, flex: 1, minWidth: '200px' }}>
-                    <TextField
+                    <UppercaseTextField
                         placeholder="Buscar fornecedores..."
                         value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
+                        onChange={(value) => setSearchTerm(value)}
                         onKeyPress={(e) => {
                             if (e.key === 'Enter') {
                                 handleSearch();

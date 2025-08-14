@@ -28,13 +28,17 @@ import {
     PlaylistRemove,
     Done,
     Undo,
-    Visibility
+    Visibility,
+    GetApp,
+    PictureAsPdf,
 } from '@mui/icons-material';
 import { DataGrid, GridColDef, GridActionsCellItem, GridRowSelectionModel } from '@mui/x-data-grid';
 import { listaService } from '@/services/listaService';
 import { ILista, IEnderecamento, IPaginatedResponse } from '@/types';
 import { dataGridPtBR } from '@/utils/dataGridLocale';
 import { dataGridStyles } from '@/utils/dataGridStyles';
+import { exportarListaToPDF, exportarListaToExcel } from '@/utils/exportUtils';
+import { UppercaseTextField } from '@/components/UppercaseTextField';
 
 interface FormData {
     nome: string;
@@ -316,6 +320,38 @@ const ListasPage: React.FC = () => {
         setEnderecamentosDisponiveis([]);
         setEnderecamentosSelecionados([]);
         setDialogAdicionarEnderecamentos(true);
+    };
+
+    // Exportar lista para PDF
+    const exportarPDF = () => {
+        if (!listaAtual || enderecamentosLista.length === 0) {
+            mostrarSnackbar('Não há dados para exportar', 'error');
+            return;
+        }
+
+        try {
+            exportarListaToPDF(enderecamentosLista as any, listaAtual.nome);
+            mostrarSnackbar('Lista exportada para PDF com sucesso!', 'success');
+        } catch (error) {
+            console.error('Erro ao exportar PDF:', error);
+            mostrarSnackbar('Erro ao exportar para PDF', 'error');
+        }
+    };
+
+    // Exportar lista para Excel
+    const exportarExcel = () => {
+        if (!listaAtual || enderecamentosLista.length === 0) {
+            mostrarSnackbar('Não há dados para exportar', 'error');
+            return;
+        }
+
+        try {
+            exportarListaToExcel(enderecamentosLista as any, listaAtual.nome);
+            mostrarSnackbar('Lista exportada para Excel com sucesso!', 'success');
+        } catch (error) {
+            console.error('Erro ao exportar Excel:', error);
+            mostrarSnackbar('Erro ao exportar para Excel', 'error');
+        }
     };
 
     // Colunas da grid de listas
@@ -674,30 +710,61 @@ const ListasPage: React.FC = () => {
                 </DialogTitle>
                 <DialogContent sx={{ p: 2 }}>
                     {/* Cabeçalho dos endereçamentos */}
-                    <Box sx={{ mb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <Box sx={{ mb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 1 }}>
                         <Typography variant="h6">
                             Endereçamentos ({enderecamentosLista.length})
                         </Typography>
-                        {listaAtual?.disponivel && (
-                            <Button
-                                variant="contained"
-                                startIcon={<PlaylistAdd />}
-                                onClick={abrirDialogAdicionarEnderecamentos}
-                            >
-                                Adicionar Endereçamentos
-                            </Button>
-                        )}
+                        <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                            {enderecamentosLista.length > 0 && (
+                                <>
+                                    <Button
+                                        variant="contained"
+                                        size="small"
+                                        startIcon={<PictureAsPdf />}
+                                        onClick={exportarPDF}
+                                        sx={{
+                                            minWidth: 'auto',
+                                            backgroundColor: '#ff9800', // Laranja/amarelo
+                                            '&:hover': {
+                                                backgroundColor: '#f57c00'
+                                            }
+                                        }}
+                                    >
+                                        PDF
+                                    </Button>
+                                    <Button
+                                        variant="contained"
+                                        size="small"
+                                        startIcon={<GetApp />}
+                                        onClick={exportarExcel}
+                                        color="success"
+                                        sx={{ minWidth: 'auto' }}
+                                    >
+                                        Excel
+                                    </Button>
+                                </>
+                            )}
+                            {listaAtual?.disponivel && (
+                                <Button
+                                    variant="contained"
+                                    startIcon={<PlaylistAdd />}
+                                    onClick={abrirDialogAdicionarEnderecamentos}
+                                >
+                                    Adicionar Endereçamentos
+                                </Button>
+                            )}
+                        </Box>
                     </Box>
 
                     {/* Grid de endereçamentos da lista */}
-                    <Paper sx={{ ...dataGridStyles.paperContainer, height: 400 }}>
+                    <Paper sx={{ ...dataGridStyles.paperContainer, height: 640 }}>
                         <DataGrid
                             rows={enderecamentosLista}
                             columns={colunasEnderecamentosLista}
                             loading={loadingEnderecamentos}
                             pageSizeOptions={[5, 10, 25]}
                             initialState={{
-                                pagination: { paginationModel: { pageSize: 10 } },
+                                pagination: { paginationModel: { pageSize: 25 } },
                             }}
                             disableRowSelectionOnClick
                             localeText={dataGridPtBR}
@@ -728,46 +795,46 @@ const ListasPage: React.FC = () => {
                             </Typography>
                             <Grid container spacing={2}>
                                 <Grid item xs={12} sm={6} md={3}>
-                                    <TextField
+                                    <UppercaseTextField
                                         fullWidth
                                         label="Código Fabricante"
                                         value={filtrosPesquisa.codigoFabricante}
-                                        onChange={(e) => setFiltrosPesquisa({
+                                        onChange={(value) => setFiltrosPesquisa({
                                             ...filtrosPesquisa,
-                                            codigoFabricante: e.target.value
+                                            codigoFabricante: value
                                         })}
                                     />
                                 </Grid>
                                 <Grid item xs={12} sm={6} md={3}>
-                                    <TextField
+                                    <UppercaseTextField
                                         fullWidth
                                         label="Código Interno"
                                         value={filtrosPesquisa.codigoInterno}
-                                        onChange={(e) => setFiltrosPesquisa({
+                                        onChange={(value) => setFiltrosPesquisa({
                                             ...filtrosPesquisa,
-                                            codigoInterno: e.target.value
+                                            codigoInterno: value
                                         })}
                                     />
                                 </Grid>
                                 <Grid item xs={12} sm={6} md={3}>
-                                    <TextField
+                                    <UppercaseTextField
                                         fullWidth
                                         label="Código de Barras"
                                         value={filtrosPesquisa.codigoBarras}
-                                        onChange={(e) => setFiltrosPesquisa({
+                                        onChange={(value) => setFiltrosPesquisa({
                                             ...filtrosPesquisa,
-                                            codigoBarras: e.target.value
+                                            codigoBarras: value
                                         })}
                                     />
                                 </Grid>
                                 <Grid item xs={12} sm={6} md={3}>
-                                    <TextField
+                                    <UppercaseTextField
                                         fullWidth
                                         label="Descrição"
                                         value={filtrosPesquisa.descricao}
-                                        onChange={(e) => setFiltrosPesquisa({
+                                        onChange={(value) => setFiltrosPesquisa({
                                             ...filtrosPesquisa,
-                                            descricao: e.target.value
+                                            descricao: value
                                         })}
                                     />
                                 </Grid>
@@ -794,7 +861,7 @@ const ListasPage: React.FC = () => {
                         Endereçamentos Disponíveis ({enderecamentosDisponiveis.length})
                     </Typography>
 
-                    <Paper sx={{ ...dataGridStyles.paperContainer, height: 400 }}>
+                    <Paper sx={{ ...dataGridStyles.paperContainer, height: 460 }}>
                         <DataGrid
                             rows={enderecamentosDisponiveis}
                             columns={colunasEnderecamentosDisponiveis}

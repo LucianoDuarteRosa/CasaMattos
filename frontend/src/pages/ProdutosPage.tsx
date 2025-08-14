@@ -25,6 +25,7 @@ import { IProduto, IFornecedor } from '@/types';
 import { dataGridPtBR } from '@/utils/dataGridLocale';
 import { dataGridStyles } from '@/utils/dataGridStyles';
 import { useUppercaseForm } from '@/hooks';
+import { UppercaseTextField } from '@/components/UppercaseTextField';
 
 interface FormData {
     codInterno: string;
@@ -426,10 +427,10 @@ const ProdutosPage: React.FC = () => {
             {/* Barra de pesquisa e botão de novo produto */}
             <Box sx={{ display: 'flex', gap: 2, mb: 3, flexWrap: 'wrap' }}>
                 <Box sx={{ display: 'flex', gap: 1, flex: 1, minWidth: '200px' }}>
-                    <TextField
+                    <UppercaseTextField
                         placeholder="Buscar produtos..."
                         value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
+                        onChange={(value) => setSearchTerm(value)}
                         onKeyPress={(e) => {
                             if (e.key === 'Enter') {
                                 handleSearch();
@@ -596,12 +597,12 @@ const ProdutosPage: React.FC = () => {
                                 />
                             </Grid>
                             <Grid item xs={12} sm={6}>
-                                <TextField
+                                <UppercaseTextField
                                     margin="normal"
                                     fullWidth
                                     label="Código Fabricante"
                                     value={formData.codFabricante}
-                                    onChange={handleInputChange('codFabricante')}
+                                    onChange={(value) => updateField('codFabricante', value)}
                                 />
                             </Grid>
                             <Grid item xs={12} sm={6}>
