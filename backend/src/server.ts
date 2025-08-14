@@ -13,6 +13,7 @@ import { usuarioRoutes } from './presentation/routes/usuarioRoutes';
 import { ruaRoutes } from './presentation/routes/ruaRoutes';
 import { predioRoutes } from './presentation/routes/predioRoutes';
 import listaRoutes from './presentation/routes/listaRoutes';
+import dashboardRoutes from './presentation/routes/dashboardRoutes';
 // Importar associações para garantir que sejam carregadas
 import './infrastructure/database/models/associations';
 
@@ -88,6 +89,7 @@ app.use('/api/ruas', ruaRoutes);
 app.use('/api/predios', predioRoutes);
 app.use('/api/enderecamentos', enderecamentoRoutes);
 app.use('/api/listas', listaRoutes);
+app.use('/api/dashboard', dashboardRoutes);
 
 // Middleware de tratamento de erros
 app.use((error: any, req: express.Request, res: express.Response, next: express.NextFunction) => {

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
     Box,
     Typography,
@@ -6,6 +6,14 @@ import {
     Paper,
     Card,
     CardContent,
+    Table,
+    TableBody,
+    TableCell,
+    TableContainer,
+    TableHead,
+    TableRow,
+    CircularProgress,
+    Alert,
 } from '@mui/material';
 import {
     Inventory,
@@ -13,30 +21,93 @@ import {
     LocationOn,
     Assignment,
 } from '@mui/icons-material';
+import {
+    dashboardService,
+    DashboardStats,
+    ProdutoPontaEstoque,
+    ProdutoEstoqueBaixo
+} from '../services/dashboardService';
 
 const DashboardPage: React.FC = () => {
-    const stats = [
+    const [stats, setStats] = useState<DashboardStats | null>(null);
+    const [produtosPontaEstoque, setProdutosPontaEstoque] = useState<ProdutoPontaEstoque[]>([]);
+    const [produtosEstoqueBaixo, setProdutosEstoqueBaixo] = useState<ProdutoEstoqueBaixo[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+
+    useEffect(() => {
+        loadDashboardData();
+    }, []);
+
+    const loadDashboardData = async () => {
+        try {
+            setLoading(true);
+            setError(null);
+
+            const [statsData, pontaEstoque, estoqueBaixo] = await Promise.all([
+                dashboardService.getStats(),
+                dashboardService.getProdutosPontaEstoque(),
+                dashboardService.getProdutosEstoqueBaixoSeparacao()
+            ]);
+
+            setStats(statsData);
+            setProdutosPontaEstoque(pontaEstoque);
+            setProdutosEstoqueBaixo(estoqueBaixo);
+        } catch (error: any) {
+            setError(error?.response?.data?.message || 'Erro ao carregar dados do dashboard');
+            console.error('Erro ao carregar dashboard:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    if (loading) {
+        return (
+            <Box
+                sx={{
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    minHeight: '400px'
+                }}
+            >
+                <CircularProgress />
+            </Box>
+        );
+    }
+
+    if (error) {
+        return (
+            <Box sx={{ m: 2 }}>
+                <Alert severity="error" onClose={() => setError(null)}>
+                    {error}
+                </Alert>
+            </Box>
+        );
+    }
+
+    const statsConfig = [
         {
-            title: 'Produtos',
-            value: '954',
+            title: 'Produtos Com Estoque',
+            value: stats?.produtosComEstoque.toString() || '0',
             icon: <Inventory fontSize="large" />,
             color: '#1976d2',
         },
         {
             title: 'Metragem Total',
-            value: '23.515,25',
+            value: stats?.metragemTotal || '0,00',
             icon: <Business fontSize="large" />,
             color: '#388e3c',
         },
         {
-            title: 'Endereçamentos',
-            value: '2.567',
+            title: 'Endereçamentos Disponíveis',
+            value: stats?.enderecamentosDisponiveis.toString() || '0',
             icon: <LocationOn fontSize="large" />,
             color: '#f57c00',
         },
         {
             title: 'Listas Ativas',
-            value: '2',
+            value: stats?.listasAtivas.toString() || '0',
             icon: <Assignment fontSize="large" />,
             color: '#d32f2f',
         },
@@ -57,7 +128,7 @@ const DashboardPage: React.FC = () => {
             </Typography>
 
             <Grid container spacing={3}>
-                {stats.map((stat, index) => (
+                {statsConfig.map((stat, index) => (
                     <Grid item xs={12} sm={6} md={3} key={index}>
                         <Card>
                             <CardContent>
@@ -82,24 +153,94 @@ const DashboardPage: React.FC = () => {
 
             <Grid container spacing={3} sx={{ mt: 3 }}>
                 <Grid item xs={12} md={6}>
-                    <Paper sx={{ p: 2, height: 300 }}>
+                    <Paper sx={{ p: 2, height: 400 }}>
                         <Typography variant="h6" gutterBottom>
                             Produtos em Ponta de Estoque
                         </Typography>
-                        <Typography color="textSecondary">
-                            Em desenvolvimento...
-                        </Typography>
+                        {produtosPontaEstoque.length > 0 ? (
+                            <TableContainer sx={{ maxHeight: 350 }}>
+                                <Table size="small">
+                                    <TableHead>
+                                        <TableRow>
+                                            <TableCell>Descrição</TableCell>
+                                            <TableCell align="right">Total</TableCell>
+                                            <TableCell align="right">Mín Venda</TableCell>
+                                        </TableRow>
+                                    </TableHead>
+                                    <TableBody>
+                                        {produtosPontaEstoque.map((produto) => (
+                                            <TableRow key={produto.id}>
+                                                <TableCell>
+                                                    <Typography variant="body2" noWrap>
+                                                        {produto.descricao}
+                                                    </Typography>
+                                                    <Typography variant="caption" color="textSecondary">
+                                                        {produto.fornecedor}
+                                                    </Typography>
+                                                </TableCell>
+                                                <TableCell align="right">
+                                                    {produto.totalDisponivel}
+                                                </TableCell>
+                                                <TableCell align="right">
+                                                    {produto.quantMinVenda}
+                                                </TableCell>
+                                            </TableRow>
+                                        ))}
+                                    </TableBody>
+                                </Table>
+                            </TableContainer>
+                        ) : (
+                            <Typography color="textSecondary" sx={{ mt: 2 }}>
+                                Nenhum produto em ponta de estoque encontrado.
+                            </Typography>
+                        )}
                     </Paper>
                 </Grid>
 
                 <Grid item xs={12} md={6}>
-                    <Paper sx={{ p: 2, height: 300 }}>
+                    <Paper sx={{ p: 2, height: 400 }}>
                         <Typography variant="h6" gutterBottom>
                             Produtos com Estoque Baixo na Separação
                         </Typography>
-                        <Typography color="textSecondary">
-                            Em desenvolvimento...
-                        </Typography>
+                        {produtosEstoqueBaixo.length > 0 ? (
+                            <TableContainer sx={{ maxHeight: 350 }}>
+                                <Table size="small">
+                                    <TableHead>
+                                        <TableRow>
+                                            <TableCell>Descrição</TableCell>
+                                            <TableCell align="right">Estoque</TableCell>
+                                            <TableCell align="right">%</TableCell>
+                                        </TableRow>
+                                    </TableHead>
+                                    <TableBody>
+                                        {produtosEstoqueBaixo.map((produto) => (
+                                            <TableRow key={produto.id}>
+                                                <TableCell>
+                                                    <Typography variant="body2" noWrap>
+                                                        {produto.descricao}
+                                                    </Typography>
+                                                    <Typography variant="caption" color="textSecondary">
+                                                        {produto.fornecedor}
+                                                    </Typography>
+                                                </TableCell>
+                                                <TableCell align="right">
+                                                    {produto.estoque}/{produto.deposito}
+                                                </TableCell>
+                                                <TableCell align="right" sx={{
+                                                    color: produto.percentualEstoque < 10 ? 'error.main' : 'warning.main'
+                                                }}>
+                                                    {produto.percentualEstoque}%
+                                                </TableCell>
+                                            </TableRow>
+                                        ))}
+                                    </TableBody>
+                                </Table>
+                            </TableContainer>
+                        ) : (
+                            <Typography color="textSecondary" sx={{ mt: 2 }}>
+                                Nenhum produto com estoque baixo encontrado.
+                            </Typography>
+                        )}
                     </Paper>
                 </Grid>
             </Grid>
