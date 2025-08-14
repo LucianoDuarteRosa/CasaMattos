@@ -12,6 +12,7 @@ import { SearchEnderecamentosDisponiveisUseCase } from '../../application/usecas
 import { EnderecamentoRepository } from '../../infrastructure/repositories/EnderecamentoRepository';
 import { authenticateToken } from '../middlewares/auth';
 import { addExecutorUserId } from '../middlewares/executorUserId';
+import { loggingService } from '../../application/services/LoggingService';
 
 const router = Router();
 
@@ -30,8 +31,8 @@ const createBulkEnderecamentoUseCase = new CreateBulkEnderecamentoUseCase(endere
 const getEnderecamentoUseCase = new GetEnderecamentoUseCase(enderecamentoRepository);
 const listEnderecamentosUseCase = new ListEnderecamentosUseCase(enderecamentoRepository);
 const listEnderecamentosDisponiveisUseCase = new ListEnderecamentosDisponiveisUseCase(enderecamentoRepository);
-const updateEnderecamentoUseCase = new UpdateEnderecamentoUseCase(enderecamentoRepository);
-const deleteEnderecamentoUseCase = new DeleteEnderecamentoUseCase(enderecamentoRepository);
+const updateEnderecamentoUseCase = new UpdateEnderecamentoUseCase(enderecamentoRepository, loggingService);
+const deleteEnderecamentoUseCase = new DeleteEnderecamentoUseCase(enderecamentoRepository, loggingService);
 const searchEnderecamentosUseCase = new SearchEnderecamentosUseCase(enderecamentoRepository);
 const searchEnderecamentosDisponiveisUseCase = new SearchEnderecamentosDisponiveisUseCase(enderecamentoRepository);
 

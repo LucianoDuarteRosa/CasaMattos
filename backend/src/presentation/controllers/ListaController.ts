@@ -6,6 +6,8 @@ import { CreateListaUseCase } from '../../application/usecases/CreateListaUseCas
 import { UpdateListaUseCase } from '../../application/usecases/UpdateListaUseCase';
 import { DeleteListaUseCase } from '../../application/usecases/DeleteListaUseCase';
 import { GetEnderecamentosDisponiveisUseCase } from '../../application/usecases/GetEnderecamentosDisponiveisUseCase';
+import { FinalizarListaUseCase } from '../../application/usecases/FinalizarListaUseCase';
+import { DesfazerFinalizacaoListaUseCase } from '../../application/usecases/DesfazerFinalizacaoListaUseCase';
 import { LoggingService } from '../../application/services/LoggingService';
 
 export class ListaController {
@@ -17,6 +19,8 @@ export class ListaController {
     private updateListaUseCase: UpdateListaUseCase;
     private deleteListaUseCase: DeleteListaUseCase;
     private getEnderecamentosDisponiveisUseCase: GetEnderecamentosDisponiveisUseCase;
+    private finalizarListaUseCase: FinalizarListaUseCase;
+    private desfazerFinalizacaoListaUseCase: DesfazerFinalizacaoListaUseCase;
 
     constructor() {
         this.listaRepository = new ListaRepository();
@@ -27,6 +31,8 @@ export class ListaController {
         this.updateListaUseCase = new UpdateListaUseCase(this.listaRepository, this.loggingService);
         this.deleteListaUseCase = new DeleteListaUseCase(this.listaRepository, this.loggingService);
         this.getEnderecamentosDisponiveisUseCase = new GetEnderecamentosDisponiveisUseCase(this.enderecamentoRepository);
+        this.finalizarListaUseCase = new FinalizarListaUseCase(this.listaRepository);
+        this.desfazerFinalizacaoListaUseCase = new DesfazerFinalizacaoListaUseCase(this.listaRepository);
     }
 
     async getAll(req: Request, res: Response): Promise<void> {
@@ -260,7 +266,8 @@ export class ListaController {
                 return;
             }
 
-            await this.listaRepository.finalizarLista(id);
+            const { executorUserId } = req.body;
+            await this.finalizarListaUseCase.execute(id, { executorUserId });
 
             res.status(200).json({
                 success: true,
@@ -285,7 +292,8 @@ export class ListaController {
                 return;
             }
 
-            await this.listaRepository.desfazerFinalizacao(id);
+            const { executorUserId } = req.body;
+            await this.desfazerFinalizacaoListaUseCase.execute(id, { executorUserId });
 
             res.status(200).json({
                 success: true,

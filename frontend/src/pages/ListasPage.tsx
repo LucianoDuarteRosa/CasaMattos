@@ -80,11 +80,9 @@ const ListasPage: React.FC = () => {
     const [enderecamentosSelecionados, setEnderecamentosSelecionados] = useState<GridRowSelectionModel>([]);
 
     // Estados de notificação
-    const [snackbar, setSnackbar] = useState({
-        open: false,
-        message: '',
-        severity: 'success' as 'success' | 'error'
-    });
+    const [snackbarOpen, setSnackbarOpen] = useState(false);
+    const [snackbarMessage, setSnackbarMessage] = useState('');
+    const [snackbarSeverity, setSnackbarSeverity] = useState<'success' | 'error'>('success');
 
     // Paginação
     const [page, setPage] = useState(0);
@@ -133,7 +131,16 @@ const ListasPage: React.FC = () => {
 
     // Mostrar snackbar
     const mostrarSnackbar = (message: string, severity: 'success' | 'error') => {
-        setSnackbar({ open: true, message, severity });
+        setSnackbarMessage(message);
+        setSnackbarSeverity(severity);
+        setSnackbarOpen(true);
+    };
+
+    const handleSnackbarClose = (_?: React.SyntheticEvent | Event, reason?: string) => {
+        if (reason === 'clickaway') {
+            return;
+        }
+        setSnackbarOpen(false);
     };
 
     // Limpar formulário
@@ -820,16 +827,18 @@ const ListasPage: React.FC = () => {
 
             {/* Snackbar */}
             <Snackbar
-                open={snackbar.open}
-                autoHideDuration={6000}
-                onClose={() => setSnackbar({ ...snackbar, open: false })}
+                open={snackbarOpen}
+                autoHideDuration={4000}
+                onClose={handleSnackbarClose}
+                anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
             >
                 <Alert
-                    onClose={() => setSnackbar({ ...snackbar, open: false })}
-                    severity={snackbar.severity}
+                    onClose={handleSnackbarClose}
+                    severity={snackbarSeverity}
                     sx={{ width: '100%' }}
+                    variant="filled"
                 >
-                    {snackbar.message}
+                    {snackbarMessage}
                 </Alert>
             </Snackbar>
         </Box>
