@@ -95,7 +95,7 @@ const DashboardPage: React.FC = () => {
         },
         {
             title: 'Metragem Total',
-            value: stats?.metragemTotal || '0,00',
+            value: stats?.metragemTotal + " m²" || '0,00',
             icon: <Business fontSize="large" />,
             color: '#388e3c',
         },
@@ -155,7 +155,7 @@ const DashboardPage: React.FC = () => {
                 <Grid item xs={12} md={6}>
                     <Paper sx={{ p: 2, height: 400 }}>
                         <Typography variant="h6" gutterBottom>
-                            Produtos em Ponta de Estoque
+                            Ponta de Estoque
                         </Typography>
                         {produtosPontaEstoque.length > 0 ? (
                             <TableContainer sx={{ maxHeight: 350 }}>
@@ -179,7 +179,7 @@ const DashboardPage: React.FC = () => {
                                                     </Typography>
                                                 </TableCell>
                                                 <TableCell align="right">
-                                                    {produto.totalDisponivel.toLocaleString('pt-BR', { maximumFractionDigits: 2 })}
+                                                    {produto.totalDisponivel.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} m²
                                                 </TableCell>
                                                 <TableCell align="right">
                                                     {produto.quantMinVenda.toLocaleString('pt-BR', { maximumFractionDigits: 2 })}
@@ -200,7 +200,7 @@ const DashboardPage: React.FC = () => {
                 <Grid item xs={12} md={6}>
                     <Paper sx={{ p: 2, height: 400 }}>
                         <Typography variant="h6" gutterBottom>
-                            Produtos com Estoque Baixo na Separação
+                            Estoque Baixo na Separação
                         </Typography>
                         {produtosEstoqueBaixo.length > 0 ? (
                             <TableContainer sx={{ maxHeight: 350 }}>
@@ -225,10 +225,10 @@ const DashboardPage: React.FC = () => {
                                                     </Typography>
                                                 </TableCell>
                                                 <TableCell align="right">
-                                                    {produto.estoque.toLocaleString('pt-BR', { maximumFractionDigits: 2 })}
+                                                    {produto.estoque.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} m²
                                                 </TableCell>
                                                 <TableCell align="right">
-                                                    {produto.cinquentaPorcento.toLocaleString('pt-BR', { maximumFractionDigits: 2 })}
+                                                    {produto.cinquentaPorcento.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} m²
                                                 </TableCell>
                                                 <TableCell align="right" sx={{
                                                     color: 'error.main'
