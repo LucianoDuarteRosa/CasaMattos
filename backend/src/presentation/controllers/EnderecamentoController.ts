@@ -24,7 +24,7 @@ export class EnderecamentoController {
 
     async create(req: Request, res: Response): Promise<void> {
         try {
-            const { tonalidade, bitola, lote, observacao, quantCaixas, disponivel, idProduto, idPredio } = req.body;
+            const { tonalidade, bitola, lote, observacao, quantCaixas, disponivel, idProduto, idPredio, executorUserId } = req.body;
 
             const enderecamento = await this.createEnderecamentoUseCase.execute({
                 tonalidade,
@@ -34,7 +34,8 @@ export class EnderecamentoController {
                 quantCaixas,
                 disponivel,
                 idProduto,
-                idPredio
+                idPredio,
+                executorUserId
             });
 
             res.status(201).json(enderecamento);
@@ -48,7 +49,7 @@ export class EnderecamentoController {
 
     async createBulk(req: Request, res: Response): Promise<void> {
         try {
-            const { quantidade, enderecamentoData } = req.body;
+            const { quantidade, enderecamentoData, executorUserId } = req.body;
 
             // Validação básica
             if (!quantidade || !enderecamentoData) {
@@ -60,7 +61,8 @@ export class EnderecamentoController {
 
             const result = await this.createBulkEnderecamentoUseCase.execute({
                 quantidade,
-                enderecamentoData
+                enderecamentoData,
+                executorUserId
             });
 
             res.status(201).json({
@@ -138,7 +140,7 @@ export class EnderecamentoController {
     async update(req: Request, res: Response): Promise<void> {
         try {
             const { id } = req.params;
-            const { tonalidade, bitola, lote, observacao, quantCaixas, disponivel, idProduto, idPredio } = req.body;
+            const { tonalidade, bitola, lote, observacao, quantCaixas, disponivel, idProduto, idPredio, executorUserId } = req.body;
 
             const enderecamento = await this.updateEnderecamentoUseCase.execute({
                 id: parseInt(id),
@@ -149,7 +151,8 @@ export class EnderecamentoController {
                 quantCaixas,
                 disponivel,
                 idProduto,
-                idPredio
+                idPredio,
+                executorUserId
             });
 
             if (!enderecamento) {
@@ -169,7 +172,8 @@ export class EnderecamentoController {
     async delete(req: Request, res: Response): Promise<void> {
         try {
             const { id } = req.params;
-            const deleted = await this.deleteEnderecamentoUseCase.execute(parseInt(id));
+            const { executorUserId } = req.body;
+            const deleted = await this.deleteEnderecamentoUseCase.execute(parseInt(id), executorUserId);
 
             if (!deleted) {
                 res.status(404).json({ error: 'Endereçamento não encontrado' });

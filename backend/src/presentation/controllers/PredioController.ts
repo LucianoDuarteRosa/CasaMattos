@@ -6,6 +6,7 @@ import { ListPrediosUseCase } from '../../application/usecases/ListPrediosUseCas
 import { UpdatePredioUseCase } from '../../application/usecases/UpdatePredioUseCase';
 import { DeletePredioUseCase } from '../../application/usecases/DeletePredioUseCase';
 import { SearchPrediosUseCase } from '../../application/usecases/SearchPrediosUseCase';
+import { loggingService } from '../../application/services/LoggingService';
 
 export class PredioController {
     private predioRepository: PredioRepository;
@@ -21,19 +22,20 @@ export class PredioController {
         this.createPredioUseCase = new CreatePredioUseCase(this.predioRepository);
         this.getPredioUseCase = new GetPredioUseCase(this.predioRepository);
         this.listPrediosUseCase = new ListPrediosUseCase(this.predioRepository);
-        this.updatePredioUseCase = new UpdatePredioUseCase(this.predioRepository);
-        this.deletePredioUseCase = new DeletePredioUseCase(this.predioRepository);
+        this.updatePredioUseCase = new UpdatePredioUseCase(this.predioRepository, loggingService);
+        this.deletePredioUseCase = new DeletePredioUseCase(this.predioRepository, loggingService);
         this.searchPrediosUseCase = new SearchPrediosUseCase(this.predioRepository);
     }
 
     async create(req: Request, res: Response): Promise<void> {
         try {
-            const { nomePredio, vagas, idRua } = req.body;
+            const { nomePredio, vagas, idRua, executorUserId } = req.body;
 
             const predio = await this.createPredioUseCase.execute({
                 nomePredio,
                 vagas,
-                idRua
+                idRua,
+                executorUserId
             });
 
             res.status(201).json(predio);
@@ -79,13 +81,14 @@ export class PredioController {
     async update(req: Request, res: Response): Promise<void> {
         try {
             const { id } = req.params;
-            const { nomePredio, vagas, idRua } = req.body;
+            const { nomePredio, vagas, idRua, executorUserId } = req.body;
 
             const predio = await this.updatePredioUseCase.execute({
                 id: parseInt(id),
                 nomePredio,
                 vagas,
-                idRua
+                idRua,
+                executorUserId
             });
 
             if (!predio) {
@@ -105,7 +108,8 @@ export class PredioController {
     async delete(req: Request, res: Response): Promise<void> {
         try {
             const { id } = req.params;
-            const deleted = await this.deletePredioUseCase.execute(parseInt(id));
+            const { executorUserId } = req.body;
+            const deleted = await this.deletePredioUseCase.execute(parseInt(id), executorUserId);
 
             if (!deleted) {
                 res.status(404).json({ error: 'Prédio não encontrado' });

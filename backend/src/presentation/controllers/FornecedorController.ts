@@ -28,7 +28,11 @@ export class FornecedorController {
 
     async create(req: Request, res: Response): Promise<void> {
         try {
-            const fornecedor = await this.createFornecedorUseCase.execute(req.body);
+            const { executorUserId, ...createData } = req.body;
+            const fornecedor = await this.createFornecedorUseCase.execute({
+                ...createData,
+                executorUserId
+            });
             res.status(201).json({
                 success: true,
                 data: fornecedor,
@@ -93,7 +97,11 @@ export class FornecedorController {
                 return;
             }
 
-            const fornecedor = await this.updateFornecedorUseCase.execute(id, req.body);
+            const { executorUserId, ...updateData } = req.body;
+            const fornecedor = await this.updateFornecedorUseCase.execute(id, {
+                ...updateData,
+                executorUserId
+            });
             res.status(200).json({
                 success: true,
                 data: fornecedor,
@@ -119,7 +127,8 @@ export class FornecedorController {
                 return;
             }
 
-            const sucesso = await this.deleteFornecedorUseCase.execute(id);
+            const { executorUserId } = req.body;
+            const sucesso = await this.deleteFornecedorUseCase.execute(id, executorUserId);
             if (sucesso) {
                 res.status(200).json({
                     success: true,

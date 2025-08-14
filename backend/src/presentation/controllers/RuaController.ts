@@ -6,6 +6,7 @@ import { ListRuasUseCase } from '../../application/usecases/ListRuasUseCase';
 import { UpdateRuaUseCase } from '../../application/usecases/UpdateRuaUseCase';
 import { DeleteRuaUseCase } from '../../application/usecases/DeleteRuaUseCase';
 import { SearchRuasUseCase } from '../../application/usecases/SearchRuasUseCase';
+import { loggingService } from '../../application/services/LoggingService';
 
 export class RuaController {
     private ruaRepository: RuaRepository;
@@ -21,17 +22,18 @@ export class RuaController {
         this.createRuaUseCase = new CreateRuaUseCase(this.ruaRepository);
         this.getRuaUseCase = new GetRuaUseCase(this.ruaRepository);
         this.listRuasUseCase = new ListRuasUseCase(this.ruaRepository);
-        this.updateRuaUseCase = new UpdateRuaUseCase(this.ruaRepository);
-        this.deleteRuaUseCase = new DeleteRuaUseCase(this.ruaRepository);
+        this.updateRuaUseCase = new UpdateRuaUseCase(this.ruaRepository, loggingService);
+        this.deleteRuaUseCase = new DeleteRuaUseCase(this.ruaRepository, loggingService);
         this.searchRuasUseCase = new SearchRuasUseCase(this.ruaRepository);
     }
 
     async create(req: Request, res: Response): Promise<void> {
         try {
-            const { nomeRua } = req.body;
+            const { nomeRua, executorUserId } = req.body;
 
             const rua = await this.createRuaUseCase.execute({
-                nomeRua
+                nomeRua,
+                executorUserId
             });
 
             res.status(201).json(rua);
@@ -77,11 +79,12 @@ export class RuaController {
     async update(req: Request, res: Response): Promise<void> {
         try {
             const { id } = req.params;
-            const { nomeRua } = req.body;
+            const { nomeRua, executorUserId } = req.body;
 
             const rua = await this.updateRuaUseCase.execute({
                 id: parseInt(id),
-                nomeRua
+                nomeRua,
+                executorUserId
             });
 
             if (!rua) {
@@ -101,7 +104,8 @@ export class RuaController {
     async delete(req: Request, res: Response): Promise<void> {
         try {
             const { id } = req.params;
-            const deleted = await this.deleteRuaUseCase.execute(parseInt(id));
+            const { executorUserId } = req.body;
+            const deleted = await this.deleteRuaUseCase.execute(parseInt(id), executorUserId);
 
             if (!deleted) {
                 res.status(404).json({ error: 'Rua não encontrada' });
