@@ -185,7 +185,7 @@ export class EnderecamentoRepository implements IEnderecamentoRepository {
     }
 
     private mapToEntity(model: any): IEnderecamento {
-        return {
+        const entity: any = {
             id: model.id,
             tonalidade: model.tonalidade,
             bitola: model.bitola,
@@ -199,5 +199,47 @@ export class EnderecamentoRepository implements IEnderecamentoRepository {
             createdAt: model.createdAt,
             updatedAt: model.updatedAt
         };
+
+        // Incluir dados relacionados se existirem
+        if (model.produto) {
+            entity.produto = {
+                id: model.produto.id,
+                codInterno: model.produto.codInterno,
+                descricao: model.produto.descricao,
+                codBarras: model.produto.codBarras,
+                codFabricante: model.produto.codFabricante,
+                quantMinVenda: model.produto.quantMinVenda,
+                deposito: model.produto.deposito,
+                estoque: model.produto.estoque,
+                custo: model.produto.custo,
+                quantCaixas: model.produto.quantCaixas,
+                idFornecedor: model.produto.idFornecedor,
+                createdAt: model.produto.createdAt,
+                updatedAt: model.produto.updatedAt
+            };
+        }
+
+        if (model.predio) {
+            entity.predio = {
+                id: model.predio.id,
+                nomePredio: model.predio.nomePredio,
+                vagas: model.predio.vagas,
+                idRua: model.predio.idRua,
+                createdAt: model.predio.createdAt,
+                updatedAt: model.predio.updatedAt
+            };
+
+            // Incluir dados da rua se existirem
+            if (model.predio.rua) {
+                entity.predio.rua = {
+                    id: model.predio.rua.id,
+                    nomeRua: model.predio.rua.nomeRua,
+                    createdAt: model.predio.rua.createdAt,
+                    updatedAt: model.predio.rua.updatedAt
+                };
+            }
+        }
+
+        return entity;
     }
 }

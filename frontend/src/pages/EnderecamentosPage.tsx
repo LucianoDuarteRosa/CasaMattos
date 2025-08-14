@@ -157,7 +157,7 @@ const EnderecamentosPage: React.FC = () => {
             field: 'actions',
             type: 'actions',
             headerName: 'Ações',
-            width: 80,
+            width: 110,
             minWidth: 70,
             getActions: (params) => {
                 const actions = [
