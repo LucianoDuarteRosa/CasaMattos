@@ -19,6 +19,7 @@ import { ruaService } from '@/services/ruaService';
 import { IRua } from '@/types';
 import { dataGridPtBR } from '@/utils/dataGridLocale';
 import { dataGridStyles } from '@/utils/dataGridStyles';
+import { useUppercaseForm } from '@/hooks';
 
 interface FormData {
     nomeRua: string;
@@ -29,9 +30,13 @@ const RuasPage: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [open, setOpen] = useState(false);
     const [editingRua, setEditingRua] = useState<IRua | null>(null);
-    const [formData, setFormData] = useState<FormData>({
-        nomeRua: '',
-    });
+
+    // Usar o hook personalizado para formulário com campos em maiúscula
+    const { data: formData, handleChange, setData: setFormData } = useUppercaseForm(
+        { nomeRua: '' } as FormData,
+        ['nomeRua'] // Nome da rua deve ser maiúscula
+    );
+
     const [searchTerm, setSearchTerm] = useState('');
     const [snackbarOpen, setSnackbarOpen] = useState(false);
     const [snackbarMessage, setSnackbarMessage] = useState('');
@@ -257,7 +262,7 @@ const RuasPage: React.FC = () => {
                         <TextField
                             label="Nome da Rua"
                             value={formData.nomeRua}
-                            onChange={(e) => setFormData(prev => ({ ...prev, nomeRua: e.target.value }))}
+                            onChange={handleChange('nomeRua')}
                             fullWidth
                             required
                             autoFocus

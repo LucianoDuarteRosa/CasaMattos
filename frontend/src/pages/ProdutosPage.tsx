@@ -24,6 +24,7 @@ import { fornecedorService } from '@/services/fornecedorService';
 import { IProduto, IFornecedor } from '@/types';
 import { dataGridPtBR } from '@/utils/dataGridLocale';
 import { dataGridStyles } from '@/utils/dataGridStyles';
+import { useUppercaseForm } from '@/hooks';
 
 interface FormData {
     codInterno: string;
@@ -108,18 +109,28 @@ const ProdutosPage: React.FC = () => {
     const [snackbarMessage, setSnackbarMessage] = useState('');
     const [snackbarSeverity, setSnackbarSeverity] = useState<'success' | 'error'>('success');
     const [searchTerm, setSearchTerm] = useState<string>('');
-    const [formData, setFormData] = useState<FormData>({
-        codInterno: '',
-        descricao: '',
-        quantMinVenda: '',
-        codBarras: '',
-        deposito: '',
-        estoque: '',
-        custo: '',
-        codFabricante: '',
-        quantCaixas: '',
-        idFornecedor: '',
-    });
+
+    // Usar o hook personalizado para formulário com campos em maiúscula
+    const { data: formData, handleChange, setData: setFormData } = useUppercaseForm(
+        {
+            codInterno: '',
+            descricao: '',
+            quantMinVenda: '',
+            codBarras: '',
+            deposito: '',
+            estoque: '',
+            custo: '',
+            codFabricante: '',
+            quantCaixas: '',
+            idFornecedor: '',
+        } as FormData,
+        ['descricao', 'deposito'] // Descrição e depósito devem ser maiúscula
+    );
+
+    // Função helper para atualizar campos individuais
+    const updateField = (field: keyof FormData, value: string) => {
+        setFormData({ [field]: value });
+    };
 
     const columns: GridColDef[] = [
         {
@@ -326,10 +337,12 @@ const ProdutosPage: React.FC = () => {
     const handleInputChange = (field: keyof FormData) => (
         event: React.ChangeEvent<HTMLInputElement>
     ) => {
-        setFormData(prev => ({
-            ...prev,
-            [field]: event.target.value
-        }));
+        // Para campos que devem ser maiúscula, usar handleChange
+        if (field === 'descricao' || field === 'deposito') {
+            handleChange(field)(event);
+        } else {
+            updateField(field, event.target.value);
+        }
     };
 
     // Handler para campos numéricos com formatação brasileira
@@ -349,10 +362,7 @@ const ProdutosPage: React.FC = () => {
             return;
         }
 
-        setFormData(prev => ({
-            ...prev,
-            [field]: value
-        }));
+        updateField(field, value);
     };
 
     const handleSubmit = async () => {

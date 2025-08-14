@@ -19,6 +19,7 @@ import { fornecedorService } from '@/services/fornecedorService';
 import { IFornecedor } from '@/types';
 import { dataGridPtBR } from '@/utils/dataGridLocale';
 import { dataGridStyles } from '@/utils/dataGridStyles';
+import { useUppercaseForm } from '@/hooks';
 
 interface FormData {
     razaoSocial: string;
@@ -34,10 +35,12 @@ const FornecedoresPage: React.FC = () => {
     const [snackbarOpen, setSnackbarOpen] = useState(false);
     const [snackbarMessage, setSnackbarMessage] = useState('');
     const [snackbarSeverity, setSnackbarSeverity] = useState<'success' | 'error'>('success');
-    const [formData, setFormData] = useState<FormData>({
-        razaoSocial: '',
-        cnpj: '',
-    });
+
+    // Usar o hook personalizado para formulário com campos em maiúscula
+    const { data: formData, handleChange, setData: setFormData } = useUppercaseForm(
+        { razaoSocial: '', cnpj: '' } as FormData,
+        ['razaoSocial'] // Apenas razaoSocial deve ser maiúscula, CNPJ mantém formatação original
+    );
 
     const showNotification = (message: string, severity: 'success' | 'error' | 'warning' | 'info' = 'info') => {
         setSnackbarMessage(message);
@@ -177,10 +180,14 @@ const FornecedoresPage: React.FC = () => {
     const handleInputChange = (field: keyof FormData) => (
         event: React.ChangeEvent<HTMLInputElement>
     ) => {
-        setFormData(prev => ({
-            ...prev,
-            [field]: event.target.value
-        }));
+        if (field === 'cnpj') {
+            const value = event.target.value;
+            const formattedValue = formatCNPJ(value);
+            setFormData({ cnpj: formattedValue });
+        } else {
+            // Para outros campos, usar o handler que aplica maiúscula automaticamente
+            handleChange(field)(event);
+        }
     };
 
     const handleSubmit = async () => {
@@ -231,15 +238,6 @@ const FornecedoresPage: React.FC = () => {
 
         // Aplica a máscara do CNPJ
         return nums.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, '$1.$2.$3/$4-$5');
-    };
-
-    const handleCNPJChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        const value = event.target.value;
-        const formattedValue = formatCNPJ(value);
-        setFormData(prev => ({
-            ...prev,
-            cnpj: formattedValue
-        }));
     };
 
     return (
@@ -333,7 +331,7 @@ const FornecedoresPage: React.FC = () => {
                                 fullWidth
                                 label="CNPJ *"
                                 value={formData.cnpj}
-                                onChange={handleCNPJChange}
+                                onChange={handleInputChange('cnpj')}
                                 placeholder="00.000.000/0000-00"
                                 inputProps={{ maxLength: 18 }}
                             />

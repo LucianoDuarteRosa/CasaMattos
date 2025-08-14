@@ -24,6 +24,7 @@ import { ruaService } from '@/services/ruaService';
 import { IPredio, IRua } from '@/types';
 import { dataGridPtBR } from '@/utils/dataGridLocale';
 import { dataGridStyles } from '@/utils/dataGridStyles';
+import { useUppercaseForm } from '@/hooks';
 
 interface FormData {
     nomePredio: string;
@@ -37,11 +38,18 @@ const PrediosPage: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [open, setOpen] = useState(false);
     const [editingPredio, setEditingPredio] = useState<IPredio | null>(null);
-    const [formData, setFormData] = useState<FormData>({
-        nomePredio: '',
-        vagas: '',
-        idRua: '',
-    });
+
+    // Usar o hook personalizado para formulário com campos em maiúscula
+    const { data: formData, handleChange, setData: setFormData } = useUppercaseForm(
+        { nomePredio: '', vagas: '', idRua: '' } as FormData,
+        ['nomePredio'] // Nome do prédio deve ser maiúscula
+    );
+
+    // Função helper para atualizar campos individuais
+    const updateField = (field: keyof FormData, value: string) => {
+        setFormData({ [field]: value });
+    };
+
     const [searchTerm, setSearchTerm] = useState('');
     const [snackbarOpen, setSnackbarOpen] = useState(false);
     const [snackbarMessage, setSnackbarMessage] = useState('');
@@ -309,7 +317,7 @@ const PrediosPage: React.FC = () => {
                         <TextField
                             label="Nome do Prédio"
                             value={formData.nomePredio}
-                            onChange={(e) => setFormData(prev => ({ ...prev, nomePredio: e.target.value }))}
+                            onChange={handleChange('nomePredio')}
                             fullWidth
                             required
                             autoFocus
@@ -323,7 +331,7 @@ const PrediosPage: React.FC = () => {
                             onChange={(e) => {
                                 const value = e.target.value;
                                 if (value === '' || /^\d+$/.test(value)) {
-                                    setFormData(prev => ({ ...prev, vagas: value }));
+                                    updateField('vagas', value);
                                 }
                             }}
                             fullWidth
@@ -336,7 +344,7 @@ const PrediosPage: React.FC = () => {
                             <InputLabel>Rua</InputLabel>
                             <Select
                                 value={formData.idRua}
-                                onChange={(e) => setFormData(prev => ({ ...prev, idRua: e.target.value }))}
+                                onChange={(e) => updateField('idRua', e.target.value as string)}
                                 label="Rua"
                             >
                                 <MenuItem value="">

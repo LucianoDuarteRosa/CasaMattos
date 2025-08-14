@@ -28,6 +28,7 @@ import { SERVER_BASE_URL } from '../services/api';
 import { IUsuario, CreateUsuarioData, UpdateUsuarioData, UpdateUsuarioSenhaData, IPerfil } from '../types';
 import { dataGridPtBR } from '../utils/dataGridLocale';
 import { dataGridStyles } from '../utils/dataGridStyles';
+import { useUppercaseForm } from '../hooks';
 
 const UsuariosPage: React.FC = () => {
     const [usuarios, setUsuarios] = useState<IUsuario[]>([]);
@@ -40,15 +41,25 @@ const UsuariosPage: React.FC = () => {
     const [dialogOpen, setDialogOpen] = useState(false);
     const [passwordDialogOpen, setPasswordDialogOpen] = useState(false);
     const [editingUsuario, setEditingUsuario] = useState<IUsuario | null>(null);
-    const [formData, setFormData] = useState<CreateUsuarioData>({
-        nomeCompleto: '',
-        nickname: '',
-        email: '',
-        telefone: '',
-        senha: '',
-        idPerfil: 2,
-        imagemUrl: ''
-    });
+
+    // Usar o hook personalizado para formulário com campos em maiúscula
+    const { data: formData, handleChange, setData: setFormData } = useUppercaseForm(
+        {
+            nomeCompleto: '',
+            nickname: '',
+            email: '',
+            telefone: '',
+            senha: '',
+            idPerfil: 2,
+            imagemUrl: ''
+        } as CreateUsuarioData,
+        ['nomeCompleto', 'nickname'] // Nome e nickname devem ser maiúscula
+    );
+
+    // Função helper para atualizar campos individuais
+    const updateField = (field: keyof CreateUsuarioData, value: any) => {
+        setFormData({ [field]: value });
+    };
     const [passwordData, setPasswordData] = useState<UpdateUsuarioSenhaData>({
         senhaAtual: '',
         novaSenha: ''
@@ -532,7 +543,7 @@ const UsuariosPage: React.FC = () => {
                             fullWidth
                             label="Nome Completo"
                             value={formData.nomeCompleto}
-                            onChange={(e) => setFormData(prev => ({ ...prev, nomeCompleto: e.target.value }))}
+                            onChange={handleChange('nomeCompleto')}
                             margin="normal"
                             required
                         />
@@ -540,7 +551,7 @@ const UsuariosPage: React.FC = () => {
                             fullWidth
                             label="Nickname"
                             value={formData.nickname}
-                            onChange={(e) => setFormData(prev => ({ ...prev, nickname: e.target.value }))}
+                            onChange={handleChange('nickname')}
                             margin="normal"
                             required
                         />
@@ -549,7 +560,7 @@ const UsuariosPage: React.FC = () => {
                             label="Email"
                             type="email"
                             value={formData.email}
-                            onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+                            onChange={(e) => updateField('email', e.target.value)}
                             margin="normal"
                             required
                         />
@@ -557,7 +568,7 @@ const UsuariosPage: React.FC = () => {
                             fullWidth
                             label="Telefone"
                             value={formData.telefone}
-                            onChange={(e) => setFormData(prev => ({ ...prev, telefone: e.target.value }))}
+                            onChange={(e) => updateField('telefone', e.target.value)}
                             margin="normal"
                         />
 
@@ -567,7 +578,7 @@ const UsuariosPage: React.FC = () => {
                                 fullWidth
                                 label="URL da Imagem"
                                 value={formData.imagemUrl}
-                                onChange={(e) => setFormData(prev => ({ ...prev, imagemUrl: e.target.value }))}
+                                onChange={(e) => updateField('imagemUrl', e.target.value)}
                                 InputProps={{
                                     endAdornment: (
                                         <InputAdornment position="end">
@@ -617,7 +628,7 @@ const UsuariosPage: React.FC = () => {
                                 label="Senha"
                                 type="password"
                                 value={formData.senha}
-                                onChange={(e) => setFormData(prev => ({ ...prev, senha: e.target.value }))}
+                                onChange={(e) => updateField('senha', e.target.value)}
                                 margin="normal"
                                 required
                             />
@@ -627,7 +638,7 @@ const UsuariosPage: React.FC = () => {
                             <Select
                                 value={formData.idPerfil}
                                 label="Perfil"
-                                onChange={(e) => setFormData(prev => ({ ...prev, idPerfil: e.target.value as number }))}
+                                onChange={(e) => updateField('idPerfil', e.target.value as number)}
                             >
                                 {perfis.map(perfil => (
                                     <MenuItem key={perfil.id} value={perfil.id}>

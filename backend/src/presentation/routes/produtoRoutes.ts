@@ -1,12 +1,16 @@
 import { Router } from 'express';
 import { ProdutoController } from '../controllers/ProdutoController';
 import { authenticateToken } from '../middlewares/auth';
+import { addExecutorUserId } from '../middlewares/executorUserId';
 
 const router = Router();
 const produtoController = new ProdutoController();
 
 // Todas as rotas requerem autenticação
 router.use(authenticateToken);
+
+// Adicionar executorUserId automaticamente para operações que modificam dados
+router.use(addExecutorUserId);
 
 // GET /api/produtos - Listar produtos com paginação
 router.get('/', (req, res) => produtoController.list(req, res));
