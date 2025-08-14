@@ -272,6 +272,7 @@ export class ListaController {
     async finalizarLista(req: Request, res: Response): Promise<void> {
         try {
             const id = parseInt(req.params.id);
+
             if (isNaN(id)) {
                 res.status(400).json({
                     success: false,

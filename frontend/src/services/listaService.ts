@@ -57,11 +57,11 @@ export const listaService = {
     },
 
     finalizarLista: async (idLista: number): Promise<void> => {
-        await api.post(`/listas/${idLista}/finalizar`);
+        await api.patch(`/listas/${idLista}/finalizar`);
     },
 
     desfazerFinalizacao: async (idLista: number): Promise<void> => {
-        await api.post(`/listas/${idLista}/desfazer-finalizacao`);
+        await api.patch(`/listas/${idLista}/desfazer-finalizacao`);
     },
 
     searchEnderecamentosDisponiveis: async (filtros: {
