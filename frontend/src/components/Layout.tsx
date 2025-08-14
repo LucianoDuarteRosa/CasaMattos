@@ -31,6 +31,8 @@ import {
     People,
     DarkMode,
     LightMode,
+    Apartment,
+    Signpost,
 } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { authService } from '@/services/authService';
@@ -98,8 +100,8 @@ const Layout: React.FC<Props> = ({ children, isDarkMode, toggleDarkMode }) => {
             { text: 'Dashboard', icon: <Dashboard />, path: '/dashboard' },
             { text: 'Produtos', icon: <Inventory />, path: '/produtos' },
             { text: 'Fornecedores', icon: <Business />, path: '/fornecedores' },
-            { text: 'Ruas', icon: <LocationOn />, path: '/ruas' },
-            { text: 'Prédios', icon: <LocationOn />, path: '/predios' },
+            { text: 'Ruas', icon: <Signpost />, path: '/ruas' },
+            { text: 'Prédios', icon: <Apartment />, path: '/predios' },
             { text: 'Endereçamentos', icon: <LocationOn />, path: '/enderecamentos' },
             { text: 'Listas', icon: <Assignment />, path: '/listas' },
         ];
