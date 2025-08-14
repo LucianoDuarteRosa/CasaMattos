@@ -12,12 +12,9 @@ import {
     Alert,
     Grid,
     Snackbar,
-    Select,
-    MenuItem,
-    FormControl,
-    InputLabel,
     Checkbox,
     FormControlLabel,
+    Autocomplete,
 } from '@mui/material';
 import { DataGrid, GridColDef, GridActionsCellItem } from '@mui/x-data-grid';
 import { Add, Edit, Visibility, Delete } from '@mui/icons-material';
@@ -360,9 +357,15 @@ const EnderecamentosPage: React.FC = () => {
         }));
     };
 
-    const handleProdutoChange = (produtoId: string) => {
-        const produto = produtos.find(p => p.id === parseInt(produtoId));
-        updateProdutoData(produto);
+    const handleProdutoChange = (produto: IProduto | null) => {
+        updateProdutoData(produto || undefined);
+    };
+
+    const handlePredioChange = (predio: PredioWithRua | null) => {
+        setFormData(prev => ({
+            ...prev,
+            idPredio: predio ? predio.id.toString() : '',
+        }));
     };
 
     const updateProdutoData = (produto?: IProduto) => {
@@ -586,56 +589,80 @@ const EnderecamentosPage: React.FC = () => {
                                 />
                             </Grid>
                             <Grid item xs={12} sm={6}>
-                                <FormControl fullWidth margin="normal" required>
-                                    <InputLabel>Produto</InputLabel>
-                                    <Select
-                                        value={formData.idProduto}
-                                        label="Produto"
-                                        onChange={(e) => handleProdutoChange(e.target.value)}
-                                        renderValue={(selected) => {
-                                            if (!selected) {
-                                                return <em>Selecione um produto</em>;
-                                            }
-                                            const produto = produtos.find(p => p.id === parseInt(selected));
-                                            return getProdutoInfo(produto);
-                                        }}
-                                    >
-                                        <MenuItem value=" ">
-                                            <em>Selecione um produto</em>
-                                        </MenuItem>
-                                        {produtos.map((produto) => (
-                                            <MenuItem key={produto.id} value={produto.id.toString()}>
-                                                {getProdutoInfo(produto)}
-                                            </MenuItem>
-                                        ))}
-                                    </Select>
-                                </FormControl>
+                                <Autocomplete
+                                    options={produtos}
+                                    value={produtos.find(p => p.id.toString() === formData.idProduto) || null}
+                                    onChange={(_, value) => handleProdutoChange(value)}
+                                    getOptionLabel={(option) => getProdutoInfo(option)}
+                                    renderInput={(params) => (
+                                        <TextField
+                                            {...params}
+                                            label="Produto *"
+                                            margin="normal"
+                                            fullWidth
+                                            placeholder="Digite para pesquisar produtos..."
+                                        />
+                                    )}
+                                    filterOptions={(options, { inputValue }) => {
+                                        const filtered = options.filter((option) => {
+                                            const produtoInfo = getProdutoInfo(option).toLowerCase();
+                                            return produtoInfo.includes(inputValue.toLowerCase());
+                                        });
+                                        return filtered;
+                                    }}
+                                    renderOption={(props, option) => (
+                                        <li {...props} key={option.id}>
+                                            <Box component="div">
+                                                <Typography variant="body1">{option.descricao}</Typography>
+                                                <Typography variant="body2" color="text.secondary">
+                                                    {option.codInterno}
+                                                    {option.codBarras && ` | ${option.codBarras}`}
+                                                    {option.codFabricante && ` | ${option.codFabricante}`}
+                                                </Typography>
+                                            </Box>
+                                        </li>
+                                    )}
+                                    isOptionEqualToValue={(option, value) => option.id === value.id}
+                                    noOptionsText="Nenhum produto encontrado"
+                                    loadingText="Carregando..."
+                                />
                             </Grid>
                             <Grid item xs={12} sm={6}>
-                                <FormControl fullWidth margin="normal" required>
-                                    <InputLabel>Rua-Prédio</InputLabel>
-                                    <Select
-                                        value={formData.idPredio}
-                                        label="Rua-Prédio"
-                                        onChange={(e) => setFormData({ ...formData, idPredio: e.target.value })}
-                                        renderValue={(selected) => {
-                                            if (!selected) {
-                                                return <em>Selecione um prédio</em>;
-                                            }
-                                            const predio = predios.find(p => p.id === parseInt(selected));
-                                            return getPredioInfo(predio);
-                                        }}
-                                    >
-                                        <MenuItem value="">
-                                            <em>Selecione um prédio</em>
-                                        </MenuItem>
-                                        {predios.map((predio) => (
-                                            <MenuItem key={predio.id} value={predio.id.toString()}>
-                                                {getPredioInfo(predio)}
-                                            </MenuItem>
-                                        ))}
-                                    </Select>
-                                </FormControl>
+                                <Autocomplete
+                                    options={predios}
+                                    value={predios.find(p => p.id.toString() === formData.idPredio) || null}
+                                    onChange={(_, value) => handlePredioChange(value)}
+                                    getOptionLabel={(option) => getPredioInfo(option)}
+                                    renderInput={(params) => (
+                                        <TextField
+                                            {...params}
+                                            label="Rua-Prédio *"
+                                            margin="normal"
+                                            fullWidth
+                                            placeholder="Digite para pesquisar prédios..."
+                                        />
+                                    )}
+                                    filterOptions={(options, { inputValue }) => {
+                                        const filtered = options.filter((option) => {
+                                            const predioInfo = getPredioInfo(option).toLowerCase();
+                                            return predioInfo.includes(inputValue.toLowerCase());
+                                        });
+                                        return filtered;
+                                    }}
+                                    renderOption={(props, option) => (
+                                        <li {...props} key={option.id}>
+                                            <Box component="div">
+                                                <Typography variant="body1">{option.nomePredio}</Typography>
+                                                <Typography variant="body2" color="text.secondary">
+                                                    {option.rua?.nomeRua || 'Rua não informada'}
+                                                </Typography>
+                                            </Box>
+                                        </li>
+                                    )}
+                                    isOptionEqualToValue={(option, value) => option.id === value.id}
+                                    noOptionsText="Nenhum prédio encontrado"
+                                    loadingText="Carregando..."
+                                />
                             </Grid>
                             <Grid item xs={12} sm={6}>
                                 <TextField
@@ -748,22 +775,62 @@ const EnderecamentosPage: React.FC = () => {
                                         variant="filled"
                                     />
                                 </Grid>
-                                <Grid item xs={12}>
+                                <Grid item xs={12} sm={6}>
                                     <TextField
                                         margin="normal"
                                         fullWidth
-                                        label="Produto"
-                                        value={getProdutoInfo(viewingEnderecamento.produto)}
+                                        label="Código Interno"
+                                        value={viewingEnderecamento.produto?.codInterno || 'Não informado'}
                                         InputProps={{ readOnly: true }}
                                         variant="filled"
                                     />
                                 </Grid>
-                                <Grid item xs={12}>
+                                <Grid item xs={12} sm={6}>
                                     <TextField
                                         margin="normal"
                                         fullWidth
-                                        label="Localização"
-                                        value={getPredioInfo(viewingEnderecamento.predio)}
+                                        label="Descrição do Produto"
+                                        value={viewingEnderecamento.produto?.descricao || 'Não informado'}
+                                        InputProps={{ readOnly: true }}
+                                        variant="filled"
+                                    />
+                                </Grid>
+                                <Grid item xs={12} sm={6}>
+                                    <TextField
+                                        margin="normal"
+                                        fullWidth
+                                        label="Código de Barras"
+                                        value={viewingEnderecamento.produto?.codBarras || 'Não informado'}
+                                        InputProps={{ readOnly: true }}
+                                        variant="filled"
+                                    />
+                                </Grid>
+                                <Grid item xs={12} sm={6}>
+                                    <TextField
+                                        margin="normal"
+                                        fullWidth
+                                        label="Código do Fabricante"
+                                        value={viewingEnderecamento.produto?.codFabricante || 'Não informado'}
+                                        InputProps={{ readOnly: true }}
+                                        variant="filled"
+                                    />
+                                </Grid>
+                                <Grid item xs={12} sm={6}>
+                                    <TextField
+                                        margin="normal"
+                                        fullWidth
+                                        label="Nome da Rua"
+                                        value={viewingEnderecamento.predio?.rua?.nomeRua || 'Não informado'}
+                                        InputProps={{ readOnly: true }}
+                                        variant="filled"
+                                    />
+                                </Grid>
+                                <Grid item xs={12} sm={6}>
+                                    <TextField
+                                        margin="normal"
+                                        fullWidth
+                                        label="Nome do Prédio"
+                                        value={viewingEnderecamento.predio?.nomePredio || 'Não informado'}
                                         InputProps={{ readOnly: true }}
                                         variant="filled"
                                     />
