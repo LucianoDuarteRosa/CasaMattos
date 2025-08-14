@@ -1,4 +1,4 @@
-import { IEnderecamentoRepository } from '../../domain/repositories/IEnderecamentoRepository';
+import { IEnderecamentoRepository, SearchEnderecamentosDisponiveisFilters } from '../../domain/repositories/IEnderecamentoRepository';
 import { IEnderecamento } from '../../domain/entities/Enderecamento';
 import EnderecamentoModel from '../database/models/EnderecamentoModel';
 import ProdutoModel from '../database/models/ProdutoModel';
@@ -191,6 +191,64 @@ export class EnderecamentoRepository implements IEnderecamentoRepository {
                             { codFabricante: { [Op.iLike]: `%${termo}%` } }
                         ]
                     }
+                },
+                {
+                    model: PredioModel,
+                    as: 'predio',
+                    include: [{
+                        model: RuaModel,
+                        as: 'rua'
+                    }]
+                }
+            ],
+            order: [
+                ['id', 'ASC']
+            ]
+        });
+
+        return enderecamentos.map(enderecamento => this.mapToEntity(enderecamento));
+    }
+
+    async searchAvailableByFilters(filters: SearchEnderecamentosDisponiveisFilters): Promise<IEnderecamento[]> {
+        const whereConditions: any = {
+            disponivel: true // Apenas endereçamentos disponíveis
+        };
+
+        const produtoWhere: any = {};
+
+        // Construir condições de filtro baseado nos parâmetros
+        if (filters.codigoFabricante) {
+            produtoWhere.codigoFabricante = {
+                [Op.like]: `%${filters.codigoFabricante}%`
+            };
+        }
+
+        if (filters.codigoInterno) {
+            produtoWhere.codigoInterno = {
+                [Op.like]: `%${filters.codigoInterno}%`
+            };
+        }
+
+        if (filters.codigoBarras) {
+            produtoWhere.codigoBarras = {
+                [Op.like]: `%${filters.codigoBarras}%`
+            };
+        }
+
+        if (filters.descricao) {
+            produtoWhere.descricao = {
+                [Op.like]: `%${filters.descricao}%`
+            };
+        }
+
+        const enderecamentos = await EnderecamentoModel.findAll({
+            where: whereConditions,
+            include: [
+                {
+                    model: ProdutoModel,
+                    as: 'produto',
+                    where: Object.keys(produtoWhere).length > 0 ? produtoWhere : undefined,
+                    required: Object.keys(produtoWhere).length > 0
                 },
                 {
                     model: PredioModel,

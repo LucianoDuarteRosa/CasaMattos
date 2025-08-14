@@ -7,6 +7,7 @@ import { ListEnderecamentosDisponiveisUseCase } from '../../application/usecases
 import { UpdateEnderecamentoUseCase } from '../../application/usecases/UpdateEnderecamentoUseCase';
 import { DeleteEnderecamentoUseCase } from '../../application/usecases/DeleteEnderecamentoUseCase';
 import { SearchEnderecamentosUseCase } from '../../application/usecases/SearchEnderecamentosUseCase';
+import { SearchEnderecamentosDisponiveisUseCase } from '../../application/usecases/SearchEnderecamentosDisponiveisUseCase';
 
 export class EnderecamentoController {
     constructor(
@@ -17,7 +18,8 @@ export class EnderecamentoController {
         private listEnderecamentosDisponiveisUseCase: ListEnderecamentosDisponiveisUseCase,
         private updateEnderecamentoUseCase: UpdateEnderecamentoUseCase,
         private deleteEnderecamentoUseCase: DeleteEnderecamentoUseCase,
-        private searchEnderecamentosUseCase: SearchEnderecamentosUseCase
+        private searchEnderecamentosUseCase: SearchEnderecamentosUseCase,
+        private searchEnderecamentosDisponiveisUseCase: SearchEnderecamentosDisponiveisUseCase
     ) { }
 
     async create(req: Request, res: Response): Promise<void> {
@@ -78,7 +80,22 @@ export class EnderecamentoController {
     async getById(req: Request, res: Response): Promise<void> {
         try {
             const { id } = req.params;
-            const enderecamento = await this.getEnderecamentoUseCase.execute(parseInt(id));
+
+            // Validar se o ID foi fornecido e é válido
+            if (!id || id === 'undefined' || id === 'null') {
+                res.status(400).json({ error: 'ID do endereçamento é obrigatório' });
+                return;
+            }
+
+            const parsedId = parseInt(id);
+
+            // Validar se o parsing foi bem sucedido
+            if (isNaN(parsedId) || parsedId <= 0) {
+                res.status(400).json({ error: 'ID do endereçamento deve ser um número válido e maior que zero' });
+                return;
+            }
+
+            const enderecamento = await this.getEnderecamentoUseCase.execute(parsedId);
 
             if (!enderecamento) {
                 res.status(404).json({ error: 'Endereçamento não encontrado' });
@@ -181,6 +198,27 @@ export class EnderecamentoController {
             res.json(enderecamentos);
         } catch (error) {
             console.error('Erro ao buscar endereçamentos:', error);
+            res.status(400).json({
+                error: error instanceof Error ? error.message : 'Erro interno do servidor'
+            });
+        }
+    }
+
+    async searchDisponiveis(req: Request, res: Response): Promise<void> {
+        try {
+            const { codigoFabricante, codigoInterno, codigoBarras, descricao } = req.query;
+
+            const filters = {
+                codigoFabricante: codigoFabricante as string,
+                codigoInterno: codigoInterno as string,
+                codigoBarras: codigoBarras as string,
+                descricao: descricao as string
+            };
+
+            const enderecamentos = await this.searchEnderecamentosDisponiveisUseCase.execute(filters);
+            res.json({ data: enderecamentos });
+        } catch (error) {
+            console.error('Erro ao buscar endereçamentos disponíveis:', error);
             res.status(400).json({
                 error: error instanceof Error ? error.message : 'Erro interno do servidor'
             });

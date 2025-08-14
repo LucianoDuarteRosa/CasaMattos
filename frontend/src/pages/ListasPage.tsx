@@ -403,19 +403,31 @@ const ListasPage: React.FC = () => {
     // Colunas da grid de endereçamentos da lista
     const colunasEnderecamentosLista: GridColDef[] = [
         {
-            field: 'id',
-            headerName: 'ID',
-            width: 80,
+            field: 'codInterno',
+            headerName: 'Código Interno',
+            width: 120,
+            valueGetter: (params) => {
+                const produto = params.row.produto;
+                return produto?.codInterno || 'N/A';
+            },
         },
         {
-            field: 'produto',
-            headerName: 'Produto',
-            width: 300,
+            field: 'descricao',
+            headerName: 'Descrição',
+            width: 200,
             flex: 1,
             valueGetter: (params) => {
                 const produto = params.row.produto;
-                if (!produto) return 'N/A';
-                return `${produto.codInterno} - ${produto.descricao}`;
+                return produto?.descricao || 'N/A';
+            },
+        },
+        {
+            field: 'codFabricante',
+            headerName: 'Cód Fabricante',
+            width: 120,
+            valueGetter: (params) => {
+                const produto = params.row.produto;
+                return produto?.codFabricante || 'N/A';
             },
         },
         {
@@ -434,16 +446,24 @@ const ListasPage: React.FC = () => {
             width: 120,
         },
         {
-            field: 'disponivel',
-            headerName: 'Status',
+            field: 'quantMinVenda',
+            headerName: 'Qtd Min Venda',
             width: 120,
-            renderCell: (params) => (
-                <Chip
-                    label={params.value ? 'Disponível' : 'Indisponível'}
-                    color={params.value ? 'success' : 'default'}
-                    size="small"
-                />
-            ),
+            valueGetter: (params) => {
+                const produto = params.row.produto;
+                return produto?.quantMinVenda || 'N/A';
+            },
+        },
+        {
+            field: 'localizacao',
+            headerName: 'Localização',
+            width: 200,
+            valueGetter: (params) => {
+                const predio = params.row.predio;
+                if (!predio) return 'N/A';
+                const rua = predio.rua?.nomeRua || 'Rua N/I';
+                return `${rua} - ${predio.nomePredio}`;
+            },
         },
         {
             field: 'actions',
@@ -465,21 +485,31 @@ const ListasPage: React.FC = () => {
     // Colunas da grid de endereçamentos disponíveis
     const colunasEnderecamentosDisponiveis: GridColDef[] = [
         {
-            field: 'id',
-            headerName: 'ID',
-            width: 80,
+            field: 'codInterno',
+            headerName: 'Código Interno',
+            width: 120,
+            valueGetter: (params) => {
+                const produto = params.row.produto;
+                return produto?.codInterno || 'N/A';
+            },
         },
         {
-            field: 'produto',
-            headerName: 'Produto',
-            width: 350,
+            field: 'descricao',
+            headerName: 'Descrição',
+            width: 200,
             flex: 1,
             valueGetter: (params) => {
                 const produto = params.row.produto;
-                if (!produto) return 'N/A';
-                const codBarras = produto.codBarras ? ` | ${produto.codBarras}` : '';
-                const codFabricante = produto.codFabricante ? ` | ${produto.codFabricante}` : '';
-                return `${produto.codInterno} - ${produto.descricao}${codBarras}${codFabricante}`;
+                return produto?.descricao || 'N/A';
+            },
+        },
+        {
+            field: 'codFabricante',
+            headerName: 'Cód Fabricante',
+            width: 120,
+            valueGetter: (params) => {
+                const produto = params.row.produto;
+                return produto?.codFabricante || 'N/A';
             },
         },
         {
@@ -496,6 +526,26 @@ const ListasPage: React.FC = () => {
             field: 'quantCaixas',
             headerName: 'Qtd Caixas',
             width: 120,
+        },
+        {
+            field: 'quantMinVenda',
+            headerName: 'Qtd Min Venda',
+            width: 120,
+            valueGetter: (params) => {
+                const produto = params.row.produto;
+                return produto?.quantMinVenda || 'N/A';
+            },
+        },
+        {
+            field: 'localizacao',
+            headerName: 'Localização',
+            width: 200,
+            valueGetter: (params) => {
+                const predio = params.row.predio;
+                if (!predio) return 'N/A';
+                const rua = predio.rua?.nomeRua || 'Rua N/I';
+                return `${rua} - ${predio.nomePredio}`;
+            },
         },
     ];
 

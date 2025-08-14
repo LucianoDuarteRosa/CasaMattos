@@ -145,17 +145,13 @@ const EnderecamentosPage: React.FC = () => {
         },
         {
             field: 'disponivel',
-            headerName: 'Status',
-            width: 100,
-            minWidth: 80,
-            renderCell: (params) => (
-                <span style={{
-                    color: params.value ? '#4caf50' : '#f44336',
-                    fontWeight: 'bold'
-                }}>
-                    {params.value ? 'Disponível' : 'Indisponível'}
-                </span>
-            )
+            headerName: 'Qtd Min Venda',
+            width: 120,
+            minWidth: 90,
+            valueGetter: (params) => {
+                const produto = params.row.produto;
+                return produto?.quantMinVenda || 'N/A';
+            }
         },
         {
             field: 'actions',

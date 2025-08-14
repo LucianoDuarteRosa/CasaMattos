@@ -1,5 +1,12 @@
 import { IEnderecamento } from '../entities/Enderecamento';
 
+export interface SearchEnderecamentosDisponiveisFilters {
+    codigoFabricante?: string;
+    codigoInterno?: string;
+    codigoBarras?: string;
+    descricao?: string;
+}
+
 export interface IEnderecamentoRepository {
     create(enderecamento: Omit<IEnderecamento, 'id'>): Promise<IEnderecamento>;
     createBulk(enderecamento: Omit<IEnderecamento, 'id'>, quantidade: number): Promise<IEnderecamento[]>;
@@ -11,4 +18,5 @@ export interface IEnderecamentoRepository {
     findByProduto(idProduto: number): Promise<IEnderecamento[]>;
     findDisponiveis(): Promise<IEnderecamento[]>;
     findByCodInternoOuDescricao(termo: string): Promise<IEnderecamento[]>;
+    searchAvailableByFilters(filters: SearchEnderecamentosDisponiveisFilters): Promise<IEnderecamento[]>;
 }
