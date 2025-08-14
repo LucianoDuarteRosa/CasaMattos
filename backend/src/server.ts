@@ -8,6 +8,7 @@ import sequelize from './infrastructure/database/connection';
 import authRoutes from './presentation/routes/authRoutes';
 import produtoRoutes from './presentation/routes/produtoRoutes';
 import fornecedorRoutes from './presentation/routes/fornecedorRoutes';
+import enderecamentoRoutes from './presentation/routes/enderecamentoRoutes';
 import { usuarioRoutes } from './presentation/routes/usuarioRoutes';
 import { ruaRoutes } from './presentation/routes/ruaRoutes';
 import { predioRoutes } from './presentation/routes/predioRoutes';
@@ -71,8 +72,8 @@ app.use('/api/fornecedores', fornecedorRoutes);
 app.use('/api/usuarios', usuarioRoutes);
 app.use('/api/ruas', ruaRoutes);
 app.use('/api/predios', predioRoutes);
+app.use('/api/enderecamentos', enderecamentoRoutes);
 app.use('/api/listas', (req, res) => res.json({ message: 'Listas routes not implemented yet' }));
-app.use('/api/enderecamentos', (req, res) => res.json({ message: 'Enderecamentos routes not implemented yet' }));
 
 // Middleware de tratamento de erros
 app.use((error: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
