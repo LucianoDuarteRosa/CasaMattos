@@ -54,5 +54,30 @@ export const listaService = {
 
     baixarLista: async (dadosBaixa: IBaixaListaRequest): Promise<void> => {
         await api.post('/listas/baixar', dadosBaixa);
+    },
+
+    finalizarLista: async (idLista: number): Promise<void> => {
+        await api.post(`/listas/${idLista}/finalizar`);
+    },
+
+    desfazerFinalizacao: async (idLista: number): Promise<void> => {
+        await api.post(`/listas/${idLista}/desfazer-finalizacao`);
+    },
+
+    searchEnderecamentosDisponiveis: async (filtros: {
+        codigoFabricante?: string;
+        codigoInterno?: string;
+        codigoBarras?: string;
+        descricao?: string;
+    }): Promise<IEnderecamento[]> => {
+        const params = new URLSearchParams();
+
+        if (filtros.codigoFabricante) params.append('codigoFabricante', filtros.codigoFabricante);
+        if (filtros.codigoInterno) params.append('codigoInterno', filtros.codigoInterno);
+        if (filtros.codigoBarras) params.append('codigoBarras', filtros.codigoBarras);
+        if (filtros.descricao) params.append('descricao', filtros.descricao);
+
+        const response = await api.get<IApiResponse<IEnderecamento[]>>(`/enderecamentos/search-disponiveis?${params}`);
+        return response.data.data!;
     }
 };
