@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { EnderecamentoController } from '../controllers/EnderecamentoController';
 import { CreateEnderecamentoUseCase } from '../../application/usecases/CreateEnderecamentoUseCase';
+import { CreateBulkEnderecamentoUseCase } from '../../application/usecases/CreateBulkEnderecamentoUseCase';
 import { GetEnderecamentoUseCase } from '../../application/usecases/GetEnderecamentoUseCase';
 import { ListEnderecamentosUseCase } from '../../application/usecases/ListEnderecamentosUseCase';
 import { ListEnderecamentosDisponiveisUseCase } from '../../application/usecases/ListEnderecamentosDisponiveisUseCase';
@@ -20,6 +21,7 @@ const enderecamentoRepository = new EnderecamentoRepository();
 
 // Instanciar use cases
 const createEnderecamentoUseCase = new CreateEnderecamentoUseCase(enderecamentoRepository);
+const createBulkEnderecamentoUseCase = new CreateBulkEnderecamentoUseCase(enderecamentoRepository);
 const getEnderecamentoUseCase = new GetEnderecamentoUseCase(enderecamentoRepository);
 const listEnderecamentosUseCase = new ListEnderecamentosUseCase(enderecamentoRepository);
 const listEnderecamentosDisponiveisUseCase = new ListEnderecamentosDisponiveisUseCase(enderecamentoRepository);
@@ -30,6 +32,7 @@ const searchEnderecamentosUseCase = new SearchEnderecamentosUseCase(enderecament
 // Instanciar controller
 const enderecamentoController = new EnderecamentoController(
     createEnderecamentoUseCase,
+    createBulkEnderecamentoUseCase,
     getEnderecamentoUseCase,
     listEnderecamentosUseCase,
     listEnderecamentosDisponiveisUseCase,
@@ -40,6 +43,7 @@ const enderecamentoController = new EnderecamentoController(
 
 // Rotas
 router.post('/', (req, res) => enderecamentoController.create(req, res));
+router.post('/bulk', (req, res) => enderecamentoController.createBulk(req, res));
 router.get('/', (req, res) => enderecamentoController.getAll(req, res));
 router.get('/disponiveis', (req, res) => enderecamentoController.getDisponiveis(req, res));
 router.get('/search', (req, res) => enderecamentoController.search(req, res));

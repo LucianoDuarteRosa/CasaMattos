@@ -70,7 +70,7 @@ const LoginPage: React.FC = () => {
                     >
                         <Login sx={{ m: 1, bgcolor: 'primary.main', borderRadius: '50%', p: 1, color: 'white', fontSize: 40 }} />
                         <Typography component="h1" variant="h4" gutterBottom>
-                            Casa Mattos
+                            Armazenamento
                         </Typography>
                         <Typography variant="subtitle1" color="text.secondary" gutterBottom>
                             Sistema de Gestão

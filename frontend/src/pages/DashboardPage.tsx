@@ -18,25 +18,25 @@ const DashboardPage: React.FC = () => {
     const stats = [
         {
             title: 'Produtos',
-            value: '1,234',
+            value: '954',
             icon: <Inventory fontSize="large" />,
             color: '#1976d2',
         },
         {
-            title: 'Fornecedores',
-            value: '45',
+            title: 'Metragem Total',
+            value: '23.515,25',
             icon: <Business fontSize="large" />,
             color: '#388e3c',
         },
         {
             title: 'Endereçamentos',
-            value: '2,567',
+            value: '2.567',
             icon: <LocationOn fontSize="large" />,
             color: '#f57c00',
         },
         {
             title: 'Listas Ativas',
-            value: '12',
+            value: '2',
             icon: <Assignment fontSize="large" />,
             color: '#d32f2f',
         },
@@ -84,7 +84,7 @@ const DashboardPage: React.FC = () => {
                 <Grid item xs={12} md={6}>
                     <Paper sx={{ p: 2, height: 300 }}>
                         <Typography variant="h6" gutterBottom>
-                            Atividades Recentes
+                            Produtos em Ponta de Estoque
                         </Typography>
                         <Typography color="textSecondary">
                             Em desenvolvimento...
@@ -95,7 +95,7 @@ const DashboardPage: React.FC = () => {
                 <Grid item xs={12} md={6}>
                     <Paper sx={{ p: 2, height: 300 }}>
                         <Typography variant="h6" gutterBottom>
-                            Produtos com Estoque Baixo
+                            Produtos com Estoque Baixo na Separação
                         </Typography>
                         <Typography color="textSecondary">
                             Em desenvolvimento...

@@ -157,7 +157,7 @@ const Layout: React.FC<Props> = ({ children, isDarkMode, toggleDarkMode }) => {
         <div>
             <Toolbar>
                 <Typography variant="h6" noWrap component="div">
-                    Casa Mattos
+                    Armazenamento
                 </Typography>
             </Toolbar>
             <List>

@@ -4,12 +4,37 @@ import EnderecamentoModel from '../database/models/EnderecamentoModel';
 import ProdutoModel from '../database/models/ProdutoModel';
 import PredioModel from '../database/models/PredioModel';
 import RuaModel from '../database/models/RuaModel';
-import { Op } from 'sequelize';
+import { Op, Transaction } from 'sequelize';
+import sequelize from '../database/connection';
 
 export class EnderecamentoRepository implements IEnderecamentoRepository {
     async create(enderecamentoData: Omit<IEnderecamento, 'id'>): Promise<IEnderecamento> {
         const enderecamento = await EnderecamentoModel.create(enderecamentoData);
         return this.mapToEntity(enderecamento);
+    }
+
+    async createBulk(enderecamentoData: Omit<IEnderecamento, 'id'>, quantidade: number): Promise<IEnderecamento[]> {
+        const transaction: Transaction = await sequelize.transaction();
+
+        try {
+            const enderecamentos: any[] = [];
+
+            // Criar múltiplos endereçamentos dentro de uma transação
+            for (let i = 0; i < quantidade; i++) {
+                const enderecamento = await EnderecamentoModel.create(enderecamentoData, { transaction });
+                enderecamentos.push(enderecamento);
+            }
+
+            // Commit da transação
+            await transaction.commit();
+
+            // Retornar os endereçamentos criados mapeados para entidades
+            return enderecamentos.map(enderecamento => this.mapToEntity(enderecamento));
+        } catch (error) {
+            // Rollback em caso de erro
+            await transaction.rollback();
+            throw error;
+        }
     }
 
     async findById(id: number): Promise<IEnderecamento | null> {

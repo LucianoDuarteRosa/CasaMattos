@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { CreateEnderecamentoUseCase } from '../../application/usecases/CreateEnderecamentoUseCase';
+import { CreateBulkEnderecamentoUseCase } from '../../application/usecases/CreateBulkEnderecamentoUseCase';
 import { GetEnderecamentoUseCase } from '../../application/usecases/GetEnderecamentoUseCase';
 import { ListEnderecamentosUseCase } from '../../application/usecases/ListEnderecamentosUseCase';
 import { ListEnderecamentosDisponiveisUseCase } from '../../application/usecases/ListEnderecamentosDisponiveisUseCase';
@@ -10,6 +11,7 @@ import { SearchEnderecamentosUseCase } from '../../application/usecases/SearchEn
 export class EnderecamentoController {
     constructor(
         private createEnderecamentoUseCase: CreateEnderecamentoUseCase,
+        private createBulkEnderecamentoUseCase: CreateBulkEnderecamentoUseCase,
         private getEnderecamentoUseCase: GetEnderecamentoUseCase,
         private listEnderecamentosUseCase: ListEnderecamentosUseCase,
         private listEnderecamentosDisponiveisUseCase: ListEnderecamentosDisponiveisUseCase,
@@ -36,6 +38,37 @@ export class EnderecamentoController {
             res.status(201).json(enderecamento);
         } catch (error) {
             console.error('Erro ao criar endereçamento:', error);
+            res.status(400).json({
+                error: error instanceof Error ? error.message : 'Erro interno do servidor'
+            });
+        }
+    }
+
+    async createBulk(req: Request, res: Response): Promise<void> {
+        try {
+            const { quantidade, enderecamentoData } = req.body;
+
+            // Validação básica
+            if (!quantidade || !enderecamentoData) {
+                res.status(400).json({
+                    error: 'Quantidade e dados do endereçamento são obrigatórios'
+                });
+                return;
+            }
+
+            const result = await this.createBulkEnderecamentoUseCase.execute({
+                quantidade,
+                enderecamentoData
+            });
+
+            res.status(201).json({
+                message: `${result.count} endereçamentos criados com sucesso!`,
+                success: result.success,
+                count: result.count,
+                data: result.enderecamentos
+            });
+        } catch (error) {
+            console.error('Erro ao criar endereçamentos em lote:', error);
             res.status(400).json({
                 error: error instanceof Error ? error.message : 'Erro interno do servidor'
             });

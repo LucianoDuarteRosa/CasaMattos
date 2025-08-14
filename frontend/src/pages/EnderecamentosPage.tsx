@@ -32,6 +32,7 @@ interface FormData {
     lote: string;
     observacao: string;
     quantCaixas: string;
+    quantidadeAdicoes: string;
     disponivel: boolean;
     idProduto: string;
     idPredio: string;
@@ -61,6 +62,7 @@ const EnderecamentosPage: React.FC = () => {
         lote: '',
         observacao: '',
         quantCaixas: '',
+        quantidadeAdicoes: '1',
         disponivel: true,
         idProduto: '',
         idPredio: '',
@@ -280,6 +282,7 @@ const EnderecamentosPage: React.FC = () => {
             lote: enderecamento.lote || '',
             observacao: enderecamento.observacao || '',
             quantCaixas: enderecamento.quantCaixas?.toString() || quantCaixasDefault,
+            quantidadeAdicoes: '1',
             disponivel: enderecamento.disponivel,
             idProduto: enderecamento.idProduto.toString(),
             idPredio: enderecamento.idPredio.toString(),
@@ -318,6 +321,7 @@ const EnderecamentosPage: React.FC = () => {
             lote: '',
             observacao: '',
             quantCaixas: '',
+            quantidadeAdicoes: '1',
             disponivel: true,
             idProduto: '',
             idPredio: '',
@@ -341,6 +345,7 @@ const EnderecamentosPage: React.FC = () => {
             lote: '',
             observacao: '',
             quantCaixas: '',
+            quantidadeAdicoes: '1',
             disponivel: true,
             idProduto: '',
             idPredio: '',
@@ -437,6 +442,18 @@ const EnderecamentosPage: React.FC = () => {
                 return;
             }
 
+            // Validação da quantidade de adições
+            const quantidadeAdicoes = parseInt(formData.quantidadeAdicoes);
+            if (isNaN(quantidadeAdicoes) || quantidadeAdicoes < 1) {
+                setError('Quantidade de adições deve ser um número maior que 0');
+                return;
+            }
+
+            if (quantidadeAdicoes > 100) {
+                setError('Quantidade de adições não pode ser maior que 100');
+                return;
+            }
+
             const enderecamentoData = {
                 tonalidade: formData.tonalidade,
                 bitola: formData.bitola,
@@ -449,14 +466,23 @@ const EnderecamentosPage: React.FC = () => {
             };
 
             if (editingEnderecamento) {
+                // Modo edição - não usar quantidade de adições
                 await enderecamentoService.update(editingEnderecamento.id, enderecamentoData);
                 showNotification('Endereçamento atualizado com sucesso!', 'success');
             } else {
-                await enderecamentoService.create(enderecamentoData);
-                showNotification('Endereçamento criado com sucesso!', 'success');
-            }
-
-            await loadEnderecamentos();
+                // Modo criação - usar a nova API de criação em lote
+                if (quantidadeAdicoes === 1) {
+                    await enderecamentoService.create(enderecamentoData);
+                    showNotification('Endereçamento criado com sucesso!', 'success');
+                } else {
+                    // Usar nova API de criação em lote
+                    const response = await enderecamentoService.createBulk({
+                        quantidade: quantidadeAdicoes,
+                        enderecamentoData
+                    });
+                    showNotification(response.message, 'success');
+                }
+            } await loadEnderecamentos();
             handleClose();
 
         } catch (error: any) {
@@ -703,6 +729,20 @@ const EnderecamentosPage: React.FC = () => {
                                     onChange={handleInputChange('quantCaixas')}
                                 />
                             </Grid>
+                            {!editingEnderecamento && (
+                                <Grid item xs={12} sm={6}>
+                                    <TextField
+                                        margin="normal"
+                                        fullWidth
+                                        label="Quantidade de Adições"
+                                        type="number"
+                                        value={formData.quantidadeAdicoes}
+                                        onChange={handleInputChange('quantidadeAdicoes')}
+                                        inputProps={{ min: 1, max: 100 }}
+                                        helperText="Número de endereçamentos idênticos a criar (máx. 100)"
+                                    />
+                                </Grid>
+                            )}
                             <Grid item xs={12}>
                                 <TextField
                                     margin="normal"

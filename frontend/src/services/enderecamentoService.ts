@@ -48,6 +48,18 @@ export interface CreateEnderecamentoData {
     idPredio: number;
 }
 
+export interface CreateBulkEnderecamentoData {
+    quantidade: number;
+    enderecamentoData: CreateEnderecamentoData;
+}
+
+export interface CreateBulkResponse {
+    message: string;
+    success: boolean;
+    count: number;
+    data: IEnderecamento[];
+}
+
 export interface UpdateEnderecamentoData {
     tonalidade?: string;
     bitola?: string;
@@ -86,6 +98,12 @@ export const enderecamentoService = {
     // Criar novo endereçamento
     async create(data: CreateEnderecamentoData): Promise<IEnderecamento> {
         const response = await api.post('/', data);
+        return response.data;
+    },
+
+    // Criar múltiplos endereçamentos idênticos
+    async createBulk(data: CreateBulkEnderecamentoData): Promise<CreateBulkResponse> {
+        const response = await api.post('/bulk', data);
         return response.data;
     },
 
