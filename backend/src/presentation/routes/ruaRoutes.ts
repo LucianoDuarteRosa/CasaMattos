@@ -1,12 +1,16 @@
 import { Router } from 'express';
 import { RuaController } from '../controllers/RuaController';
 import { authenticateToken } from '../middlewares/auth';
+import { addExecutorUserId } from '../middlewares/executorUserId';
 
 const router = Router();
 const ruaController = new RuaController();
 
 // Aplicar middleware de autenticação em todas as rotas
 router.use(authenticateToken);
+
+// Adicionar executorUserId automaticamente para operações que modificam dados
+router.use(addExecutorUserId);
 
 // Rotas CRUD para ruas
 router.post('/', (req, res) => ruaController.create(req, res));

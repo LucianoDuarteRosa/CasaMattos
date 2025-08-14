@@ -4,6 +4,7 @@ import { IEnderecamento } from '../entities/Enderecamento';
 export interface IListaRepository {
     create(lista: Omit<ILista, 'id'>): Promise<ILista>;
     findById(id: number): Promise<ILista | null>;
+    findByNome(nome: string): Promise<ILista | null>;
     findAll(): Promise<ILista[]>;
     findAndCountAll(options: {
         offset?: number;

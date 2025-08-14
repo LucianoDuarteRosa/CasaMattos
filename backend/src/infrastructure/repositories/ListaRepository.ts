@@ -31,6 +31,14 @@ export class ListaRepository implements IListaRepository {
         return this.mapToEntity(lista);
     }
 
+    async findByNome(nome: string): Promise<ILista | null> {
+        const lista = await ListaModel.findOne({
+            where: { nome: nome.trim() }
+        });
+        if (!lista) return null;
+        return this.mapToEntity(lista);
+    }
+
     async findAndCountAll(options: {
         offset?: number;
         limit?: number;

@@ -1,12 +1,16 @@
 import { Router } from 'express';
 import { PredioController } from '../controllers/PredioController';
 import { authenticateToken } from '../middlewares/auth';
+import { addExecutorUserId } from '../middlewares/executorUserId';
 
 const router = Router();
 const predioController = new PredioController();
 
 // Aplicar middleware de autenticação em todas as rotas
 router.use(authenticateToken);
+
+// Adicionar executorUserId automaticamente para operações que modificam dados
+router.use(addExecutorUserId);
 
 // Rotas CRUD para prédios
 router.post('/', (req, res) => predioController.create(req, res));

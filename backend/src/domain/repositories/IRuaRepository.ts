@@ -7,4 +7,5 @@ export interface IRuaRepository {
     update(id: number, data: Partial<Omit<IRua, 'id' | 'createdAt' | 'updatedAt'>>): Promise<IRua | null>;
     delete(id: number): Promise<boolean>;
     findByNome(nomeRua: string): Promise<IRua[]>;
+    findByNomeExato(nomeRua: string): Promise<IRua | null>;
 }

@@ -1,28 +1,25 @@
-import { IRuaRepository } from '../../domain/repositories/IRuaRepository';
+import { IListaRepository } from '../../domain/repositories/IListaRepository';
 import { LoggingService, LogAction } from '../services/LoggingService';
 
-export class DeleteRuaUseCase {
+export class DeleteListaUseCase {
     constructor(
-        private ruaRepository: IRuaRepository,
+        private listaRepository: IListaRepository,
         private loggingService: LoggingService
     ) { }
 
     async execute(id: number, executorUserId?: number): Promise<boolean> {
         try {
-            if (!id || id <= 0) {
-                throw new Error('ID da rua é obrigatório e deve ser maior que zero');
-            }
-
-            const existingRua = await this.ruaRepository.findById(id);
-            if (!existingRua) {
-                const error = new Error('Rua não encontrada');
+            // Verificar se a lista existe
+            const listaExistente = await this.listaRepository.findById(id);
+            if (!listaExistente) {
+                const error = new Error('Lista não encontrada');
 
                 if (executorUserId) {
                     await this.loggingService.logAction({
                         userId: executorUserId,
-                        entity: 'Ruas',
+                        entity: 'Listas',
                         action: LogAction.DELETE,
-                        description: `Tentativa de excluir rua inexistente (ID: ${id})`,
+                        description: `Tentativa de excluir lista inexistente (ID: ${id})`,
                         error
                     });
                 }
@@ -30,15 +27,15 @@ export class DeleteRuaUseCase {
                 throw error;
             }
 
-            const resultado = await this.ruaRepository.delete(id);
+            const resultado = await this.listaRepository.delete(id);
 
             // Log de sucesso
             if (executorUserId) {
                 await this.loggingService.logDelete(
                     executorUserId,
-                    'Ruas',
-                    existingRua,
-                    `Rua excluída: ${existingRua.nomeRua} (ID: ${id})`
+                    'Listas',
+                    listaExistente,
+                    `Lista excluída: ${listaExistente.nome} (ID: ${id})`
                 );
             }
 
@@ -48,9 +45,9 @@ export class DeleteRuaUseCase {
             if (executorUserId) {
                 await this.loggingService.logAction({
                     userId: executorUserId,
-                    entity: 'Ruas',
+                    entity: 'Listas',
                     action: LogAction.DELETE,
-                    description: `Erro ao excluir rua (ID: ${id}): ${error.message}`,
+                    description: `Erro ao excluir lista (ID: ${id}): ${error.message}`,
                     error
                 });
             }

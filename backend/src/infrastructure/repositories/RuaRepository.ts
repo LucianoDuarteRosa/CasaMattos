@@ -56,6 +56,17 @@ export class RuaRepository implements IRuaRepository {
         return ruas.map(rua => this.mapToEntity(rua));
     }
 
+    async findByNomeExato(nomeRua: string): Promise<IRua | null> {
+        const rua = await RuaModel.findOne({
+            where: {
+                nomeRua: {
+                    [Op.iLike]: nomeRua
+                }
+            }
+        });
+        return rua ? this.mapToEntity(rua) : null;
+    }
+
     private mapToEntity(model: RuaModel): IRua {
         return {
             id: model.id,

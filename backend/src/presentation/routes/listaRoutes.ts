@@ -1,12 +1,16 @@
 import { Router } from 'express';
 import { ListaController } from '../controllers/ListaController';
 import { authenticateToken } from '../middlewares/auth';
+import { addExecutorUserId } from '../middlewares/executorUserId';
 
 const router = Router();
 const listaController = new ListaController();
 
 // Todas as rotas requerem autenticação
 router.use(authenticateToken);
+
+// Adicionar executorUserId automaticamente para operações que modificam dados
+router.use(addExecutorUserId);
 
 // GET /api/listas - Listar listas com paginação
 router.get('/', (req, res) => listaController.getAll(req, res));

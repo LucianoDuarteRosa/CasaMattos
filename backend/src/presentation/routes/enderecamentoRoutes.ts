@@ -11,11 +11,15 @@ import { SearchEnderecamentosUseCase } from '../../application/usecases/SearchEn
 import { SearchEnderecamentosDisponiveisUseCase } from '../../application/usecases/SearchEnderecamentosDisponiveisUseCase';
 import { EnderecamentoRepository } from '../../infrastructure/repositories/EnderecamentoRepository';
 import { authenticateToken } from '../middlewares/auth';
+import { addExecutorUserId } from '../middlewares/executorUserId';
 
 const router = Router();
 
 // Aplicar middleware de autenticação em todas as rotas
 router.use(authenticateToken);
+
+// Adicionar executorUserId automaticamente para operações que modificam dados
+router.use(addExecutorUserId);
 
 // Instanciar repositório
 const enderecamentoRepository = new EnderecamentoRepository();

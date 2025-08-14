@@ -2,18 +2,30 @@ import { Request, Response } from 'express';
 import { ListaRepository } from '../../infrastructure/repositories/ListaRepository';
 import { EnderecamentoRepository } from '../../infrastructure/repositories/EnderecamentoRepository';
 import { GetListasUseCase } from '../../application/usecases/GetListasUseCase';
+import { CreateListaUseCase } from '../../application/usecases/CreateListaUseCase';
+import { UpdateListaUseCase } from '../../application/usecases/UpdateListaUseCase';
+import { DeleteListaUseCase } from '../../application/usecases/DeleteListaUseCase';
 import { GetEnderecamentosDisponiveisUseCase } from '../../application/usecases/GetEnderecamentosDisponiveisUseCase';
+import { LoggingService } from '../../application/services/LoggingService';
 
 export class ListaController {
     private listaRepository: ListaRepository;
     private enderecamentoRepository: EnderecamentoRepository;
+    private loggingService: LoggingService;
     private getListasUseCase: GetListasUseCase;
+    private createListaUseCase: CreateListaUseCase;
+    private updateListaUseCase: UpdateListaUseCase;
+    private deleteListaUseCase: DeleteListaUseCase;
     private getEnderecamentosDisponiveisUseCase: GetEnderecamentosDisponiveisUseCase;
 
     constructor() {
         this.listaRepository = new ListaRepository();
         this.enderecamentoRepository = new EnderecamentoRepository();
+        this.loggingService = LoggingService.getInstance();
         this.getListasUseCase = new GetListasUseCase(this.listaRepository);
+        this.createListaUseCase = new CreateListaUseCase(this.listaRepository, this.loggingService);
+        this.updateListaUseCase = new UpdateListaUseCase(this.listaRepository, this.loggingService);
+        this.deleteListaUseCase = new DeleteListaUseCase(this.listaRepository, this.loggingService);
         this.getEnderecamentosDisponiveisUseCase = new GetEnderecamentosDisponiveisUseCase(this.enderecamentoRepository);
     }
 
@@ -73,21 +85,9 @@ export class ListaController {
     async create(req: Request, res: Response): Promise<void> {
         try {
             const { nome } = req.body;
+            const executorUserId = req.body.executorUserId;
 
-            if (!nome || !nome.trim()) {
-                res.status(400).json({
-                    success: false,
-                    message: 'Nome da lista é obrigatório'
-                });
-                return;
-            }
-
-            const listaData = {
-                nome: nome.trim(),
-                disponivel: true
-            };
-
-            const lista = await this.listaRepository.create(listaData);
+            const lista = await this.createListaUseCase.execute(nome, executorUserId);
 
             res.status(201).json({
                 success: true,
@@ -114,25 +114,9 @@ export class ListaController {
             }
 
             const { nome } = req.body;
-            if (!nome || !nome.trim()) {
-                res.status(400).json({
-                    success: false,
-                    message: 'Nome da lista é obrigatório'
-                });
-                return;
-            }
+            const executorUserId = req.body.executorUserId;
 
-            const updatedLista = await this.listaRepository.update(id, {
-                nome: nome.trim()
-            });
-
-            if (!updatedLista) {
-                res.status(404).json({
-                    success: false,
-                    message: 'Lista não encontrada'
-                });
-                return;
-            }
+            const updatedLista = await this.updateListaUseCase.execute(id, nome, executorUserId);
 
             res.status(200).json({
                 success: true,
@@ -158,14 +142,9 @@ export class ListaController {
                 return;
             }
 
-            const deleted = await this.listaRepository.delete(id);
-            if (!deleted) {
-                res.status(404).json({
-                    success: false,
-                    message: 'Lista não encontrada'
-                });
-                return;
-            }
+            const executorUserId = req.body.executorUserId;
+
+            await this.deleteListaUseCase.execute(id, executorUserId);
 
             res.status(200).json({
                 success: true,
