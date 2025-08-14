@@ -8,6 +8,7 @@ import { UpdateUsuarioUseCase } from '../../application/usecases/UpdateUsuarioUs
 import { UpdateUsuarioSenhaUseCase } from '../../application/usecases/UpdateUsuarioSenhaUseCase';
 import { DeleteUsuarioUseCase } from '../../application/usecases/DeleteUsuarioUseCase';
 import { UsuarioRepository } from '../../infrastructure/repositories/UsuarioRepository';
+import { LoggingHelper } from '../../application/helpers/LoggingHelper';
 
 const usuarioRepository = new UsuarioRepository();
 const createUsuarioUseCase = new CreateUsuarioUseCase(usuarioRepository);
@@ -60,6 +61,9 @@ export class UsuarioController {
 
     async create(req: AuthenticatedRequest, res: Response): Promise<void> {
         try {
+            // Adicionar executorUserId ao request
+            req.body.executorUserId = req.user!.id;
+
             const usuario = await createUsuarioUseCase.execute(req.body, req.user!.idPerfil);
 
             // Remove senha do retorno
@@ -103,6 +107,9 @@ export class UsuarioController {
     async update(req: AuthenticatedRequest, res: Response): Promise<void> {
         try {
             const id = parseInt(req.params.id);
+            // Adicionar executorUserId ao request
+            req.body.executorUserId = req.user!.id;
+
             const usuario = await updateUsuarioUseCase.execute(id, req.body, req.user!.idPerfil, req.user!.id);
 
             // Remove senha do retorno
@@ -131,8 +138,8 @@ export class UsuarioController {
             // Buscar o usuário antes de deletar para obter a imagem
             const userToDelete = await getUsuarioUseCase.execute(id, req.user!.idPerfil);
 
-            // Executar a deleção do usuário
-            await deleteUsuarioUseCase.execute(id, req.user!.idPerfil);
+            // Executar a deleção do usuário com executorUserId
+            await deleteUsuarioUseCase.execute(id, req.user!.idPerfil, req.user!.id);
 
             // Remover imagem se existir
             if (userToDelete?.imagemUrl) {
@@ -190,7 +197,7 @@ export class UsuarioController {
             console.log(`🔄 Atualizando usuário ${userId} com imagemUrl: ${imageUrl}`);
             const updatedUsuario = await updateUsuarioUseCase.execute(
                 userId,
-                { imagemUrl: imageUrl },
+                { imagemUrl: imageUrl, executorUserId: req.user!.id },
                 req.user!.idPerfil,
                 req.user!.id
             );

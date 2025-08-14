@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import UsuarioModel from '../../infrastructure/database/models/UsuarioModel';
 import PerfilModel from '../../infrastructure/database/models/PerfilModel';
+import { loggingService } from '../../application/services/LoggingService';
 
 export class AuthController {
     static async login(req: Request, res: Response) {
@@ -31,6 +32,8 @@ export class AuthController {
             });
 
             if (!usuario) {
+                // Log tentativa de login com email inválido
+                await loggingService.logError(0, 'Usuario', new Error('Tentativa de login com email inválido'), `Login falhado para email: ${email}`);
                 return res.status(401).json({
                     success: false,
                     message: 'Email ou senha inválidos'
@@ -40,11 +43,18 @@ export class AuthController {
             // Verificar senha
             const senhaValida = await bcrypt.compare(senha, usuario.senha);
             if (!senhaValida) {
+                // Log tentativa de login com senha inválida
+                await loggingService.logError(usuario.id, 'Usuario', new Error('Tentativa de login com senha inválida'), `Login falhado para usuário: ${usuario.nomeCompleto} (${usuario.email})`);
                 return res.status(401).json({
                     success: false,
                     message: 'Email ou senha inválidos'
                 });
             }
+
+            // Log login bem-sucedido
+            const userAgent = req.headers['user-agent'] || 'Unknown';
+            const ip = req.ip || req.connection.remoteAddress || 'Unknown';
+            await loggingService.logLogin(usuario.id, `Login realizado com sucesso - IP: ${ip}, Navegador: ${userAgent}`);
 
             // Gerar JWT token
             const token = jwt.sign(
@@ -71,6 +81,22 @@ export class AuthController {
 
         } catch (error) {
             console.error('Erro no login:', error);
+            res.status(500).json({
+                success: false,
+                message: 'Erro interno do servidor'
+            });
+        }
+    }
+
+    static async logout(req: Request, res: Response) {
+        try {
+            // O logging já foi feito pelo middleware
+            res.json({
+                success: true,
+                message: 'Logout realizado com sucesso'
+            });
+        } catch (error) {
+            console.error('Erro no logout:', error);
             res.status(500).json({
                 success: false,
                 message: 'Erro interno do servidor'

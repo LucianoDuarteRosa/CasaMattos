@@ -42,10 +42,23 @@ app.use(cors({
     credentials: true
 }));
 
-// Rate limiting
+// Rate limiting - Configuração mais permissiva para desenvolvimento
 const limiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutos
-    max: 100 // limite de 100 requests por IP por janela de tempo
+    windowMs: 1 * 60 * 1000, // 1 minuto
+    max: process.env.NODE_ENV === 'production' ? 60 : 1000, // 60 em produção, 1000 em desenvolvimento
+    message: {
+        error: 'Muitas requisições do mesmo IP, tente novamente em alguns minutos.',
+        retryAfter: 60
+    },
+    standardHeaders: true, // Retorna informações de rate limit nos headers `RateLimit-*`
+    legacyHeaders: false, // Desabilita headers `X-RateLimit-*`
+    skip: (req) => {
+        // Pular rate limit para rotas de health check em desenvolvimento
+        if (process.env.NODE_ENV !== 'production' && req.url === '/health') {
+            return true;
+        }
+        return false;
+    }
 });
 app.use(limiter);
 

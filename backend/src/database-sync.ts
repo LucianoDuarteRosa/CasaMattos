@@ -9,6 +9,7 @@ import './infrastructure/database/models/ProdutoModel';
 import './infrastructure/database/models/UsuarioModel';
 import './infrastructure/database/models/ListaModel';
 import './infrastructure/database/models/EnderecamentoModel';
+import './infrastructure/database/models/LogModel';
 
 async function syncDatabase() {
     try {

@@ -6,6 +6,7 @@ import RuaModel from './RuaModel';
 import PredioModel from './PredioModel';
 import ListaModel from './ListaModel';
 import EnderecamentoModel from './EnderecamentoModel';
+import LogModel from './LogModel';
 
 // Associações Usuario <-> Perfil
 UsuarioModel.belongsTo(PerfilModel, {
@@ -73,6 +74,17 @@ PredioModel.hasMany(EnderecamentoModel, {
     as: 'enderecamentos'
 });
 
+// Associações Log <-> Usuario
+LogModel.belongsTo(UsuarioModel, {
+    foreignKey: 'idUsuario',
+    as: 'usuario'
+});
+
+UsuarioModel.hasMany(LogModel, {
+    foreignKey: 'idUsuario',
+    as: 'logs'
+});
+
 export {
     UsuarioModel,
     PerfilModel,
@@ -81,5 +93,6 @@ export {
     RuaModel,
     PredioModel,
     ListaModel,
-    EnderecamentoModel
+    EnderecamentoModel,
+    LogModel
 };
