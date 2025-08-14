@@ -656,7 +656,7 @@ const ListasPage: React.FC = () => {
                         fullWidth
                         variant="outlined"
                         value={formData.nome}
-                        onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
+                        onChange={(e) => setFormData({ ...formData, nome: e.target.value.toUpperCase() })}
                         sx={{ mt: 2 }}
                     />
                 </DialogContent>
@@ -678,7 +678,7 @@ const ListasPage: React.FC = () => {
                         fullWidth
                         variant="outlined"
                         value={formData.nome}
-                        onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
+                        onChange={(e) => setFormData({ ...formData, nome: e.target.value.toUpperCase() })}
                         sx={{ mt: 2 }}
                     />
                 </DialogContent>

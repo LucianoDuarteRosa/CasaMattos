@@ -28,7 +28,6 @@ import { SERVER_BASE_URL } from '../services/api';
 import { IUsuario, CreateUsuarioData, UpdateUsuarioData, UpdateUsuarioSenhaData, IPerfil } from '../types';
 import { dataGridPtBR } from '../utils/dataGridLocale';
 import { dataGridStyles } from '../utils/dataGridStyles';
-import { UppercaseTextField } from '../components/UppercaseTextField';
 import { useUppercaseForm } from '../hooks';
 
 const UsuariosPage: React.FC = () => {
@@ -471,10 +470,10 @@ const UsuariosPage: React.FC = () => {
             {/* Barra de pesquisa e botão de novo usuário */}
             <Box sx={{ display: 'flex', gap: 2, mb: 3, flexWrap: 'wrap' }}>
                 <Box sx={{ display: 'flex', gap: 1, flex: 1, minWidth: '200px' }}>
-                    <UppercaseTextField
+                    <TextField
                         placeholder="Buscar usuários..."
                         value={searchTerm}
-                        onChange={(value) => setSearchTerm(value)}
+                        onChange={(e) => setSearchTerm(e.target.value.toUpperCase())}
                         sx={{ flex: 1 }}
                     />
                     <Button
