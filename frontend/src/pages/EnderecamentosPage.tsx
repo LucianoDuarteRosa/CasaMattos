@@ -28,6 +28,8 @@ import { IProduto } from '@/types'; import { dataGridPtBR } from '@/utils/dataGr
 import { dataGridStyles } from '@/utils/dataGridStyles';
 
 interface FormData {
+    codigoBarras: string;
+    codigoInterno: string;
     tonalidade: string;
     bitola: string;
     lote: string;
@@ -55,14 +57,16 @@ const EnderecamentosPage: React.FC = () => {
     const [searchTerm, setSearchTerm] = useState<string>('');
     const [showOnlyAvailable, setShowOnlyAvailable] = useState(true);
     const [formData, setFormData] = useState<FormData>({
+        codigoBarras: '',
+        codigoInterno: '',
         tonalidade: '',
         bitola: '',
         lote: '',
         observacao: '',
         quantCaixas: '',
         disponivel: true,
-        idProduto: ' ',
-        idPredio: ' ',
+        idProduto: '',
+        idPredio: '',
     });
 
     // Função para obter informações do produto
@@ -272,6 +276,8 @@ const EnderecamentosPage: React.FC = () => {
         const quantCaixasDefault = produto?.quantCaixas?.toString() || '';
 
         setFormData({
+            codigoBarras: enderecamento.produto?.codBarras || '',
+            codigoInterno: enderecamento.produto?.codInterno?.toString() || '',
             tonalidade: enderecamento.tonalidade,
             bitola: enderecamento.bitola,
             lote: enderecamento.lote || '',
@@ -308,14 +314,16 @@ const EnderecamentosPage: React.FC = () => {
         setError('');
         setSuccess('');
         setFormData({
+            codigoBarras: '',
+            codigoInterno: '',
             tonalidade: '',
             bitola: '',
             lote: '',
             observacao: '',
             quantCaixas: '',
             disponivel: true,
-            idProduto: ' ',
-            idPredio: ' ',
+            idProduto: '',
+            idPredio: '',
         });
     };
 
@@ -329,14 +337,16 @@ const EnderecamentosPage: React.FC = () => {
         setError('');
         setSuccess('');
         setFormData({
+            codigoBarras: '',
+            codigoInterno: '',
             tonalidade: '',
             bitola: '',
             lote: '',
             observacao: '',
             quantCaixas: '',
             disponivel: true,
-            idProduto: ' ',
-            idPredio: ' ',
+            idProduto: '',
+            idPredio: '',
         });
         setOpen(true);
     };
@@ -352,12 +362,59 @@ const EnderecamentosPage: React.FC = () => {
 
     const handleProdutoChange = (produtoId: string) => {
         const produto = produtos.find(p => p.id === parseInt(produtoId));
-        setFormData(prev => ({
-            ...prev,
-            idProduto: produtoId,
-            // Pré-preencher quantidade de caixas com o valor padrão do produto
-            quantCaixas: produto?.quantCaixas?.toString() || prev.quantCaixas
-        }));
+        updateProdutoData(produto);
+    };
+
+    const updateProdutoData = (produto?: IProduto) => {
+        if (produto) {
+            setFormData(prev => ({
+                ...prev,
+                idProduto: produto.id.toString(),
+                codigoBarras: produto.codBarras || '',
+                codigoInterno: produto.codInterno?.toString() || '',
+                quantCaixas: produto.quantCaixas?.toString() || prev.quantCaixas
+            }));
+        }
+    };
+
+    const handleCodigoBarrasBlur = async () => {
+        if (!formData.codigoBarras.trim()) return;
+
+        try {
+            const produto = await produtoService.findByCodigoBarra(formData.codigoBarras);
+            if (produto) {
+                updateProdutoData(produto);
+                showNotification('Produto encontrado!', 'success');
+            } else {
+                showNotification('Produto não encontrado com este código de barras', 'warning');
+            }
+        } catch (error) {
+            console.error('Erro ao buscar produto por código de barras:', error);
+            showNotification('Erro ao buscar produto', 'error');
+        }
+    };
+
+    const handleCodigoInternoBlur = async () => {
+        if (!formData.codigoInterno.trim()) return;
+
+        try {
+            const codigoInternoNum = parseInt(formData.codigoInterno);
+            if (isNaN(codigoInternoNum)) {
+                showNotification('Código interno deve ser um número', 'warning');
+                return;
+            }
+
+            const produto = await produtoService.findByCodigoInterno(codigoInternoNum);
+            if (produto) {
+                updateProdutoData(produto);
+                showNotification('Produto encontrado!', 'success');
+            } else {
+                showNotification('Produto não encontrado com este código interno', 'warning');
+            }
+        } catch (error) {
+            console.error('Erro ao buscar produto por código interno:', error);
+            showNotification('Erro ao buscar produto', 'error');
+        }
     };
 
     const handleSubmit = async () => {
@@ -366,9 +423,14 @@ const EnderecamentosPage: React.FC = () => {
             setSuccess('');
 
             // Validação básica
-            if (!formData.tonalidade || !formData.bitola || !formData.idProduto || !formData.idPredio ||
-                formData.idProduto.trim() === '' || formData.idPredio.trim() === '') {
+            if (!formData.tonalidade || !formData.bitola || !formData.idPredio ||
+                formData.idPredio.trim() === '') {
                 setError('Preencha todos os campos obrigatórios');
+                return;
+            }
+
+            if (!formData.idProduto || formData.idProduto.trim() === '') {
+                setError('Selecione um produto ou use os códigos para buscar');
                 return;
             }
 
@@ -501,13 +563,35 @@ const EnderecamentosPage: React.FC = () => {
                     <Box component="form" sx={{ mt: 1 }}>
                         <Grid container spacing={2}>
                             <Grid item xs={12} sm={6}>
+                                <TextField
+                                    margin="normal"
+                                    fullWidth
+                                    label="Código de Barras"
+                                    value={formData.codigoBarras}
+                                    onChange={handleInputChange('codigoBarras')}
+                                    onBlur={handleCodigoBarrasBlur}
+                                    placeholder="Digite ou escaneie o código de barras"
+                                />
+                            </Grid>
+                            <Grid item xs={12} sm={6}>
+                                <TextField
+                                    margin="normal"
+                                    fullWidth
+                                    label="Código Interno"
+                                    type="number"
+                                    value={formData.codigoInterno}
+                                    onChange={handleInputChange('codigoInterno')}
+                                    onBlur={handleCodigoInternoBlur}
+                                    placeholder="Digite o código interno do produto"
+                                />
+                            </Grid>
+                            <Grid item xs={12} sm={6}>
                                 <FormControl fullWidth margin="normal" required>
                                     <InputLabel>Produto</InputLabel>
                                     <Select
                                         value={formData.idProduto}
                                         label="Produto"
                                         onChange={(e) => handleProdutoChange(e.target.value)}
-                                        displayEmpty
                                         renderValue={(selected) => {
                                             if (!selected) {
                                                 return <em>Selecione um produto</em>;
@@ -529,12 +613,11 @@ const EnderecamentosPage: React.FC = () => {
                             </Grid>
                             <Grid item xs={12} sm={6}>
                                 <FormControl fullWidth margin="normal" required>
-                                    <InputLabel>Prédio</InputLabel>
+                                    <InputLabel>Rua-Prédio</InputLabel>
                                     <Select
                                         value={formData.idPredio}
-                                        label="Prédio"
+                                        label="Rua-Prédio"
                                         onChange={(e) => setFormData({ ...formData, idPredio: e.target.value })}
-                                        displayEmpty
                                         renderValue={(selected) => {
                                             if (!selected) {
                                                 return <em>Selecione um prédio</em>;
@@ -543,7 +626,7 @@ const EnderecamentosPage: React.FC = () => {
                                             return getPredioInfo(predio);
                                         }}
                                     >
-                                        <MenuItem value=" ">
+                                        <MenuItem value="">
                                             <em>Selecione um prédio</em>
                                         </MenuItem>
                                         {predios.map((predio) => (

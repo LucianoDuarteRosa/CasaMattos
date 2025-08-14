@@ -38,5 +38,29 @@ export const produtoService = {
     searchByCodigoOrNome: async (term: string): Promise<IProduto[]> => {
         const response = await api.get<IApiResponse<IProduto[]>>(`/produtos/search?term=${encodeURIComponent(term)}`);
         return response.data.data!;
+    },
+
+    findByCodigoBarra: async (codBarra: string): Promise<IProduto | null> => {
+        try {
+            const response = await api.get<IApiResponse<IProduto>>(`/produtos/codigo-barras/${encodeURIComponent(codBarra)}`);
+            return response.data.data!;
+        } catch (error: any) {
+            if (error.response?.status === 404) {
+                return null;
+            }
+            throw error;
+        }
+    },
+
+    findByCodigoInterno: async (codInterno: number): Promise<IProduto | null> => {
+        try {
+            const response = await api.get<IApiResponse<IProduto>>(`/produtos/codigo-interno/${codInterno}`);
+            return response.data.data!;
+        } catch (error: any) {
+            if (error.response?.status === 404) {
+                return null;
+            }
+            throw error;
+        }
     }
 };

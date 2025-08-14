@@ -7,6 +7,7 @@ export interface IProdutoRepository {
     update(id: number, data: Partial<IProduto>): Promise<IProduto | null>;
     delete(id: number): Promise<boolean>;
     findByCodInterno(codInterno: number): Promise<IProduto | null>;
+    findByCodigoBarra(codBarra: string): Promise<IProduto | null>;
     findByDescricao(descricao: string): Promise<IProduto[]>;
     findByFornecedor(idFornecedor: number): Promise<IProduto[]>;
     search(term: string): Promise<IProduto[]>;

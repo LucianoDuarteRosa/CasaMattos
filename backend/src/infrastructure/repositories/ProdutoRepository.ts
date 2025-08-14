@@ -43,6 +43,13 @@ export class ProdutoRepository implements IProdutoRepository {
         return produto ? produto.toJSON() as IProduto : null;
     }
 
+    async findByCodigoBarra(codBarra: string): Promise<IProduto | null> {
+        const produto = await ProdutoModel.findOne({
+            where: { codBarras: codBarra }
+        });
+        return produto ? produto.toJSON() as IProduto : null;
+    }
+
     async findByDescricao(descricao: string): Promise<IProduto[]> {
         const produtos = await ProdutoModel.findAll({
             where: {

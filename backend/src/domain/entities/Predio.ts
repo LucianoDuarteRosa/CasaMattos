@@ -1,8 +1,11 @@
+import { IRua } from './Rua';
+
 export interface IPredio {
     id: number;
     nomePredio: string;
     vagas?: number;
     idRua: number;
+    rua?: IRua;
     createdAt?: Date;
     updatedAt?: Date;
 }

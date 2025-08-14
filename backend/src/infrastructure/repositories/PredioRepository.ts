@@ -93,7 +93,7 @@ export class PredioRepository implements IPredioRepository {
     }
 
     private mapToEntity(model: any): IPredio {
-        return {
+        const predio: any = {
             id: model.id,
             nomePredio: model.nomePredio,
             vagas: model.vagas,
@@ -101,5 +101,17 @@ export class PredioRepository implements IPredioRepository {
             createdAt: model.createdAt,
             updatedAt: model.updatedAt
         };
+
+        // Inclui o objeto rua se estiver presente
+        if (model.rua) {
+            predio.rua = {
+                id: model.rua.id,
+                nomeRua: model.rua.nomeRua,
+                createdAt: model.rua.createdAt,
+                updatedAt: model.rua.updatedAt
+            };
+        }
+
+        return predio;
     }
 }

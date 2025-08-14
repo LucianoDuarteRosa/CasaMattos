@@ -14,6 +14,12 @@ router.get('/', (req, res) => produtoController.list(req, res));
 // GET /api/produtos/search - Buscar produtos
 router.get('/search', (req, res) => produtoController.search(req, res));
 
+// GET /api/produtos/codigo-barras/:codBarra - Buscar produto por código de barras
+router.get('/codigo-barras/:codBarra', (req, res) => produtoController.findByCodigoBarra(req, res));
+
+// GET /api/produtos/codigo-interno/:codInterno - Buscar produto por código interno
+router.get('/codigo-interno/:codInterno', (req, res) => produtoController.findByCodigoInterno(req, res));
+
 // GET /api/produtos/:id - Obter produto por ID
 router.get('/:id', (req, res) => produtoController.getById(req, res));
 

@@ -132,4 +132,70 @@ export class ProdutoController {
             });
         }
     }
+
+    async findByCodigoBarra(req: Request, res: Response): Promise<void> {
+        try {
+            const { codBarra } = req.params;
+            if (!codBarra) {
+                res.status(400).json({
+                    success: false,
+                    message: 'Código de barras é obrigatório'
+                });
+                return;
+            }
+
+            const produto = await this.produtoRepository.findByCodigoBarra(codBarra);
+            if (!produto) {
+                res.status(404).json({
+                    success: false,
+                    message: 'Produto não encontrado com este código de barras'
+                });
+                return;
+            }
+
+            res.json({
+                success: true,
+                data: produto
+            });
+        } catch (error: any) {
+            res.status(500).json({
+                success: false,
+                message: error.message || 'Erro ao buscar produto por código de barras'
+            });
+        }
+    }
+
+    async findByCodigoInterno(req: Request, res: Response): Promise<void> {
+        try {
+            const { codInterno } = req.params;
+            const codigoInternoNum = parseInt(codInterno);
+
+            if (!codInterno || isNaN(codigoInternoNum)) {
+                res.status(400).json({
+                    success: false,
+                    message: 'Código interno deve ser um número válido'
+                });
+                return;
+            }
+
+            const produto = await this.produtoRepository.findByCodInterno(codigoInternoNum);
+            if (!produto) {
+                res.status(404).json({
+                    success: false,
+                    message: 'Produto não encontrado com este código interno'
+                });
+                return;
+            }
+
+            res.json({
+                success: true,
+                data: produto
+            });
+        } catch (error: any) {
+            res.status(500).json({
+                success: false,
+                message: error.message || 'Erro ao buscar produto por código interno'
+            });
+        }
+    }
 }

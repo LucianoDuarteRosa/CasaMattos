@@ -118,7 +118,7 @@ const ProdutosPage: React.FC = () => {
         custo: '',
         codFabricante: '',
         quantCaixas: '',
-        idFornecedor: ' ',
+        idFornecedor: '',
     });
 
     const columns: GridColDef[] = [
@@ -318,7 +318,7 @@ const ProdutosPage: React.FC = () => {
             custo: '',
             codFabricante: '',
             quantCaixas: '',
-            idFornecedor: ' ',
+            idFornecedor: '',
         });
         setOpen(true);
     };
@@ -505,7 +505,6 @@ const ProdutosPage: React.FC = () => {
                                         value={formData.idFornecedor}
                                         label="Fornecedor"
                                         onChange={(e) => setFormData({ ...formData, idFornecedor: e.target.value })}
-                                        displayEmpty
                                         renderValue={(selected) => {
                                             if (!selected) {
                                                 return <em>Selecione um fornecedor</em>;
@@ -513,7 +512,7 @@ const ProdutosPage: React.FC = () => {
                                             return getFornecedorInfo(selected);
                                         }}
                                     >
-                                        <MenuItem value=" ">
+                                        <MenuItem value="">
                                             <em>Selecione um fornecedor</em>
                                         </MenuItem>
                                         {fornecedores.map((fornecedor) => (
