@@ -21,7 +21,8 @@ import { Add, Edit, Visibility, Delete } from '@mui/icons-material';
 import { enderecamentoService, EnderecamentoWithRelations } from '@/services/enderecamentoService';
 import { produtoService } from '@/services/produtoService';
 import { predioService, PredioWithRua } from '@/services/predioService';
-import { IProduto } from '@/types'; import { dataGridPtBR } from '@/utils/dataGridLocale';
+import { IProduto } from '@/types';
+import { dataGridPtBR } from '@/utils/dataGridLocale';
 import { dataGridStyles } from '@/utils/dataGridStyles';
 
 interface FormData {
@@ -298,12 +299,37 @@ const EnderecamentosPage: React.FC = () => {
     const handleDelete = async (id: number) => {
         if (window.confirm('Tem certeza que deseja excluir este endereçamento?')) {
             try {
+                // Buscar o endereçamento que será excluído para obter os dados do produto
+                const enderecamentoParaExcluir = enderecamentos.find(e => e.id === id);
+                if (!enderecamentoParaExcluir) {
+                    throw new Error('Endereçamento não encontrado');
+                }
+
+                // Buscar os dados do produto para calcular a movimentação de estoque
+                const produto = await produtoService.getById(enderecamentoParaExcluir.idProduto);
+                if (!produto) {
+                    throw new Error('Produto não encontrado');
+                }
+
+                // Calcular quantidade a ser retirada do estoque (quantMinVenda * quantCaixas)
+                const quantCaixas = enderecamentoParaExcluir.quantCaixas || produto.quantCaixas || 1;
+                const quantidadeParaRetirar = produto.quantMinVenda * quantCaixas;
+
+                // Excluir o endereçamento
                 await enderecamentoService.delete(id);
-                showNotification('Endereçamento excluído com sucesso!', 'success');
+
+                // Retirar a quantidade do campo deposito do produto (saída do estoque)
+                await produtoService.updateEstoque(
+                    enderecamentoParaExcluir.idProduto,
+                    quantidadeParaRetirar,
+                    'saida'
+                );
+
+                showNotification('Endereçamento excluído com sucesso e estoque reduzido!', 'success');
                 await loadEnderecamentos();
             } catch (error: any) {
                 console.error('Erro ao excluir endereçamento:', error);
-                showNotification(error.response?.data?.error || 'Erro ao excluir endereçamento', 'error');
+                showNotification(error.response?.data?.error || error.message || 'Erro ao excluir endereçamento', 'error');
             }
         }
     };
@@ -471,8 +497,11 @@ const EnderecamentosPage: React.FC = () => {
                 showNotification('Endereçamento atualizado com sucesso!', 'success');
             } else {
                 // Modo criação - usar a nova API de criação em lote
+                let enderecamentosCriados: any[] = [];
+
                 if (quantidadeAdicoes === 1) {
-                    await enderecamentoService.create(enderecamentoData);
+                    const enderecamento = await enderecamentoService.create(enderecamentoData);
+                    enderecamentosCriados = [enderecamento];
                     showNotification('Endereçamento criado com sucesso!', 'success');
                 } else {
                     // Usar nova API de criação em lote
@@ -480,9 +509,27 @@ const EnderecamentosPage: React.FC = () => {
                         quantidade: quantidadeAdicoes,
                         enderecamentoData
                     });
+                    enderecamentosCriados = response.data;
                     showNotification(response.message, 'success');
                 }
-            } await loadEnderecamentos();
+
+                // Movimentar estoque: adicionar ao depósito (entrada)
+                // Buscar dados do produto para calcular a movimentação
+                const produto = await produtoService.getById(enderecamentoData.idProduto);
+                if (produto) {
+                    const quantCaixas = enderecamentoData.quantCaixas || produto.quantCaixas || 1;
+                    const quantidadePorEnderecamento = produto.quantMinVenda * quantCaixas;
+                    const quantidadeTotalParaMovimentar = quantidadePorEnderecamento * enderecamentosCriados.length;
+
+                    await produtoService.updateEstoque(
+                        enderecamentoData.idProduto,
+                        quantidadeTotalParaMovimentar,
+                        'entrada'
+                    );
+                }
+            }
+
+            await loadEnderecamentos();
             handleClose();
 
         } catch (error: any) {

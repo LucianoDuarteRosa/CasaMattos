@@ -62,5 +62,13 @@ export const produtoService = {
             }
             throw error;
         }
+    },
+
+    updateEstoque: async (id: number, quantidadeMovimentacao: number, tipoMovimentacao: 'entrada' | 'saida'): Promise<IProduto> => {
+        const response = await api.patch<IApiResponse<IProduto>>(`/produtos/${id}/estoque`, {
+            quantidadeMovimentacao,
+            tipoMovimentacao
+        });
+        return response.data.data!;
     }
 };

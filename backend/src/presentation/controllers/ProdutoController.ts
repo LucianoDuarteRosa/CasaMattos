@@ -198,4 +198,78 @@ export class ProdutoController {
             });
         }
     }
+
+    async updateEstoque(req: Request, res: Response): Promise<void> {
+        try {
+            const id = parseInt(req.params.id);
+            const { quantidadeMovimentacao, tipoMovimentacao } = req.body;
+
+            if (isNaN(id)) {
+                res.status(400).json({
+                    success: false,
+                    message: 'ID inválido'
+                });
+                return;
+            }
+
+            if (!quantidadeMovimentacao || quantidadeMovimentacao <= 0) {
+                res.status(400).json({
+                    success: false,
+                    message: 'Quantidade de movimentação deve ser maior que zero'
+                });
+                return;
+            }
+
+            if (!tipoMovimentacao || !['entrada', 'saida'].includes(tipoMovimentacao)) {
+                res.status(400).json({
+                    success: false,
+                    message: 'Tipo de movimentação deve ser "entrada" ou "saida"'
+                });
+                return;
+            }
+
+            const produto = await this.produtoRepository.findById(id);
+            if (!produto) {
+                res.status(404).json({
+                    success: false,
+                    message: 'Produto não encontrado'
+                });
+                return;
+            }
+
+            // Calcular novo valor do depósito
+            let novoDeposito = produto.deposito;
+            if (tipoMovimentacao === 'entrada') {
+                novoDeposito += quantidadeMovimentacao;
+            } else {
+                novoDeposito -= quantidadeMovimentacao;
+
+                // Verificar se o estoque não ficará negativo
+                if (novoDeposito < 0) {
+                    res.status(400).json({
+                        success: false,
+                        message: `Estoque insuficiente. Disponível: ${produto.deposito}, Solicitado: ${quantidadeMovimentacao}`
+                    });
+                    return;
+                }
+            }
+
+            // Atualizar o produto
+            const produtoAtualizado = await this.produtoRepository.update(id, {
+                deposito: novoDeposito
+            });
+
+            res.json({
+                success: true,
+                data: produtoAtualizado,
+                message: `Estoque ${tipoMovimentacao === 'entrada' ? 'aumentado' : 'reduzido'} em ${quantidadeMovimentacao} unidades`
+            });
+
+        } catch (error: any) {
+            res.status(500).json({
+                success: false,
+                message: error.message || 'Erro ao atualizar estoque'
+            });
+        }
+    }
 }

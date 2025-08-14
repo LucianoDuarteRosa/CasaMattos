@@ -29,4 +29,7 @@ router.post('/', (req, res) => produtoController.create(req, res));
 // PUT /api/produtos/:id - Atualizar produto
 router.put('/:id', (req, res) => produtoController.update(req, res));
 
+// PATCH /api/produtos/:id/estoque - Atualizar estoque do produto
+router.patch('/:id/estoque', (req, res) => produtoController.updateEstoque(req, res));
+
 export default router;
