@@ -49,18 +49,36 @@ const LoginPage: React.FC = () => {
     };
 
     return (
-        <Container component="main" maxWidth="xs">
+        <Container
+            component="main"
+            maxWidth="xs"
+            sx={{
+                height: '100vh',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: 2
+            }}
+        >
             <Box
                 sx={{
-                    marginTop: 8,
                     display: 'flex',
                     flexDirection: 'column',
                     alignItems: 'center',
-                    minHeight: '100vh',
-                    justifyContent: 'center',
+                    width: '100%',
+                    maxHeight: '90vh',
+                    overflow: 'hidden',
                 }}
             >
-                <Paper elevation={3} sx={{ padding: 4, width: '100%' }}>
+                <Paper
+                    elevation={3}
+                    sx={{
+                        padding: 4,
+                        width: '100%',
+                        maxWidth: 400,
+                        maxHeight: 'fit-content'
+                    }}
+                >
                     <Box
                         sx={{
                             display: 'flex',
