@@ -7,8 +7,6 @@ export interface ProdutoAttributes {
     descricao: string;
     quantMinVenda: number;
     codBarras?: string;
-    deposito: number;
-    estoque: number;
     custo?: number;
     codFabricante?: string;
     quantCaixas?: number;
@@ -24,8 +22,6 @@ class ProdutoModel extends Model<ProdutoAttributes, ProdutoCreationAttributes>
     public descricao!: string;
     public quantMinVenda!: number;
     public codBarras?: string;
-    public deposito!: number;
-    public estoque!: number;
     public custo?: number;
     public codFabricante?: string;
     public quantCaixas?: number;
@@ -58,14 +54,6 @@ ProdutoModel.init(
         codBarras: {
             type: DataTypes.STRING(30),
             allowNull: true,
-        },
-        deposito: {
-            type: DataTypes.DOUBLE,
-            allowNull: false,
-        },
-        estoque: {
-            type: DataTypes.DOUBLE,
-            allowNull: false,
         },
         custo: {
             type: DataTypes.DOUBLE,

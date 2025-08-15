@@ -1,13 +1,21 @@
 import { Request, Response } from 'express';
 import { ProdutoRepository } from '../../infrastructure/repositories/ProdutoRepository';
+import { EnderecamentoRepository } from '../../infrastructure/repositories/EnderecamentoRepository';
+import { EstoqueItemRepository } from '../../infrastructure/repositories/EstoqueItemRepository';
 import { CreateProdutoUseCase } from '../../application/usecases/CreateProdutoUseCase';
 import { GetProdutoUseCase } from '../../application/usecases/GetProdutoUseCase';
 import { ListProdutosUseCase } from '../../application/usecases/ListProdutosUseCase';
 import { UpdateProdutoUseCase } from '../../application/usecases/UpdateProdutoUseCase';
 import { SearchProdutosUseCase } from '../../application/usecases/SearchProdutosUseCase';
+import { EstoqueCalculoService } from '../../application/services/EstoqueCalculoService';
+import { ProdutoEstoqueService } from '../../application/services/ProdutoEstoqueService';
 
 export class ProdutoController {
     private produtoRepository: ProdutoRepository;
+    private enderecamentoRepository: EnderecamentoRepository;
+    private estoqueItemRepository: EstoqueItemRepository;
+    private estoqueCalculoService: EstoqueCalculoService;
+    private produtoEstoqueService: ProdutoEstoqueService;
     private createProdutoUseCase: CreateProdutoUseCase;
     private getProdutoUseCase: GetProdutoUseCase;
     private listProdutosUseCase: ListProdutosUseCase;
@@ -16,11 +24,22 @@ export class ProdutoController {
 
     constructor() {
         this.produtoRepository = new ProdutoRepository();
+        this.enderecamentoRepository = new EnderecamentoRepository();
+        this.estoqueItemRepository = new EstoqueItemRepository();
+
+        this.estoqueCalculoService = new EstoqueCalculoService(
+            this.estoqueItemRepository,
+            this.produtoRepository,
+            this.enderecamentoRepository
+        );
+
+        this.produtoEstoqueService = new ProdutoEstoqueService(this.estoqueCalculoService);
+
         this.createProdutoUseCase = new CreateProdutoUseCase(this.produtoRepository);
-        this.getProdutoUseCase = new GetProdutoUseCase(this.produtoRepository);
-        this.listProdutosUseCase = new ListProdutosUseCase(this.produtoRepository);
+        this.getProdutoUseCase = new GetProdutoUseCase(this.produtoRepository, this.produtoEstoqueService);
+        this.listProdutosUseCase = new ListProdutosUseCase(this.produtoRepository, this.produtoEstoqueService);
         this.updateProdutoUseCase = new UpdateProdutoUseCase(this.produtoRepository);
-        this.searchProdutosUseCase = new SearchProdutosUseCase(this.produtoRepository);
+        this.searchProdutosUseCase = new SearchProdutosUseCase(this.produtoRepository, this.produtoEstoqueService);
     }
 
     async create(req: Request, res: Response): Promise<void> {
@@ -200,76 +219,17 @@ export class ProdutoController {
     }
 
     async updateEstoque(req: Request, res: Response): Promise<void> {
-        try {
-            const id = parseInt(req.params.id);
-            const { quantidadeMovimentacao, tipoMovimentacao } = req.body;
-
-            if (isNaN(id)) {
-                res.status(400).json({
-                    success: false,
-                    message: 'ID inválido'
-                });
-                return;
+        // MÉTODO DESCONTINUADO: 
+        // Agora o estoque é calculado dinamicamente baseado nos EndereçamentoItems e EstoqueItems
+        // Para movimentar estoque use os endpoints específicos de transferência e retirada
+        res.status(410).json({
+            success: false,
+            message: 'Este endpoint foi descontinuado. Use os endpoints específicos para transferência entre depósito e estoque.',
+            alternativeEndpoints: {
+                transferirParaEstoque: 'POST /api/estoque/transferir-deposito-estoque',
+                retirarDoEstoque: 'POST /api/estoque/retirar-estoque',
+                consultarEstoque: 'GET /api/estoque/produto/:id'
             }
-
-            if (!quantidadeMovimentacao || quantidadeMovimentacao <= 0) {
-                res.status(400).json({
-                    success: false,
-                    message: 'Quantidade de movimentação deve ser maior que zero'
-                });
-                return;
-            }
-
-            if (!tipoMovimentacao || !['entrada', 'saida'].includes(tipoMovimentacao)) {
-                res.status(400).json({
-                    success: false,
-                    message: 'Tipo de movimentação deve ser "entrada" ou "saida"'
-                });
-                return;
-            }
-
-            const produto = await this.produtoRepository.findById(id);
-            if (!produto) {
-                res.status(404).json({
-                    success: false,
-                    message: 'Produto não encontrado'
-                });
-                return;
-            }
-
-            // Calcular novo valor do depósito
-            let novoDeposito = produto.deposito;
-            if (tipoMovimentacao === 'entrada') {
-                novoDeposito += quantidadeMovimentacao;
-            } else {
-                novoDeposito -= quantidadeMovimentacao;
-
-                // Verificar se o estoque não ficará negativo
-                if (novoDeposito < 0) {
-                    res.status(400).json({
-                        success: false,
-                        message: `Estoque insuficiente. Disponível: ${produto.deposito}, Solicitado: ${quantidadeMovimentacao}`
-                    });
-                    return;
-                }
-            }
-
-            // Atualizar o produto
-            const produtoAtualizado = await this.produtoRepository.update(id, {
-                deposito: novoDeposito
-            });
-
-            res.json({
-                success: true,
-                data: produtoAtualizado,
-                message: `Estoque ${tipoMovimentacao === 'entrada' ? 'aumentado' : 'reduzido'} em ${quantidadeMovimentacao} unidades`
-            });
-
-        } catch (error: any) {
-            res.status(500).json({
-                success: false,
-                message: error.message || 'Erro ao atualizar estoque'
-            });
-        }
+        });
     }
 }

@@ -19,18 +19,42 @@ export class DashboardController {
     async getStats(req: Request, res: Response): Promise<void> {
         try {
             // Query para produtos com estoque (deposito + estoque > 0)
+            // Deposito = soma das quantCaixas dos endereçamentos * quantMinVenda
+            // Estoque = soma das quantidade dos estoque_items * quantMinVenda
             const produtosComEstoque = await sequelize.query(`
+                WITH produto_calculos AS (
+                    SELECT 
+                        p.id,
+                        p."quantMinVenda",
+                        COALESCE(SUM(e."quantCaixas"), 0) * p."quantMinVenda" as deposito_total,
+                        COALESCE(SUM(ei.quantidade), 0) * p."quantMinVenda" as estoque_total
+                    FROM "Produtos" p
+                    LEFT JOIN "Enderecamentos" e ON e."idProduto" = p.id
+                    LEFT JOIN "EstoqueItems" ei ON ei."produtoId" = p.id
+                    GROUP BY p.id, p."quantMinVenda"
+                )
                 SELECT COUNT(*) as total 
-                FROM "Produtos" 
-                WHERE ("deposito" + "estoque") > 0
+                FROM produto_calculos 
+                WHERE (deposito_total + estoque_total) > 0
             `, {
                 type: QueryTypes.SELECT
             });
 
             // Query para metragem total (sum do estoque + deposito)
             const metragemTotal = await sequelize.query(`
-                SELECT SUM("deposito" + "estoque") as total 
-                FROM "Produtos"
+                WITH produto_calculos AS (
+                    SELECT 
+                        p.id,
+                        p."quantMinVenda",
+                        COALESCE(SUM(e."quantCaixas"), 0) * p."quantMinVenda" as deposito_total,
+                        COALESCE(SUM(ei.quantidade), 0) * p."quantMinVenda" as estoque_total
+                    FROM "Produtos" p
+                    LEFT JOIN "Enderecamentos" e ON e."idProduto" = p.id
+                    LEFT JOIN "EstoqueItems" ei ON ei."produtoId" = p.id
+                    GROUP BY p.id, p."quantMinVenda"
+                )
+                SELECT SUM(deposito_total + estoque_total) as total 
+                FROM produto_calculos
             `, {
                 type: QueryTypes.SELECT
             });
@@ -78,17 +102,32 @@ export class DashboardController {
     async getProdutosPontaEstoque(req: Request, res: Response): Promise<void> {
         try {
             // Produtos em ponta de estoque: menos de 10 * quantMinVenda no total (estoque + deposito)
+            // Deposito = soma das quantCaixas dos endereçamentos * quantMinVenda
+            // Estoque = soma das quantidade dos estoque_items * quantMinVenda
             const produtosPontaEstoque = await sequelize.query(`
-                SELECT p.id, p."descricao", p."deposito", p."estoque", 
-                       p."quantMinVenda", f."razaoSocial" as fornecedor,
-                       (p."deposito" + p."estoque") as "totalDisponivel",
-                       (p."quantMinVenda" * 10) as "limiteMinimo"
-                FROM "Produtos" p
-                LEFT JOIN "Fornecedores" f ON p."idFornecedor" = f.id
-                WHERE (p."deposito" + p."estoque") < (p."quantMinVenda" * 10)
-                  AND (p."deposito" + p."estoque") > 0
-                  AND p."deposito" = 0
-                ORDER BY (p."deposito" + p."estoque") ASC
+                WITH produto_calculos AS (
+                    SELECT 
+                        p.id,
+                        p."descricao",
+                        p."quantMinVenda",
+                        f."razaoSocial" as fornecedor,
+                        COALESCE(SUM(e."quantCaixas"), 0) * p."quantMinVenda" as deposito,
+                        COALESCE(SUM(ei.quantidade), 0) * p."quantMinVenda" as estoque,
+                        (COALESCE(SUM(e."quantCaixas"), 0) + COALESCE(SUM(ei.quantidade), 0)) * p."quantMinVenda" as totalDisponivel,
+                        (p."quantMinVenda" * 10) as limiteMinimo
+                    FROM "Produtos" p
+                    LEFT JOIN "Fornecedores" f ON p."idFornecedor" = f.id
+                    LEFT JOIN "Enderecamentos" e ON e."idProduto" = p.id
+                    LEFT JOIN "EstoqueItems" ei ON ei."produtoId" = p.id
+                    GROUP BY p.id, p."descricao", p."quantMinVenda", f."razaoSocial"
+                )
+                SELECT id, descricao, deposito, estoque, "quantMinVenda", fornecedor, 
+                       totalDisponivel, limiteMinimo
+                FROM produto_calculos
+                WHERE totalDisponivel < limiteMinimo
+                  AND totalDisponivel > 0
+                  AND deposito = 0
+                ORDER BY totalDisponivel ASC
                 LIMIT 10
             `, {
                 type: QueryTypes.SELECT
@@ -113,17 +152,33 @@ export class DashboardController {
             // Produtos com estoque baixo na separação 
             // Regra: estoque < 50% de (quantMinVenda * quantCaixas)
             // Só aparecem produtos que tenham estoque no depósito (deposito > 0)
+            // Deposito = soma das quantCaixas dos endereçamentos * quantMinVenda
+            // Estoque = soma das quantidade dos estoque_items * quantMinVenda
             const produtosEstoqueBaixo = await sequelize.query(`
-                SELECT p.id, p."descricao", p."deposito", p."estoque", 
-                       p."quantMinVenda", p."quantCaixas", f."razaoSocial" as fornecedor,
-                       (p."quantMinVenda" * COALESCE(p."quantCaixas", 1)) as "limiteCalculado",
-                       ((p."quantMinVenda" * COALESCE(p."quantCaixas", 1)) * 0.5) as "cinquentaPorcento"
-                FROM "Produtos" p
-                LEFT JOIN "Fornecedores" f ON p."idFornecedor" = f.id
-                WHERE p."deposito" > 0 
-                  AND p."estoque" > 0
-                  AND p."estoque" < ((p."quantMinVenda" * COALESCE(p."quantCaixas", 1)) * 0.5)
-                ORDER BY p."estoque" ASC
+                WITH produto_calculos AS (
+                    SELECT 
+                        p.id,
+                        p."descricao",
+                        p."quantMinVenda",
+                        p."quantCaixas",
+                        f."razaoSocial" as fornecedor,
+                        COALESCE(SUM(e."quantCaixas"), 0) * p."quantMinVenda" as deposito,
+                        COALESCE(SUM(ei.quantidade), 0) * p."quantMinVenda" as estoque,
+                        (p."quantMinVenda" * COALESCE(p."quantCaixas", 1)) as limiteCalculado,
+                        ((p."quantMinVenda" * COALESCE(p."quantCaixas", 1)) * 0.5) as cinquentaPorcento
+                    FROM "Produtos" p
+                    LEFT JOIN "Fornecedores" f ON p."idFornecedor" = f.id
+                    LEFT JOIN "Enderecamentos" e ON e."idProduto" = p.id
+                    LEFT JOIN "EstoqueItems" ei ON ei."produtoId" = p.id
+                    GROUP BY p.id, p."descricao", p."quantMinVenda", p."quantCaixas", f."razaoSocial"
+                )
+                SELECT id, descricao, deposito, estoque, "quantMinVenda", "quantCaixas", 
+                       fornecedor, limiteCalculado, cinquentaPorcento
+                FROM produto_calculos
+                WHERE deposito > 0 
+                  AND estoque > 0
+                  AND estoque < cinquentaPorcento
+                ORDER BY estoque ASC
                 LIMIT 10
             `, {
                 type: QueryTypes.SELECT

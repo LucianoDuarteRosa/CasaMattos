@@ -3,6 +3,15 @@ const fs = require('fs');
 const path = require('path');
 
 async function runMigration() {
+    // Obter o nome do arquivo de migração da linha de comando
+    const migrationFile = process.argv[2];
+
+    if (!migrationFile) {
+        console.error('Por favor, forneça o nome do arquivo de migração como parâmetro.');
+        console.error('Exemplo: node run-migration.js migrations/create_estoque_items.sql');
+        process.exit(1);
+    }
+
     const client = new Client({
         user: process.env.DB_USER || 'postgres',
         password: process.env.DB_PASSWORD || 'admin',
@@ -16,10 +25,15 @@ async function runMigration() {
         console.log('Conectado ao banco de dados');
 
         // Ler o arquivo de migração
-        const migrationPath = path.join(__dirname, 'migrations', 'add_imageurl_to_usuarios.sql');
+        const migrationPath = path.join(__dirname, migrationFile);
+
+        if (!fs.existsSync(migrationPath)) {
+            throw new Error(`Arquivo de migração não encontrado: ${migrationPath}`);
+        }
+
         const migrationSQL = fs.readFileSync(migrationPath, 'utf8');
 
-        console.log('Executando migração...');
+        console.log(`Executando migração: ${migrationFile}`);
         console.log('SQL:', migrationSQL);
 
         // Executar a migração

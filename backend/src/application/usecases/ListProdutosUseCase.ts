@@ -1,8 +1,9 @@
 import { IProdutoRepository } from '../../domain/repositories/IProdutoRepository';
 import { IProduto } from '../../domain/entities/Produto';
+import { ProdutoEstoqueService, IProdutoComEstoque } from '../services/ProdutoEstoqueService';
 
 export interface ListProdutosResponse {
-    data: IProduto[];
+    data: IProdutoComEstoque[];
     total: number;
     page: number;
     limit: number;
@@ -11,7 +12,8 @@ export interface ListProdutosResponse {
 
 export class ListProdutosUseCase {
     constructor(
-        private produtoRepository: IProdutoRepository
+        private produtoRepository: IProdutoRepository,
+        private produtoEstoqueService: ProdutoEstoqueService
     ) { }
 
     async execute(
@@ -21,8 +23,11 @@ export class ListProdutosUseCase {
     ): Promise<ListProdutosResponse> {
         const result = await this.produtoRepository.findWithPagination(page, limit, search);
 
+        // Adicionar cálculos de estoque para todos os produtos
+        const produtosComEstoque = await this.produtoEstoqueService.adicionarCalculosEstoqueLista(result.produtos);
+
         return {
-            data: result.produtos,
+            data: produtosComEstoque,
             total: result.total,
             page,
             limit,

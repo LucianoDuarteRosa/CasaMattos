@@ -1,6 +1,9 @@
 import api from './api';
 import { IProduto, IApiResponse, IPaginatedResponse } from '@/types';
 
+// Tipo para criação de produto sem campos calculados
+type CreateProdutoData = Omit<IProduto, 'id' | 'deposito' | 'estoque' | 'createdAt' | 'updatedAt' | 'fornecedor'>;
+
 export const produtoService = {
     getAll: async (page: number = 1, limit: number = 25, search?: string): Promise<IPaginatedResponse<IProduto>> => {
         const params = new URLSearchParams({
@@ -21,7 +24,7 @@ export const produtoService = {
         return response.data.data!;
     },
 
-    create: async (produto: Omit<IProduto, 'id'>): Promise<IProduto> => {
+    create: async (produto: CreateProdutoData): Promise<IProduto> => {
         const response = await api.post<IApiResponse<IProduto>>('/produtos', produto);
         return response.data.data!;
     },

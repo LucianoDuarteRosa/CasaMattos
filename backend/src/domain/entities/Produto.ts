@@ -4,8 +4,6 @@ export interface IProduto {
     descricao: string;
     quantMinVenda: number;
     codBarras?: string;
-    deposito: number;
-    estoque: number;
     custo?: number;
     codFabricante?: string;
     quantCaixas?: number;
@@ -20,8 +18,6 @@ export class Produto implements IProduto {
         public codInterno: number,
         public descricao: string,
         public quantMinVenda: number,
-        public deposito: number,
-        public estoque: number,
         public idFornecedor: number,
         public codBarras?: string,
         public custo?: number,
@@ -37,8 +33,6 @@ export class Produto implements IProduto {
             data.codInterno,
             data.descricao,
             data.quantMinVenda,
-            data.deposito,
-            data.estoque,
             data.idFornecedor,
             data.codBarras,
             data.custo,

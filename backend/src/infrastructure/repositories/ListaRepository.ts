@@ -220,20 +220,31 @@ export class ListaRepository implements IListaRepository {
             for (const enderecamento of enderecamentos) {
                 await enderecamento.update({ disponivel: false }, { transaction });
 
-                // Movimentar estoque: calcular quantidadeCaixa * quantidadeMinVenda e retirar do depósito para o estoque
+                // Movimentar estoque: transferir do depósito (endereçamentos) para o estoque (estoque_items)
+                // A lógica agora é: quando se baixa uma lista, o produto sai do endereçamento e vai para estoque_items
                 if ((enderecamento as any).produto && enderecamento.quantCaixas) {
                     const produto = (enderecamento as any).produto;
-                    const quantidadeMovimentar = enderecamento.quantCaixas * produto.quantMinVenda;
-                    const novoDeposito = produto.deposito - quantidadeMovimentar;
-                    const novoEstoque = produto.estoque + quantidadeMovimentar;
+                    const quantidadeMovimentar = enderecamento.quantCaixas;
 
-                    if (novoDeposito < 0) {
-                        throw new Error(`Estoque insuficiente no depósito para o produto ${produto.descricao}`);
+                    // Verificar se há quantidade suficiente no endereçamento
+                    if (!enderecamento.quantCaixas || enderecamento.quantCaixas < quantidadeMovimentar) {
+                        throw new Error(`Quantidade insuficiente no endereçamento para o produto ${produto.descricao}`);
                     }
 
-                    await produto.update({
-                        deposito: novoDeposito,
-                        estoque: novoEstoque
+                    // Reduzir quantidade do endereçamento (quantCaixas)
+                    const novaQuantidadeEnderecamento = enderecamento.quantCaixas - quantidadeMovimentar;
+                    await enderecamento.update({
+                        quantCaixas: novaQuantidadeEnderecamento
+                    }, { transaction });
+
+                    // Adicionar ao estoque_items (usando características do endereçamento)
+                    const EstoqueItemModel = sequelize.models.EstoqueItem;
+                    await EstoqueItemModel.create({
+                        produtoId: produto.id,
+                        lote: enderecamento.lote || 'LISTA',
+                        ton: enderecamento.tonalidade || 'N/A',
+                        bit: enderecamento.bitola || 'N/A',
+                        quantidade: quantidadeMovimentar
                     }, { transaction });
                 }
             }
@@ -331,8 +342,6 @@ export class ListaRepository implements IListaRepository {
                 descricao: enderecamento.produto.descricao,
                 quantMinVenda: enderecamento.produto.quantMinVenda,
                 codBarras: enderecamento.produto.codBarras,
-                deposito: enderecamento.produto.deposito,
-                estoque: enderecamento.produto.estoque,
                 custo: enderecamento.produto.custo,
                 codFabricante: enderecamento.produto.codFabricante,
                 quantCaixas: enderecamento.produto.quantCaixas,

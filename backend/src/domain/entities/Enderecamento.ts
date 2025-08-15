@@ -4,8 +4,6 @@ export interface IProduto {
     descricao: string;
     quantMinVenda: number;
     codBarras?: string;
-    deposito: number;
-    estoque: number;
     custo?: number;
     codFabricante?: string;
     quantCaixas?: number;

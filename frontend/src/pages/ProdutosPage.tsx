@@ -32,8 +32,6 @@ interface FormData {
     descricao: string;
     quantMinVenda: string;
     codBarras: string;
-    deposito: string;
-    estoque: string;
     custo: string;
     codFabricante: string;
     quantCaixas: string;
@@ -118,14 +116,12 @@ const ProdutosPage: React.FC = () => {
             descricao: '',
             quantMinVenda: '',
             codBarras: '',
-            deposito: '',
-            estoque: '',
             custo: '',
             codFabricante: '',
             quantCaixas: '',
             idFornecedor: '',
         } as FormData,
-        ['descricao', 'deposito'] // Descrição e depósito devem ser maiúscula
+        ['descricao'] // Descrição deve ser maiúscula
     );
 
     // Função helper para atualizar campos individuais
@@ -149,13 +145,13 @@ const ProdutosPage: React.FC = () => {
         {
             field: 'codFabricante',
             headerName: 'Cód. Fab.',
-            width: 100,
+            width: 130,
             minWidth: 80
         },
         {
             field: 'idFornecedor',
             headerName: 'Fornecedor',
-            width: 180,
+            width: 200,
             minWidth: 120,
             valueFormatter: (params) => {
                 const info = getFornecedorInfo(params.value);
@@ -277,8 +273,6 @@ const ProdutosPage: React.FC = () => {
             descricao: produto.descricao,
             quantMinVenda: decimalToBrazilian(produto.quantMinVenda),
             codBarras: produto.codBarras || '',
-            deposito: decimalToBrazilian(produto.deposito),
-            estoque: decimalToBrazilian(produto.estoque),
             custo: produto.custo ? decimalToBrazilian(produto.custo) : '',
             codFabricante: produto.codFabricante || '',
             quantCaixas: produto.quantCaixas?.toString() || '',
@@ -302,8 +296,6 @@ const ProdutosPage: React.FC = () => {
             descricao: '',
             quantMinVenda: '',
             codBarras: '',
-            deposito: '',
-            estoque: '',
             custo: '',
             codFabricante: '',
             quantCaixas: '',
@@ -325,8 +317,6 @@ const ProdutosPage: React.FC = () => {
             descricao: '',
             quantMinVenda: '',
             codBarras: '',
-            deposito: '',
-            estoque: '',
             custo: '',
             codFabricante: '',
             quantCaixas: '',
@@ -339,7 +329,7 @@ const ProdutosPage: React.FC = () => {
         event: React.ChangeEvent<HTMLInputElement>
     ) => {
         // Para campos que devem ser maiúscula, usar handleChange
-        if (field === 'descricao' || field === 'deposito') {
+        if (field === 'descricao') {
             handleChange(field)(event);
         } else {
             updateField(field, event.target.value);
@@ -373,7 +363,7 @@ const ProdutosPage: React.FC = () => {
 
             // Validação básica
             if (!formData.codInterno || !formData.descricao || !formData.quantMinVenda ||
-                !formData.deposito || !formData.estoque || !formData.idFornecedor) {
+                !formData.idFornecedor) {
                 setError('Preencha todos os campos obrigatórios');
                 return;
             }
@@ -383,8 +373,6 @@ const ProdutosPage: React.FC = () => {
                 descricao: formData.descricao,
                 quantMinVenda: parseFloat(brazilianToDecimal(formData.quantMinVenda)),
                 codBarras: formData.codBarras || undefined,
-                deposito: parseFloat(brazilianToDecimal(formData.deposito)),
-                estoque: parseFloat(brazilianToDecimal(formData.estoque)),
                 custo: formData.custo ? parseFloat(brazilianToDecimal(formData.custo)) : undefined,
                 codFabricante: formData.codFabricante || undefined,
                 quantCaixas: formData.quantCaixas ? parseInt(formData.quantCaixas) : undefined,
@@ -562,28 +550,6 @@ const ProdutosPage: React.FC = () => {
                                     label="Código de Barras"
                                     value={formData.codBarras}
                                     onChange={handleInputChange('codBarras')}
-                                />
-                            </Grid>
-                            <Grid item xs={12} sm={6}>
-                                <TextField
-                                    margin="normal"
-                                    required
-                                    fullWidth
-                                    label="Depósito"
-                                    value={formData.deposito}
-                                    onChange={handleNumericInputChange('deposito')}
-                                    placeholder="0,00"
-                                />
-                            </Grid>
-                            <Grid item xs={12} sm={6}>
-                                <TextField
-                                    margin="normal"
-                                    required
-                                    fullWidth
-                                    label="Estoque"
-                                    value={formData.estoque}
-                                    onChange={handleNumericInputChange('estoque')}
-                                    placeholder="0,00"
                                 />
                             </Grid>
                             <Grid item xs={12} sm={6}>

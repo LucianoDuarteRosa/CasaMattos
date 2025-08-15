@@ -7,8 +7,6 @@ export interface CreateProdutoDTO {
     descricao: string;
     quantMinVenda: number;
     codBarras?: string;
-    deposito: number;
-    estoque: number;
     custo?: number;
     codFabricante?: string;
     quantCaixas?: number;
@@ -42,8 +40,6 @@ export class CreateProdutoUseCase {
                     codInterno: newProduto.codInterno,
                     descricao: newProduto.descricao,
                     quantMinVenda: newProduto.quantMinVenda,
-                    deposito: newProduto.deposito,
-                    estoque: newProduto.estoque,
                     idFornecedor: newProduto.idFornecedor
                 },
                 `Criou novo produto: ${newProduto.descricao} (Cód: ${newProduto.codInterno})`
