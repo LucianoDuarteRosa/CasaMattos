@@ -225,10 +225,10 @@ const DashboardPage: React.FC = () => {
                                                     </Typography>
                                                 </TableCell>
                                                 <TableCell align="right">
-                                                    {produto.estoque.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} m²
+                                                    {(produto.estoque ?? 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} m²
                                                 </TableCell>
                                                 <TableCell align="right">
-                                                    {produto.cinquentaPorcento.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} m²
+                                                    {(produto.cinquentaPorcento ?? 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} m²
                                                 </TableCell>
                                                 <TableCell align="right" sx={{
                                                     color: 'error.main'

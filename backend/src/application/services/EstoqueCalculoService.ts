@@ -30,9 +30,8 @@ export class EstoqueCalculoService {
             throw new Error('Produto não encontrado');
         }
 
-        // Estoque = Soma dos EstoqueItems * QuantMinVenda
-        const quantidadeEstoque = await this.estoqueItemRepository.calcularEstoqueProduto(produtoId);
-        const estoqueTotal = quantidadeEstoque * produto.quantMinVenda;
+        // Estoque = Soma das quantidades dos EstoqueItems (não multiplica por quantMinVenda)
+        const estoqueTotal = await this.estoqueItemRepository.calcularEstoqueProduto(produtoId);
 
         // Depósito = soma das quantCaixas dos endereçamentos * QuantMinVenda
         const enderecamentos = await this.enderecamentoRepository.findByProduto(produtoId);

@@ -38,7 +38,7 @@ export interface IEnderecamento {
     quantCaixas?: number;
     disponivel: boolean;
     idProduto: number;
-    idLista?: number;
+    idLista?: number | null;
     idPredio: number;
     produto?: IProduto;
     predio?: IPredio;
@@ -57,7 +57,7 @@ export class Enderecamento implements IEnderecamento {
         public lote?: string,
         public observacao?: string,
         public quantCaixas?: number,
-        public idLista?: number,
+        public idLista?: number | null,
         public createdAt?: Date,
         public updatedAt?: Date
     ) { }

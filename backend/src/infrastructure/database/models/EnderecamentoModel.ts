@@ -10,7 +10,7 @@ export interface EnderecamentoAttributes {
     quantCaixas?: number;
     disponivel: boolean;
     idProduto: number;
-    idLista?: number;
+    idLista?: number | null;
     idPredio: number;
 }
 
@@ -26,7 +26,7 @@ class EnderecamentoModel extends Model<EnderecamentoAttributes, EnderecamentoCre
     public quantCaixas?: number;
     public disponivel!: boolean;
     public idProduto!: number;
-    public idLista?: number;
+    public idLista?: number | null;
     public idPredio!: number;
 
     public readonly createdAt!: Date;

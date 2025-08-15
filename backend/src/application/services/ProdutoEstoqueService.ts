@@ -17,7 +17,7 @@ export class ProdutoEstoqueService {
 
         return {
             ...produto,
-            estoque: calculos.estoqueTotal / produto.quantMinVenda, // Quantidade em unidades do produto
+            estoque: calculos.estoqueTotal, // Quantidade total de itens no estoque
             deposito: calculos.depositoTotal / produto.quantMinVenda, // Quantidade em unidades do produto
             estoqueCalculos: calculos
         };

@@ -183,8 +183,8 @@ export class ListaRepository implements IListaRepository {
                 throw new Error('Endereçamento não está associado a esta lista');
             }
 
-            // Remover a associação
-            await enderecamento.update({ idLista: undefined }, { transaction });
+            // Remover a associação (setar idLista como null para garantir remoção correta)
+            await enderecamento.update({ idLista: null }, { transaction });
 
             await transaction.commit();
         } catch (error) {
@@ -221,31 +221,36 @@ export class ListaRepository implements IListaRepository {
                 await enderecamento.update({ disponivel: false }, { transaction });
 
                 // Movimentar estoque: transferir do depósito (endereçamentos) para o estoque (estoque_items)
-                // A lógica agora é: quando se baixa uma lista, o produto sai do endereçamento e vai para estoque_items
                 if ((enderecamento as any).produto && enderecamento.quantCaixas) {
                     const produto = (enderecamento as any).produto;
-                    const quantidadeMovimentar = enderecamento.quantCaixas;
+                    const quantidadeMovimentar = enderecamento.quantCaixas * produto.quantMinVenda;
+                    const EstoqueItemModel = (await import('../database/models/EstoqueItemModel')).default;
 
-                    // Verificar se há quantidade suficiente no endereçamento
-                    if (!enderecamento.quantCaixas || enderecamento.quantCaixas < quantidadeMovimentar) {
-                        throw new Error(`Quantidade insuficiente no endereçamento para o produto ${produto.descricao}`);
+                    // Tenta encontrar um estoque_item igual
+                    const estoqueExistente = await EstoqueItemModel.findOne({
+                        where: {
+                            produtoId: produto.id,
+                            lote: enderecamento.lote || 'LISTA',
+                            ton: enderecamento.tonalidade || 'N/A',
+                            bit: enderecamento.bitola || 'N/A'
+                        },
+                        transaction
+                    });
+                    if (estoqueExistente) {
+                        // Se já existe, soma a quantidade
+                        await estoqueExistente.update({
+                            quantidade: Number(estoqueExistente.quantidade) + quantidadeMovimentar
+                        }, { transaction });
+                    } else {
+                        // Se não existe, cria
+                        await EstoqueItemModel.create({
+                            produtoId: produto.id,
+                            lote: enderecamento.lote || 'LISTA',
+                            ton: enderecamento.tonalidade || 'N/A',
+                            bit: enderecamento.bitola || 'N/A',
+                            quantidade: quantidadeMovimentar
+                        }, { transaction });
                     }
-
-                    // Reduzir quantidade do endereçamento (quantCaixas)
-                    const novaQuantidadeEnderecamento = enderecamento.quantCaixas - quantidadeMovimentar;
-                    await enderecamento.update({
-                        quantCaixas: novaQuantidadeEnderecamento
-                    }, { transaction });
-
-                    // Adicionar ao estoque_items (usando características do endereçamento)
-                    const EstoqueItemModel = sequelize.models.EstoqueItem;
-                    await EstoqueItemModel.create({
-                        produtoId: produto.id,
-                        lote: enderecamento.lote || 'LISTA',
-                        ton: enderecamento.tonalidade || 'N/A',
-                        bit: enderecamento.bitola || 'N/A',
-                        quantidade: quantidadeMovimentar
-                    }, { transaction });
                 }
             }
 
@@ -286,21 +291,29 @@ export class ListaRepository implements IListaRepository {
             for (const enderecamento of enderecamentos) {
                 await enderecamento.update({ disponivel: true }, { transaction });
 
-                // Movimentar estoque inversamente: devolver as quantidades retiradas do depósito para o estoque original
+                // Movimentar estoque inversamente: reduzir quantidade do estoque_item correspondente
                 if ((enderecamento as any).produto && enderecamento.quantCaixas) {
                     const produto = (enderecamento as any).produto;
                     const quantidadeMovimentar = enderecamento.quantCaixas * produto.quantMinVenda;
-                    const novoDeposito = produto.deposito + quantidadeMovimentar;
-                    const novoEstoque = produto.estoque - quantidadeMovimentar;
+                    const EstoqueItemModel = (await import('../database/models/EstoqueItemModel')).default;
 
-                    if (novoEstoque < 0) {
-                        throw new Error(`Estoque insuficiente para devolver para o produto ${produto.descricao}`);
+                    const estoqueExistente = await EstoqueItemModel.findOne({
+                        where: {
+                            produtoId: produto.id,
+                            lote: enderecamento.lote || 'LISTA',
+                            ton: enderecamento.tonalidade || 'N/A',
+                            bit: enderecamento.bitola || 'N/A'
+                        },
+                        transaction
+                    });
+                    if (estoqueExistente) {
+                        const novaQuantidade = Number(estoqueExistente.quantidade) - quantidadeMovimentar;
+                        if (novaQuantidade > 0) {
+                            await estoqueExistente.update({ quantidade: novaQuantidade }, { transaction });
+                        } else {
+                            await estoqueExistente.destroy({ transaction });
+                        }
                     }
-
-                    await produto.update({
-                        deposito: novoDeposito,
-                        estoque: novoEstoque
-                    }, { transaction });
                 }
             }
 

@@ -153,7 +153,7 @@ export class DashboardController {
             // Regra: estoque < 50% de (quantMinVenda * quantCaixas)
             // Só aparecem produtos que tenham estoque no depósito (deposito > 0)
             // Deposito = soma das quantCaixas dos endereçamentos * quantMinVenda
-            // Estoque = soma das quantidade dos estoque_items * quantMinVenda
+            // Estoque = soma das quantidades dos estoque_items
             const produtosEstoqueBaixo = await sequelize.query(`
                 WITH produto_calculos AS (
                     SELECT 
@@ -163,7 +163,7 @@ export class DashboardController {
                         p."quantCaixas",
                         f."razaoSocial" as fornecedor,
                         COALESCE(SUM(e."quantCaixas"), 0) * p."quantMinVenda" as deposito,
-                        COALESCE(SUM(ei.quantidade), 0) * p."quantMinVenda" as estoque,
+                        COALESCE(SUM(ei.quantidade), 0) as estoque,
                         (p."quantMinVenda" * COALESCE(p."quantCaixas", 1)) as limiteCalculado,
                         ((p."quantMinVenda" * COALESCE(p."quantCaixas", 1)) * 0.5) as cinquentaPorcento
                     FROM "Produtos" p
@@ -175,9 +175,8 @@ export class DashboardController {
                 SELECT id, descricao, deposito, estoque, "quantMinVenda", "quantCaixas", 
                        fornecedor, limiteCalculado, cinquentaPorcento
                 FROM produto_calculos
-                WHERE deposito > 0 
-                  AND estoque > 0
-                  AND estoque < cinquentaPorcento
+                                WHERE deposito > 0 
+                                    AND estoque < cinquentaPorcento
                 ORDER BY estoque ASC
                 LIMIT 10
             `, {
