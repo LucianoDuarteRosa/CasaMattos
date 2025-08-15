@@ -5,7 +5,11 @@ const router = express.Router();
 const estoqueController = new EstoqueController();
 
 // POST /api/estoque/transferir-deposito-estoque - Transferir produto do depósito para estoque
-router.post('/transferir-deposito-estoque', (req, res) => estoqueController.transferirDepositoParaEstoque(req, res));
+import { addExecutorUserId } from '../middlewares/executorUserId';
+import { authenticateToken } from '../middlewares/auth';
+
+// Proteger e adicionar executorUserId
+router.post('/transferir-deposito-estoque', authenticateToken, addExecutorUserId, (req, res) => estoqueController.transferirDepositoParaEstoque(req, res));
 
 // POST /api/estoque/retirar-estoque - Retirar produto do estoque
 router.post('/retirar-estoque', (req, res) => estoqueController.retirarDoEstoque(req, res));

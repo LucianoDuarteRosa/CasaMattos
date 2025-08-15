@@ -101,34 +101,34 @@ export class DashboardController {
 
     async getProdutosPontaEstoque(req: Request, res: Response): Promise<void> {
         try {
-            // Produtos em ponta de estoque: menos de 10 * quantMinVenda no total (estoque + deposito)
-            // Deposito = soma das quantCaixas dos endereçamentos * quantMinVenda
-            // Estoque = soma das quantidade dos estoque_items * quantMinVenda
+            // Produtos em ponta de estoque: qualquer lote com quantidade < 10*quantMinVenda e sem mais caixas no endereçamento
             const produtosPontaEstoque = await sequelize.query(`
-                WITH produto_calculos AS (
-                    SELECT 
-                        p.id,
-                        p."descricao",
-                        p."quantMinVenda",
-                        f."razaoSocial" as fornecedor,
-                        COALESCE(SUM(e."quantCaixas"), 0) * p."quantMinVenda" as deposito,
-                        COALESCE(SUM(ei.quantidade), 0) * p."quantMinVenda" as estoque,
-                        (COALESCE(SUM(e."quantCaixas"), 0) + COALESCE(SUM(ei.quantidade), 0)) * p."quantMinVenda" as totalDisponivel,
-                        (p."quantMinVenda" * 10) as limiteMinimo
-                    FROM "Produtos" p
-                    LEFT JOIN "Fornecedores" f ON p."idFornecedor" = f.id
-                    LEFT JOIN "Enderecamentos" e ON e."idProduto" = p.id
-                    LEFT JOIN "EstoqueItems" ei ON ei."produtoId" = p.id
-                    GROUP BY p.id, p."descricao", p."quantMinVenda", f."razaoSocial"
-                )
-                SELECT id, descricao, deposito, estoque, "quantMinVenda", fornecedor, 
-                       totalDisponivel, limiteMinimo
-                FROM produto_calculos
-                WHERE totalDisponivel < limiteMinimo
-                  AND totalDisponivel > 0
-                  AND deposito = 0
-                ORDER BY totalDisponivel ASC
-                LIMIT 10
+                SELECT 
+                    p.id as "produtoId",
+                    p."descricao",
+                    p."quantMinVenda",
+                    f."razaoSocial" as fornecedor,
+                    ei.lote,
+                    ei.ton,
+                    ei.bit,
+                    ei.quantidade,
+                    (ei.quantidade * p."quantMinVenda") as quantidade_total,
+                    (p."quantMinVenda" * 10) as limiteMinimo
+                FROM "EstoqueItems" ei
+                INNER JOIN "Produtos" p ON p.id = ei."produtoId"
+                LEFT JOIN "Fornecedores" f ON p."idFornecedor" = f.id
+                LEFT JOIN "Enderecamentos" e 
+                    ON e."idProduto" = p.id 
+                    AND e.lote = ei.lote 
+                    AND e.tonalidade = ei.ton 
+                    AND e.bitola = ei.bit
+                GROUP BY p.id, p."descricao", p."quantMinVenda", f."razaoSocial", ei.lote, ei.ton, ei.bit, ei.quantidade
+                HAVING 
+                    SUM(COALESCE(e."quantCaixas", 0)) = 0 -- não há mais caixas desse lote no endereçamento
+                    AND (ei.quantidade * p."quantMinVenda") < (p."quantMinVenda" * 10)
+                    AND (ei.quantidade * p."quantMinVenda") > 0
+                ORDER BY quantidade_total ASC
+                LIMIT 20
             `, {
                 type: QueryTypes.SELECT
             });
