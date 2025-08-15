@@ -136,3 +136,14 @@ export interface IPaginatedResponse<T> {
     limit: number;
     totalPages: number;
 }
+
+export interface IEstoqueItem {
+    id: number;
+    produtoId: number;
+    lote: string;
+    ton: string;
+    bit: string;
+    quantidade: number;
+    createdAt?: string;
+    updatedAt?: string;
+}

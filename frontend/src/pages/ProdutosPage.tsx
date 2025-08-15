@@ -22,6 +22,8 @@ import { Add, Edit, Visibility } from '@mui/icons-material';
 import { produtoService } from '@/services/produtoService';
 import { fornecedorService } from '@/services/fornecedorService';
 import { IProduto, IFornecedor } from '@/types';
+import { IEstoqueItem } from '@/types';
+import { estoqueItemService } from '@/services/estoqueItemService';
 import { dataGridPtBR } from '@/utils/dataGridLocale';
 import { dataGridStyles } from '@/utils/dataGridStyles';
 import { useUppercaseForm } from '@/hooks';
@@ -97,6 +99,8 @@ const ProdutosPage: React.FC = () => {
 
     const [produtos, setProdutos] = useState<IProduto[]>([]);
     const [fornecedores, setFornecedores] = useState<IFornecedor[]>([]);
+    const [estoqueItems, setEstoqueItems] = useState<IEstoqueItem[]>([]);
+    const [loadingEstoqueItems, setLoadingEstoqueItems] = useState(false);
     const [loading, setLoading] = useState(true);
     const [open, setOpen] = useState(false);
     const [detailsOpen, setDetailsOpen] = useState(false);
@@ -284,6 +288,14 @@ const ProdutosPage: React.FC = () => {
     const handleDetails = (produto: IProduto) => {
         setViewingProduto(produto);
         setDetailsOpen(true);
+        setEstoqueItems([]);
+        if (produto?.id) {
+            setLoadingEstoqueItems(true);
+            estoqueItemService.getByProdutoId(produto.id)
+                .then(setEstoqueItems)
+                .catch(() => setEstoqueItems([]))
+                .finally(() => setLoadingEstoqueItems(false));
+        }
     };
 
     const handleClose = () => {
@@ -600,7 +612,7 @@ const ProdutosPage: React.FC = () => {
                 <DialogContent>
                     {viewingProduto && (
                         <Box component="div" sx={{ mt: 1 }}>
-                            <Grid container spacing={2}>
+                            <Grid container spacing={1}>
                                 <Grid item xs={12} sm={6}>
                                     <TextField
                                         margin="normal"
@@ -711,29 +723,39 @@ const ProdutosPage: React.FC = () => {
                                         variant="filled"
                                     />
                                 </Grid>
-                                <Grid item xs={12} sm={6}>
-                                    <TextField
-                                        margin="normal"
-                                        fullWidth
-                                        label="Criado em"
-                                        value={viewingProduto.createdAt ? new Date(viewingProduto.createdAt).toLocaleString('pt-BR') : 'Não informado'}
-                                        InputProps={{ readOnly: true }}
-                                        variant="filled"
-                                    />
-                                </Grid>
-                                {viewingProduto.updatedAt && (
-                                    <Grid item xs={12} sm={6}>
-                                        <TextField
-                                            margin="normal"
-                                            fullWidth
-                                            label="Atualizado em"
-                                            value={new Date(viewingProduto.updatedAt).toLocaleString('pt-BR')}
-                                            InputProps={{ readOnly: true }}
-                                            variant="filled"
-                                        />
-                                    </Grid>
-                                )}
                             </Grid>
+                            {/* Lista de Itens de Estoque */}
+                            <Box sx={{ mt: 4 }}>
+                                <Typography variant="h6" gutterBottom>Itens de Estoque</Typography>
+                                {loadingEstoqueItems ? (
+                                    <Typography>Carregando itens de estoque...</Typography>
+                                ) : estoqueItems.length === 0 ? (
+                                    <Typography>Nenhum item de estoque encontrado para este produto.</Typography>
+                                ) : (
+                                    <Paper variant="outlined" sx={{ maxHeight: 300, overflow: 'auto' }}>
+                                        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                                            <thead>
+                                                <tr>
+                                                    <th style={{ padding: 8, borderBottom: '1px solid #ccc' }}>Lote</th>
+                                                    <th style={{ padding: 8, borderBottom: '1px solid #ccc' }}>Tonalidade</th>
+                                                    <th style={{ padding: 8, borderBottom: '1px solid #ccc' }}>Bitola</th>
+                                                    <th style={{ padding: 8, borderBottom: '1px solid #ccc' }}>Quantidade</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {estoqueItems.map(item => (
+                                                    <tr key={item.id}>
+                                                        <td style={{ padding: 8, borderBottom: '1px solid #eee' }}>{item.lote}</td>
+                                                        <td style={{ padding: 8, borderBottom: '1px solid #eee' }}>{item.ton}</td>
+                                                        <td style={{ padding: 8, borderBottom: '1px solid #eee' }}>{item.bit}</td>
+                                                        <td style={{ padding: 8, borderBottom: '1px solid #eee', textAlign: 'right' }}>{formatBrazilianNumber(item.quantidade)}</td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </Paper>
+                                )}
+                            </Box>
                         </Box>
                     )}
                 </DialogContent>

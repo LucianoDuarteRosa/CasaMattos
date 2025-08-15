@@ -53,7 +53,7 @@ export class EstoqueCalculoService {
         const estoqueItems = await this.estoqueItemRepository.findByProdutoId(produtoId);
 
         return estoqueItems.map(item => ({
-            lote: item.lote,
+            lote: item.lote ? item.lote.toUpperCase() : '',
             ton: item.ton,
             bit: item.bit,
             quantidade: item.quantidade,
