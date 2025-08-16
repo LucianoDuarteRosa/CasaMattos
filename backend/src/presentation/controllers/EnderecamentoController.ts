@@ -180,7 +180,7 @@ export class EnderecamentoController {
                 return;
             }
 
-            res.status(204).send();
+            res.status(200).json({ success: true });
         } catch (error) {
             console.error('Erro ao deletar endereçamento:', error);
             res.status(400).json({

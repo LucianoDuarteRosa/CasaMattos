@@ -177,11 +177,6 @@ const ProdutosPage: React.FC = () => {
             width: 100,
             minWidth: 80,
             type: 'number',
-            valueGetter: (params) => {
-                const quantCaixas = Number(params.row.quantCaixas) || 0;
-                const quantMinVenda = Number(params.row.quantMinVenda) || 0;
-                return quantCaixas * quantMinVenda;
-            },
             valueFormatter: (params) => formatBrazilianNumber(params.value)
         },
         {
@@ -616,7 +611,7 @@ const ProdutosPage: React.FC = () => {
                 </DialogTitle>
                 <DialogContent>
                     {viewingProduto && (
-                        <Box component="div" sx={{ mt: 1 }}>
+                        <Box component="div">
                             <Grid container spacing={1}>
                                 <Grid item xs={12} sm={6}>
                                     <TextField
@@ -735,7 +730,7 @@ const ProdutosPage: React.FC = () => {
                                 </Grid>
                             </Grid>
                             {/* Lista de Itens de Estoque */}
-                            <Box sx={{ mt: 4 }}>
+                            <Box sx={{ mt: 2 }}>
                                 <Typography variant="h6" gutterBottom>Itens de Estoque</Typography>
                                 {loadingEstoqueItems ? (
                                     <Typography>Carregando itens de estoque...</Typography>

@@ -33,11 +33,14 @@ export class EstoqueCalculoService {
         // Estoque = Soma das quantidades dos EstoqueItems (não multiplica por quantMinVenda)
         const estoqueTotal = await this.estoqueItemRepository.calcularEstoqueProduto(produtoId);
 
-        // Depósito = soma das quantCaixas dos endereçamentos * QuantMinVenda
+
+        // Depósito = soma de (quantCaixas * quantMinVenda) para cada endereçamento
         const enderecamentos = await this.enderecamentoRepository.findByProduto(produtoId);
-        const quantidadeDeposito = enderecamentos.reduce((total: number, enderecamento: any) =>
-            total + (enderecamento.quantCaixas || 0), 0);
-        const depositoTotal = quantidadeDeposito * produto.quantMinVenda;
+        const depositoTotal = enderecamentos.reduce(
+            (total: number, enderecamento: any) =>
+                total + ((enderecamento.quantCaixas || 0) * (produto.quantMinVenda || 0)),
+            0
+        );
 
         return {
             estoqueTotal,
