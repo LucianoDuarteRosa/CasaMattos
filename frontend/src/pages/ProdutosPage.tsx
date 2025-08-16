@@ -752,13 +752,13 @@ const ProdutosPage: React.FC = () => {
                                                     <th style={{ padding: 8, borderBottom: '1px solid #ccc' }}>Quantidade</th>
                                                 </tr>
                                             </thead>
-                                            <tbody>
+                                            <tbody style={{ textAlign: 'center' }}>
                                                 {estoqueItems.map(item => (
                                                     <tr key={item.id}>
-                                                        <td style={{ padding: 8, borderBottom: '1px solid #eee' }}>{item.lote}</td>
-                                                        <td style={{ padding: 8, borderBottom: '1px solid #eee' }}>{item.ton}</td>
-                                                        <td style={{ padding: 8, borderBottom: '1px solid #eee' }}>{item.bit}</td>
-                                                        <td style={{ padding: 8, borderBottom: '1px solid #eee', textAlign: 'right' }}>{formatBrazilianNumber(item.quantidade)}</td>
+                                                        <td style={{ padding: 8, borderBottom: '1px solid #eee', textAlign: 'center' }}>{item.lote}</td>
+                                                        <td style={{ padding: 8, borderBottom: '1px solid #eee', textAlign: 'center' }}>{item.ton}</td>
+                                                        <td style={{ padding: 8, borderBottom: '1px solid #eee', textAlign: 'center' }}>{item.bit}</td>
+                                                        <td style={{ padding: 8, borderBottom: '1px solid #eee', textAlign: 'center' }}>{formatBrazilianNumber(item.quantidade)}</td>
                                                     </tr>
                                                 ))}
                                             </tbody>

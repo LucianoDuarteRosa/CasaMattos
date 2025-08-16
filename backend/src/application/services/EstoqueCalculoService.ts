@@ -50,14 +50,62 @@ export class EstoqueCalculoService {
         const produto = await this.produtoRepository.findById(produtoId);
         if (!produto) return [];
 
+        // Itens do estoque
         const estoqueItems = await this.estoqueItemRepository.findByProdutoId(produtoId);
 
-        return estoqueItems.map(item => ({
-            lote: item.lote ? item.lote.toUpperCase() : '',
+        // Itens do armazenamento (endereçamento)
+        const enderecamentos = await this.enderecamentoRepository.findByProduto(produtoId);
+
+        // Junta todos os itens (estoque + armazenamento)
+        const todosItens: Array<{ lote: string; ton: string; bit: string; quantidade: number; origem: 'estoque' | 'armazenamento' }> = [];
+
+        // Adiciona os itens do estoque
+        for (const item of estoqueItems) {
+            todosItens.push({
+                lote: item.lote ? item.lote.toUpperCase() : '',
+                ton: item.ton,
+                bit: item.bit,
+                quantidade: item.quantidade,
+                origem: 'estoque'
+            });
+        }
+
+        // Adiciona os itens do armazenamento (endereçamento)
+        for (const end of enderecamentos) {
+            // Só considera endereçamentos disponíveis e com quantCaixas > 0
+            if (end.disponivel && end.quantCaixas && end.quantCaixas > 0) {
+                todosItens.push({
+                    lote: end.lote ? end.lote.toUpperCase() : '',
+                    ton: end.tonalidade,
+                    bit: end.bitola,
+                    quantidade: end.quantCaixas * produto.quantMinVenda,
+                    origem: 'armazenamento'
+                });
+            }
+        }
+
+        // Agrupa por lote, ton, bit
+        const agrupados: { [key: string]: { lote: string; ton: string; bit: string; quantidade: number } } = {};
+        for (const item of todosItens) {
+            const chave = `${item.lote}|${item.ton}|${item.bit}`;
+            if (!agrupados[chave]) {
+                agrupados[chave] = {
+                    lote: item.lote,
+                    ton: item.ton,
+                    bit: item.bit,
+                    quantidade: 0
+                };
+            }
+            agrupados[chave].quantidade += item.quantidade;
+        }
+
+        // Monta o array final
+        return Object.values(agrupados).map(item => ({
+            lote: item.lote,
             ton: item.ton,
             bit: item.bit,
             quantidade: item.quantidade,
-            quantidadeVenda: item.quantidade * produto.quantMinVenda
+            quantidadeVenda: item.quantidade // já está multiplicado para armazenamento
         }));
     }
 
