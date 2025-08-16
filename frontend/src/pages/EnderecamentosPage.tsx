@@ -500,35 +500,25 @@ const EnderecamentosPage: React.FC = () => {
                 showNotification('Endereçamento atualizado com sucesso!', 'success');
             } else {
                 // Modo criação - usar a nova API de criação em lote
-                let enderecamentosCriados: any[] = [];
-
-                if (quantidadeAdicoes === 1) {
-                    const enderecamento = await enderecamentoService.create(enderecamentoData);
-                    enderecamentosCriados = [enderecamento];
-                    showNotification('Endereçamento criado com sucesso!', 'success');
-                } else {
-                    // Usar nova API de criação em lote
-                    const response = await enderecamentoService.createBulk({
-                        quantidade: quantidadeAdicoes,
-                        enderecamentoData
-                    });
-                    enderecamentosCriados = response.data;
-                    showNotification(response.message, 'success');
-                }
-
-                // Movimentar estoque: adicionar ao depósito (entrada)
-                // Buscar dados do produto para calcular a movimentação
-                const produto = await produtoService.getById(enderecamentoData.idProduto);
-                if (produto) {
-                    const quantCaixas = enderecamentoData.quantCaixas || produto.quantCaixas || 1;
-                    const quantidadePorEnderecamento = produto.quantMinVenda * quantCaixas;
-                    const quantidadeTotalParaMovimentar = quantidadePorEnderecamento * enderecamentosCriados.length;
-
-                    await produtoService.updateEstoque(
-                        enderecamentoData.idProduto,
-                        quantidadeTotalParaMovimentar,
-                        'entrada'
-                    );
+                try {
+                    if (quantidadeAdicoes === 1) {
+                        await enderecamentoService.create(enderecamentoData);
+                        showNotification('Endereçamento criado com sucesso!', 'success');
+                    } else {
+                        // Usar nova API de criação em lote
+                        const response = await enderecamentoService.createBulk({
+                            quantidade: quantidadeAdicoes,
+                            enderecamentoData
+                        });
+                        showNotification(response.message, 'success');
+                    }
+                } catch (error: any) {
+                    if (error?.response?.data?.created) {
+                        // Se o backend retornar um campo indicando que foi criado, não mostrar erro
+                        showNotification('Endereçamento criado, mas houve um aviso do servidor.', 'warning');
+                    } else {
+                        showNotification(error.response?.data?.message || 'Erro ao salvar endereçamento. Tente novamente.', 'error');
+                    }
                 }
             }
 
@@ -538,6 +528,7 @@ const EnderecamentosPage: React.FC = () => {
         } catch (error: any) {
             console.error('Erro ao salvar endereçamento:', error);
             showNotification(error.response?.data?.message || 'Erro ao salvar endereçamento. Tente novamente.', 'error');
+            await loadEnderecamentos();
         }
     };
 

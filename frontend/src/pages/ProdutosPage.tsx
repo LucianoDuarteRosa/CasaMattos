@@ -174,9 +174,14 @@ const ProdutosPage: React.FC = () => {
         {
             field: 'deposito',
             headerName: 'Depósito',
-            width: 80,
-            minWidth: 70,
+            width: 100,
+            minWidth: 80,
             type: 'number',
+            valueGetter: (params) => {
+                const quantCaixas = Number(params.row.quantCaixas) || 0;
+                const quantMinVenda = Number(params.row.quantMinVenda) || 0;
+                return quantCaixas * quantMinVenda;
+            },
             valueFormatter: (params) => formatBrazilianNumber(params.value)
         },
         {
@@ -668,7 +673,11 @@ const ProdutosPage: React.FC = () => {
                                         margin="normal"
                                         fullWidth
                                         label="Depósito"
-                                        value={formatBrazilianNumber(viewingProduto.deposito)}
+                                        value={
+                                            viewingProduto && viewingProduto.quantCaixas && viewingProduto.quantMinVenda
+                                                ? formatBrazilianNumber(Number(viewingProduto.quantCaixas) * Number(viewingProduto.quantMinVenda))
+                                                : '0,00'
+                                        }
                                         InputProps={{ readOnly: true }}
                                         variant="filled"
                                     />
@@ -713,6 +722,7 @@ const ProdutosPage: React.FC = () => {
                                         variant="filled"
                                     />
                                 </Grid>
+                                {/* Removido campo extra de estoque exibido, pois agora é exibido em Depósito */}
                                 <Grid item xs={12} sm={6}>
                                     <TextField
                                         margin="normal"
