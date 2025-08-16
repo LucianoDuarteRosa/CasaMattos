@@ -222,7 +222,7 @@ export class ProdutoController {
         // MÉTODO DESCONTINUADO: 
         // Agora o estoque é calculado dinamicamente baseado nos EndereçamentoItems e EstoqueItems
         // Para movimentar estoque use os endpoints específicos de transferência e retirada
-        res.status(410).json({
+        res.status(200).json({
             success: false,
             message: 'Este endpoint foi descontinuado. Use os endpoints específicos para transferência entre depósito e estoque.',
             alternativeEndpoints: {
