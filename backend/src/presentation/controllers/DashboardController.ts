@@ -162,7 +162,7 @@ export class DashboardController {
                         p."quantMinVenda",
                         p."quantCaixas",
                         f."razaoSocial" as fornecedor,
-                        COALESCE(SUM(e."quantCaixas"), 0) * p."quantMinVenda" as deposito,
+                        COALESCE(SUM(CASE WHEN e."disponivel" = true THEN e."quantCaixas" ELSE 0 END), 0) * p."quantMinVenda" as deposito,
                         COALESCE(SUM(ei.quantidade), 0) as estoque,
                         (p."quantMinVenda" * COALESCE(p."quantCaixas", 1)) as limiteCalculado,
                         ((p."quantMinVenda" * COALESCE(p."quantCaixas", 1)) * 0.5) as cinquentaPorcento
@@ -175,8 +175,8 @@ export class DashboardController {
                 SELECT id, descricao, deposito, estoque, "quantMinVenda", "quantCaixas", 
                        fornecedor, limiteCalculado, cinquentaPorcento
                 FROM produto_calculos
-                                WHERE deposito > 0 
-                                    AND estoque < cinquentaPorcento
+                WHERE deposito > 0 
+                    AND estoque < cinquentaPorcento
                 ORDER BY estoque ASC
                 LIMIT 10
             `, {
