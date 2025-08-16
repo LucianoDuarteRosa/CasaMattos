@@ -209,7 +209,6 @@ const DashboardPage: React.FC = () => {
                                         <TableRow>
                                             <TableCell>Descrição</TableCell>
                                             <TableCell align="right">Estoque Atual</TableCell>
-                                            <TableCell align="right">Limite 50%</TableCell>
                                             <TableCell align="right">Status</TableCell>
                                         </TableRow>
                                     </TableHead>
@@ -226,9 +225,6 @@ const DashboardPage: React.FC = () => {
                                                 </TableCell>
                                                 <TableCell align="right">
                                                     {(produto.estoque ?? 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} m²
-                                                </TableCell>
-                                                <TableCell align="right">
-                                                    {(produto.cinquentaPorcento ?? 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} m²
                                                 </TableCell>
                                                 <TableCell align="right" sx={{
                                                     color: 'error.main'

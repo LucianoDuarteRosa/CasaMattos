@@ -15,6 +15,8 @@ export class ProdutoRepository implements IProdutoRepository {
     }
 
     async findAll(): Promise<IProduto[]> {
+        // Aqui não é possível filtrar endereçamentos diretamente, mas o cálculo do depósito deve considerar apenas endereçamentos disponíveis.
+        // Certifique-se de que o serviço/camada que calcula o depósito já usa apenas endereçamentos disponiveis (ajustado no EnderecamentoRepository).
         const produtos = await ProdutoModel.findAll({
             order: [['descricao', 'ASC']]
         });

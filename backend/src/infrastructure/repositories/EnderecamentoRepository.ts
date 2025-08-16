@@ -129,7 +129,7 @@ export class EnderecamentoRepository implements IEnderecamentoRepository {
 
     async findByProduto(idProduto: number): Promise<IEnderecamento[]> {
         const enderecamentos = await EnderecamentoModel.findAll({
-            where: { idProduto },
+            where: { idProduto, disponivel: true },
             include: [
                 {
                     model: ProdutoModel,
