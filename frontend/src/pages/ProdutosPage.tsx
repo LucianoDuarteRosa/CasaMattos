@@ -341,7 +341,7 @@ const ProdutosPage: React.FC = () => {
         event: React.ChangeEvent<HTMLInputElement>
     ) => {
         // Para campos que devem ser maiúscula, usar handleChange
-        if (field === 'descricao') {
+        if (field === 'descricao' || field === 'codBarras') {
             handleChange(field)(event);
         } else {
             updateField(field, event.target.value);

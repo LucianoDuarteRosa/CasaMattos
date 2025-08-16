@@ -378,10 +378,17 @@ const EnderecamentosPage: React.FC = () => {
     const handleInputChange = (field: keyof FormData) => (
         event: React.ChangeEvent<HTMLInputElement>
     ) => {
-        setFormData(prev => ({
-            ...prev,
-            [field]: event.target.value
-        }));
+        setFormData(prev => {
+            let value = event.target.value;
+            // Força maiúsculas nos campos específicos
+            if (["tonalidade", "bitola", "lote", "observacao"].includes(field)) {
+                value = value.toUpperCase();
+            }
+            return {
+                ...prev,
+                [field]: value
+            };
+        });
     };
 
     const handleProdutoChange = (produto: IProduto | null) => {
