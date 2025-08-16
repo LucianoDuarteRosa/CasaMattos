@@ -10,11 +10,14 @@ export interface DashboardStats {
 export interface ProdutoPontaEstoque {
     id: number;
     descricao: string;
-    deposito: number;
-    estoque: number;
     quantMinVenda: number;
     fornecedor: string;
+    lote: string;
+    ton: string;
+    bit: string;
+    quantidade: number;
     totalDisponivel: number;
+    limiteMinimo: number;
 }
 
 export interface ProdutoEstoqueBaixo {

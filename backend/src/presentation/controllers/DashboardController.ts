@@ -111,8 +111,7 @@ export class DashboardController {
                     ei.lote,
                     ei.ton,
                     ei.bit,
-                    ei.quantidade,
-                    (ei.quantidade * p."quantMinVenda") as quantidade_total,
+                    ei.quantidade as "totalDisponivel",
                     (p."quantMinVenda" * 10) as limiteMinimo
                 FROM "EstoqueItems" ei
                 INNER JOIN "Produtos" p ON p.id = ei."produtoId"
@@ -122,12 +121,13 @@ export class DashboardController {
                     AND e.lote = ei.lote 
                     AND e.tonalidade = ei.ton 
                     AND e.bitola = ei.bit
+                    AND e."disponivel" = true
                 GROUP BY p.id, p."descricao", p."quantMinVenda", f."razaoSocial", ei.lote, ei.ton, ei.bit, ei.quantidade
                 HAVING 
-                    SUM(COALESCE(e."quantCaixas", 0)) = 0 -- não há mais caixas desse lote no endereçamento
-                    AND (ei.quantidade * p."quantMinVenda") < (p."quantMinVenda" * 10)
-                    AND (ei.quantidade * p."quantMinVenda") > 0
-                ORDER BY quantidade_total ASC
+                    SUM(COALESCE(e."quantCaixas", 0)) = 0 -- não há mais caixas desse lote no endereçamento disponivel
+                    AND ei.quantidade < (p."quantMinVenda" * 10)
+                    AND ei.quantidade > 0
+                ORDER BY "totalDisponivel" ASC
                 LIMIT 20
             `, {
                 type: QueryTypes.SELECT

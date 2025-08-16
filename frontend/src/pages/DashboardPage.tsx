@@ -169,7 +169,7 @@ const DashboardPage: React.FC = () => {
                                     </TableHead>
                                     <TableBody>
                                         {produtosPontaEstoque.map((produto) => (
-                                            <TableRow key={produto.id}>
+                                            <TableRow key={`${produto.id || produto.id}-${produto.lote}-${produto.ton}-${produto.bit}`}>
                                                 <TableCell>
                                                     <Typography variant="body2" noWrap>
                                                         {produto.descricao}
@@ -179,7 +179,7 @@ const DashboardPage: React.FC = () => {
                                                     </Typography>
                                                 </TableCell>
                                                 <TableCell align="right">
-                                                    {produto.totalDisponivel.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} m²
+                                                    {Number(produto.totalDisponivel).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} m²
                                                 </TableCell>
                                                 <TableCell align="right">
                                                     {produto.quantMinVenda.toLocaleString('pt-BR', { maximumFractionDigits: 2 })}
@@ -224,7 +224,7 @@ const DashboardPage: React.FC = () => {
                                                     </Typography>
                                                 </TableCell>
                                                 <TableCell align="right">
-                                                    {(produto.estoque ?? 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} m²
+                                                    {Number(produto.estoque ?? 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} m²
                                                 </TableCell>
                                                 <TableCell align="right" sx={{
                                                     color: 'error.main'
