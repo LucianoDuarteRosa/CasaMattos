@@ -39,7 +39,7 @@ export const SnackbarProvider: React.FC<SnackbarProviderProps> = ({ children }) 
         <SnackbarContext.Provider value={{ showSnackbar }}>
             {children}
             <Snackbar open={open} autoHideDuration={4000} onClose={handleClose} anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}>
-                <Alert onClose={handleClose} severity={severity} sx={{ width: '100%' }}>
+                <Alert onClose={handleClose} severity={severity} variant="filled" sx={{ width: '100%' }}>
                     {message}
                 </Alert>
             </Snackbar>

@@ -6,9 +6,7 @@ import './styles/globals.css';
 import { SnackbarProvider as CustomSnackbarProvider } from './components/SnackbarProvider';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
-    <React.StrictMode>
-        <CustomSnackbarProvider>
-            <App />
-        </CustomSnackbarProvider>
-    </React.StrictMode>,
+    <CustomSnackbarProvider>
+        <App />
+    </CustomSnackbarProvider>
 );

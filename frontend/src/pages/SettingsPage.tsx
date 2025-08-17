@@ -1,5 +1,6 @@
 // Página de configurações genérica (inicialmente para SMTP)
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useContext } from 'react';
+import { SnackbarContext } from '../components/SnackbarProvider';
 import { api } from '../services/api';
 import { TextField, Button, Switch, FormControlLabel, Typography, Paper, Box } from '@mui/material';
 
@@ -16,6 +17,7 @@ interface SmtpConfig {
 }
 
 export default function SettingsPage() {
+    const snackbar = useContext(SnackbarContext);
     const [smtp, setSmtp] = useState<SmtpConfig>({
         host: '', port: 587, user: '', pass: '', from: '', to: '', secure: false, active: false
     });
@@ -56,13 +58,17 @@ export default function SettingsPage() {
             type: 'smtp',
             active: smtp.active,
         };
-        if (smtp.id) {
-            await api.put(`/settings/${smtp.id}`, payload);
-        } else {
-            await api.post('/settings', payload);
+        try {
+            if (smtp.id) {
+                await api.put(`/settings/${smtp.id}`, payload);
+            } else {
+                await api.post('/settings', payload);
+            }
+            snackbar?.showSnackbar('Configuração salva com sucesso!', 'success');
+        } catch (e) {
+            snackbar?.showSnackbar('Erro ao salvar configuração.', 'error');
         }
         setLoading(false);
-        alert('Configuração salva!');
     };
 
     return (
