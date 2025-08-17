@@ -88,19 +88,19 @@ const DashboardPage: React.FC = () => {
 
     const statsConfig = [
         {
-            title: 'Produtos Com Estoque',
+            title: 'Produtos em Estoque',
             value: stats?.produtosComEstoque.toString() || '0',
             icon: <Inventory fontSize="large" />,
             color: '#1976d2',
         },
         {
             title: 'Metragem Total',
-            value: stats?.metragemTotal + " m²" || '0,00',
+            value: stats?.metragemTotal || '0,00',
             icon: <Business fontSize="large" />,
             color: '#388e3c',
         },
         {
-            title: 'Endereçamentos Disponíveis',
+            title: 'Endereçamentos',
             value: stats?.enderecamentosDisponiveis.toString() || '0',
             icon: <LocationOn fontSize="large" />,
             color: '#f57c00',
