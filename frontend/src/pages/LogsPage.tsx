@@ -17,7 +17,7 @@ import { logService } from '../services/logService';
 import { LogEntry } from '../types';
 import { dataGridPtBR } from '../utils/dataGridLocale';
 import { dataGridStyles } from '../utils/dataGridStyles';
-
+import { Search } from '@mui/icons-material';
 
 const entidades = [
     { value: '', label: 'Todas' },
@@ -101,6 +101,7 @@ const LogsPage: React.FC = () => {
                         value={search}
                         onChange={e => setSearch(e.target.value)}
                         sx={{ minWidth: 220 }}
+                        InputProps={{ startAdornment: <Search sx={{ mr: 1 }} /> }}
                     />
                     <FormControl fullWidth sx={{ minWidth: 180 }}>
                         <InputLabel>Entidade</InputLabel>
@@ -128,7 +129,7 @@ const LogsPage: React.FC = () => {
                     </FormControl>
                 </Box>
                 <Button
-                    variant="contained"
+                    variant="outlined"
                     onClick={handleFilter}
                     disabled={loading}
                     sx={{ minWidth: 120, height: '56px', alignSelf: 'flex-end' }}

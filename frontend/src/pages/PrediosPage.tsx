@@ -18,7 +18,7 @@ import {
     Select,
 } from '@mui/material';
 import { DataGrid, GridColDef, GridActionsCellItem } from '@mui/x-data-grid';
-import { Add, Edit, Delete } from '@mui/icons-material';
+import { Add, Edit, Delete, Search } from '@mui/icons-material';
 import { predioService, PredioWithRua } from '@/services/predioService';
 import { ruaService } from '@/services/ruaService';
 import { IPredio, IRua } from '@/types';
@@ -258,6 +258,7 @@ const PrediosPage: React.FC = () => {
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value.toUpperCase())}
                         sx={{ flex: 1 }}
+                        InputProps={{ startAdornment: <Search sx={{ mr: 1 }} /> }}
                     />
                     <Button
                         variant="outlined"

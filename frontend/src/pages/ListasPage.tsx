@@ -55,6 +55,7 @@ interface FiltrosPesquisa {
 const ListasPage: React.FC = () => {
     // Estados principais
     const [listas, setListas] = useState<ILista[]>([]);
+    const [filtroNome, setFiltroNome] = useState('');
     const [listaAtual, setListaAtual] = useState<ILista | null>(null);
     const [enderecamentosLista, setEnderecamentosLista] = useState<IEnderecamento[]>([]);
     const [enderecamentosDisponiveis, setEnderecamentosDisponiveis] = useState<IEnderecamento[]>([]);
@@ -610,15 +611,25 @@ const ListasPage: React.FC = () => {
                 Listas de Separação
             </Typography>
 
-            {/* Cabeçalho com botão de nova lista */}
-            <Box sx={{ mb: 2, display: 'flex', justifyContent: 'space-between' }}>
-                <Typography variant="h6">
-                    Gerenciar Listas
-                </Typography>
+            {/* Barra de pesquisa e botão ocupando toda a largura, igual Usuários */}
+            <Box sx={{ display: 'flex', gap: 2, mb: 3, flexWrap: 'wrap' }}>
+                <Box sx={{ display: 'flex', gap: 1, flex: 1, minWidth: '200px', alignItems: 'center' }}>
+                    <TextField
+                        placeholder="Pesquisar pelo nome da lista..."
+                        value={filtroNome}
+                        onChange={e => setFiltroNome(e.target.value)}
+                        size="medium"
+                        variant="outlined"
+                        InputProps={{ startAdornment: <Search sx={{ mr: 1 }} /> }}
+                        sx={{ flex: 1 }}
+                    />
+                </Box>
                 <Button
                     variant="contained"
                     startIcon={<Add />}
                     onClick={abrirDialogNovaLista}
+                    sx={{ minWidth: '120px', boxSizing: 'border-box' }}
+                    size="medium"
                 >
                     Nova Lista
                 </Button>
@@ -627,7 +638,7 @@ const ListasPage: React.FC = () => {
             {/* Grid de listas */}
             <Paper sx={dataGridStyles.paperContainer}>
                 <DataGrid
-                    rows={listas}
+                    rows={listas.filter(l => l.nome.toLowerCase().includes(filtroNome.toLowerCase()))}
                     columns={colunasListas}
                     loading={loading}
                     pageSizeOptions={[10, 25, 50, 100]}

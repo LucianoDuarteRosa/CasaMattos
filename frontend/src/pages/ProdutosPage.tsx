@@ -18,7 +18,7 @@ import {
     InputLabel,
 } from '@mui/material';
 import { DataGrid, GridColDef, GridActionsCellItem } from '@mui/x-data-grid';
-import { Add, Edit, Visibility } from '@mui/icons-material';
+import { Add, Edit, Visibility, Search } from '@mui/icons-material';
 import { produtoService } from '@/services/produtoService';
 import { fornecedorService } from '@/services/fornecedorService';
 import { IProduto, IFornecedor } from '@/types';
@@ -437,6 +437,7 @@ const ProdutosPage: React.FC = () => {
                             }
                         }}
                         sx={{ flex: 1 }}
+                        InputProps={{ startAdornment: <Search sx={{ mr: 1 }} /> }}
                     />
                     <Button
                         variant="outlined"

@@ -21,7 +21,7 @@ import {
     Snackbar
 } from '@mui/material';
 import { DataGrid, GridColDef, GridActionsCellItem } from '@mui/x-data-grid';
-import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon, Lock as LockIcon, OpenInNew as OpenInNewIcon, Upload as UploadIcon } from '@mui/icons-material';
+import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon, Lock as LockIcon, OpenInNew as OpenInNewIcon, Upload as UploadIcon, Search } from '@mui/icons-material';
 import { usuarioService } from '../services/usuarioService';
 import { authService } from '../services/authService';
 import { SERVER_BASE_URL } from '../services/api';
@@ -475,6 +475,7 @@ const UsuariosPage: React.FC = () => {
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value.toUpperCase())}
                         sx={{ flex: 1 }}
+                        InputProps={{ startAdornment: <Search sx={{ mr: 1 }} /> }}
                     />
                     <Button
                         variant="outlined"

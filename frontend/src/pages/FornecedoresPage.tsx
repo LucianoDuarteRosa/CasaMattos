@@ -14,7 +14,7 @@ import {
     Alert,
 } from '@mui/material';
 import { DataGrid, GridColDef, GridActionsCellItem } from '@mui/x-data-grid';
-import { Add, Edit, Delete } from '@mui/icons-material';
+import { Add, Edit, Delete, Search } from '@mui/icons-material';
 import { fornecedorService } from '@/services/fornecedorService';
 import { IFornecedor } from '@/types';
 import { dataGridPtBR } from '@/utils/dataGridLocale';
@@ -267,6 +267,7 @@ const FornecedoresPage: React.FC = () => {
                             }
                         }}
                         sx={{ flex: 1 }}
+                        InputProps={{ startAdornment: <Search sx={{ mr: 1 }} /> }}
                     />
                     <Button
                         variant="outlined"

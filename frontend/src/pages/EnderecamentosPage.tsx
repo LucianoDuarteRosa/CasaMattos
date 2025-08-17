@@ -2,22 +2,22 @@ import React, { useState, useEffect } from 'react';
 import {
     Box,
     Typography,
-    Button,
-    TextField,
-    Dialog,
-    DialogTitle,
-    DialogContent,
-    DialogActions,
-    Paper,
-    Alert,
     Grid,
     Snackbar,
     Checkbox,
     FormControlLabel,
     Autocomplete,
+    TextField,
+    Button,
+    Paper,
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    Alert,
+    DialogActions
 } from '@mui/material';
 import { DataGrid, GridColDef, GridActionsCellItem } from '@mui/x-data-grid';
-import { Add, Edit, Visibility, Delete } from '@mui/icons-material';
+import { Add, Edit, Visibility, Delete, Search } from '@mui/icons-material';
 import { enderecamentoService, EnderecamentoWithRelations } from '@/services/enderecamentoService';
 import { produtoService } from '@/services/produtoService';
 import { predioService, PredioWithRua } from '@/services/predioService';
@@ -553,6 +553,7 @@ const EnderecamentosPage: React.FC = () => {
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value.toUpperCase())}
                         sx={{ flex: 1 }}
+                        InputProps={{ startAdornment: <Search sx={{ mr: 1 }} /> }}
                     />
                     <Button
                         variant="outlined"
