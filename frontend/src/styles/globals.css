@@ -79,9 +79,15 @@ body {
     overflow-x: hidden;
 }
 
+
+
 body {
     min-height: 100vh;
     box-sizing: border-box;
+    /* Utiliza variáveis CSS para background, controladas pelo tema */
+    background: var(--app-background, linear-gradient(120deg, #e0e7ff 0%, #f8fafc 50%, #c7d2fe 100%));
+    background-color: var(--app-background-fallback, #e0e7ff);
+    transition: background 0.3s;
 }
 
 *,

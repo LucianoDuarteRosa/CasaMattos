@@ -17,6 +17,8 @@ import {
     Avatar,
     Menu,
     MenuItem,
+    Divider,
+    Button,
 } from '@mui/material';
 import {
     Menu as MenuIcon,
@@ -24,7 +26,6 @@ import {
     Inventory,
     Business,
     LocationOn,
-    Assignment,
     AccountCircle,
     Logout,
     Person,
@@ -162,11 +163,19 @@ const Layout: React.FC<Props> = ({ children, isDarkMode, toggleDarkMode }) => {
 
     const drawer = (
         <div>
-            <Toolbar>
-                <Typography variant="h6" noWrap component="div">
-                    Armazenamento
-                </Typography>
+            <Toolbar sx={{ justifyContent: 'center', p: 0 }}>
+                <Button
+                    variant="text"
+                    color="inherit"
+                    sx={{ textTransform: 'none', width: '100%' }}
+                    onClick={() => handleMenuClick('/dashboard')}
+                >
+                    <Typography variant="h6" noWrap component="div" color="inherit">
+                        Armazenamento
+                    </Typography>
+                </Button>
             </Toolbar>
+            <Divider sx={{ mb: 1 }} />
             <List>
                 {menuItems.map((item) => (
                     <ListItem key={item.text} disablePadding>

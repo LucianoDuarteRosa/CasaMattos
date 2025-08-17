@@ -100,6 +100,18 @@ const App: React.FC = () => {
         },
     });
 
+
+    // Define backgrounds para claro/escuro
+    useEffect(() => {
+        const lightBg = 'linear-gradient(120deg, #e0e7ff 0%, #f8fafc 50%, #c7d2fe 100%)';
+        // Gradiente escuro mais escuro para contraste
+        const darkBg = 'linear-gradient(120deg, #181a20 0%, #23272f 50%, #111217 100%)';
+        const lightFallback = '#e0e7ff';
+        const darkFallback = '#181a20';
+        document.body.style.setProperty('--app-background', isDarkMode ? darkBg : lightBg);
+        document.body.style.setProperty('--app-background-fallback', isDarkMode ? darkFallback : lightFallback);
+    }, [isDarkMode]);
+
     return (
         <ThemeProvider theme={theme}>
             <CssBaseline />

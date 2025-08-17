@@ -10,7 +10,7 @@ import {
     InputAdornment,
     IconButton,
 } from '@mui/material';
-import { Visibility, VisibilityOff, Login } from '@mui/icons-material';
+import { Visibility, VisibilityOff, AccountCircle } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { authService } from '@/services/authService';
@@ -57,7 +57,9 @@ const LoginPage: React.FC = () => {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                padding: 2
+                padding: 2,
+                position: 'relative',
+                zIndex: 1
             }}
         >
             <Box
@@ -76,7 +78,8 @@ const LoginPage: React.FC = () => {
                         padding: 4,
                         width: '100%',
                         maxWidth: 400,
-                        maxHeight: 'fit-content'
+                        maxHeight: 'fit-content',
+                        borderRadius: 4
                     }}
                 >
                     <Box
@@ -86,7 +89,7 @@ const LoginPage: React.FC = () => {
                             alignItems: 'center',
                         }}
                     >
-                        <Login sx={{ m: 1, bgcolor: 'primary.main', borderRadius: '50%', p: 1, color: 'white', fontSize: 40 }} />
+                        <AccountCircle sx={{ m: 1, bgcolor: 'primary.main', borderRadius: '50%', p: 1, color: 'white', fontSize: 40 }} />
                         <Typography component="h1" variant="h4" gutterBottom>
                             Armazenamento
                         </Typography>

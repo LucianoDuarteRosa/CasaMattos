@@ -117,13 +117,16 @@ const DashboardPage: React.FC = () => {
         <Box sx={{
             width: '100%',
             overflow: 'hidden',
-            // Compensar o padding do Layout
             m: -1.5,
             p: { xs: 1, sm: 2 },
             maxWidth: '100vw',
-            boxSizing: 'border-box'
+            boxSizing: 'border-box',
+            position: 'relative',
         }}>
-            <Typography variant="h4" gutterBottom>
+
+
+
+            <Typography variant="h4" gutterBottom sx={{ position: 'relative', zIndex: 1 }}>
                 Dashboard
             </Typography>
 
