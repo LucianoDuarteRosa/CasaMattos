@@ -5,11 +5,11 @@ cron.schedule('0 20 * * *', async () => {
     await sendScheduledEmail();
 });
 // Envio de e-mail automático para teste após 10 segundos do start
-/*setTimeout(async () => {
+setTimeout(async () => {
     console.log('Enviando e-mail de teste automático...');
     await sendScheduledEmail();
     console.log('E-mail de teste enviado!');
-}, 10000); // 10 segundos*/
+}, 10000); // 10 segundos
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';

@@ -37,7 +37,7 @@ export async function sendScheduledEmail() {
             text: 'Este é um e-mail enviado automaticamente às 20h.',
         };
         const info = await transporter.sendMail(mailOptions);
-        await loggingService.logInfo(0, 'SMTP', 'E-mail automático enviado com sucesso', { mailOptions, info });
+        await loggingService.logInfo(1, 'SMTP', 'E-mail automático enviado com sucesso', { mailOptions, info });
     } catch (err) {
         const errorObj = err instanceof Error ? err : new Error(String(err));
         await loggingService.logError(0, 'SMTP', errorObj, 'Erro ao enviar e-mail automático');
