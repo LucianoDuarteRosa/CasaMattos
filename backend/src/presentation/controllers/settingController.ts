@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import Setting from '../../domain/entities/Setting';
+import { loggingService } from '../../application/services/LoggingService';
 
 export const getSettings = async (req: Request, res: Response) => {
     const { type } = req.query;
@@ -18,6 +19,10 @@ export const getSetting = async (req: Request, res: Response) => {
 export const createSetting = async (req: Request, res: Response) => {
     const { key, value, type, active } = req.body;
     const setting = await Setting.create({ key, value, type, active });
+    const userId = req.body.executorUserId;
+    if (userId) {
+        await loggingService.logCreate(userId, 'Configuração', setting.toJSON(), 'Configuração criada');
+    }
     res.status(201).json(setting);
 };
 
@@ -26,7 +31,12 @@ export const updateSetting = async (req: Request, res: Response) => {
     const { key, value, type, active } = req.body;
     const setting = await Setting.findByPk(id);
     if (!setting) return res.status(404).json({ error: 'Configuração não encontrada' });
+    const oldData = setting.toJSON();
     await setting.update({ key, value, type, active });
+    const userId = req.body.executorUserId;
+    if (userId) {
+        await loggingService.logUpdate(userId, 'Configuração', oldData, setting.toJSON(), 'Configuração atualizada');
+    }
     res.json(setting);
 };
 

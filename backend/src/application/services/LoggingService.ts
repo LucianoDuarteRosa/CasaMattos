@@ -105,12 +105,23 @@ export class LoggingService {
         });
     }
 
+
     async logLogout(userId: number, description?: string): Promise<void> {
         await this.logAction({
             userId,
             entity: 'Usuario',
             action: LogAction.LOGOUT,
             description: description || 'Logout realizado'
+        });
+    }
+
+    async logInfo(userId: number, entity: string, description: string, metadata?: any): Promise<void> {
+        await this.logAction({
+            userId,
+            entity,
+            action: LogAction.UPDATE, // Usando UPDATE para logs informativos, ou crie um novo tipo se preferir
+            description,
+            newData: metadata
         });
     }
 

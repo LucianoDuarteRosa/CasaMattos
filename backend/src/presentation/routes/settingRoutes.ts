@@ -2,11 +2,15 @@ import { Router } from 'express';
 import { getSettings, getSetting, createSetting, updateSetting, deleteSetting } from '../controllers/settingController';
 import { isAdmin } from '../middlewares/authMiddleware';
 import { authenticateToken } from '../middlewares/auth';
+import { contextMiddleware } from '../middlewares/contextMiddleware';
+import { addExecutorUserId } from '../middlewares/executorUserId';
 
 const router = Router();
 
 // Todas as rotas requerem autenticação
 router.use(authenticateToken);
+router.use(contextMiddleware);
+router.use(addExecutorUserId);
 
 router.get('/', isAdmin, getSettings);
 router.get('/:id', isAdmin, getSetting);

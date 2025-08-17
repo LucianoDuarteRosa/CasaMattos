@@ -28,6 +28,8 @@ const entidades = [
     { value: 'Rua', label: 'Rua' },
     { value: 'Predio', label: 'Prédio' },
     { value: 'Enderecamento', label: 'Endereçamento' },
+    { value: 'Configuração', label: 'Configuração' },
+    { value: 'SMTP', label: 'Envio de E-mail' },
 ];
 
 const tipos = [
@@ -81,7 +83,17 @@ const LogsPage: React.FC = () => {
 
     const columns: GridColDef[] = [
         { field: 'id', headerName: 'ID', width: 80 },
-        { field: 'dataHora', headerName: 'Data/Hora', minWidth: 170, flex: 0.7 },
+        {
+            field: 'dataHora',
+            headerName: 'Data/Hora',
+            minWidth: 170,
+            flex: 0.7,
+            valueFormatter: (params) => {
+                // Converter para horário de Brasília (UTC-3)
+                const date = new Date(params.value);
+                return date.toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
+            }
+        },
         { field: 'usuario', headerName: 'Usuário', minWidth: 150, flex: 0.7 },
         { field: 'entidade', headerName: 'Entidade', minWidth: 120, flex: 0.6 },
         { field: 'tipo', headerName: 'Tipo', minWidth: 120, flex: 0.5 },
