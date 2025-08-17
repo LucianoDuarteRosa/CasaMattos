@@ -67,6 +67,13 @@ const ListasPage: React.FC = () => {
     const [dialogEditarLista, setDialogEditarLista] = useState(false);
     const [dialogAdicionarEnderecamentos, setDialogAdicionarEnderecamentos] = useState(false);
     const [dialogDetalhesLista, setDialogDetalhesLista] = useState(false);
+    // Dialog de confirmação
+    const [dialogConfirmacao, setDialogConfirmacao] = useState<{
+        open: boolean;
+        titulo: string;
+        mensagem: string;
+        onConfirm: (() => void) | null;
+    }>({ open: false, titulo: '', mensagem: '', onConfirm: null });
 
     // Estados de formulários
     const [formData, setFormData] = useState<FormData>({
@@ -208,18 +215,39 @@ const ListasPage: React.FC = () => {
     };
 
     // Excluir lista
-    const excluirLista = async (lista: ILista) => {
-        if (!confirm(`Tem certeza que deseja excluir a lista "${lista.nome}"?`)) {
+    const excluirLista = (lista: ILista) => {
+        if (!lista.disponivel) {
+            setDialogConfirmacao({
+                open: true,
+                titulo: 'Exclusão não permitida',
+                mensagem: `Não é possível excluir uma lista finalizada. Desfaça a finalização para poder excluir.`,
+                onConfirm: null
+            });
             return;
         }
-
-        try {
-            await listaService.delete(lista.id);
-            await carregarListas();
-            mostrarSnackbar('Lista excluída com sucesso!', 'success');
-        } catch (error) {
-            mostrarSnackbar('Erro ao excluir lista', 'error');
-        }
+        setDialogConfirmacao({
+            open: true,
+            titulo: 'Excluir Lista',
+            mensagem: `Tem certeza que deseja excluir a lista "${lista.nome}"? Essa ação não poderá ser desfeita.`,
+            onConfirm: async () => {
+                setDialogConfirmacao((prev) => ({ ...prev, open: false }));
+                try {
+                    // Busca endereçamentos associados à lista
+                    const enderecamentos = await listaService.getEnderecamentos(lista.id);
+                    if (enderecamentos && enderecamentos.length > 0) {
+                        // Remove todos os endereçamentos da lista
+                        for (const end of enderecamentos) {
+                            await listaService.removerEnderecamento(lista.id, end.id);
+                        }
+                    }
+                    await listaService.delete(lista.id);
+                    await carregarListas();
+                    mostrarSnackbar('Lista excluída com sucesso!', 'success');
+                } catch (error) {
+                    mostrarSnackbar('Erro ao excluir lista', 'error');
+                }
+            }
+        });
     };
 
     // Finalizar lista
@@ -241,21 +269,25 @@ const ListasPage: React.FC = () => {
     };
 
     // Desfazer finalização
-    const desfazerFinalizacao = async (lista: ILista) => {
-        if (!confirm(`Tem certeza que deseja desfazer a finalização da lista "${lista.nome}"? Esta ação retornará todos os endereçamentos como disponíveis.`)) {
-            return;
-        }
-
-        try {
-            await listaService.desfazerFinalizacao(lista.id);
-            await carregarListas();
-            if (listaAtual?.id === lista.id) {
-                await carregarEnderecamentosLista(lista.id);
+    const desfazerFinalizacao = (lista: ILista) => {
+        setDialogConfirmacao({
+            open: true,
+            titulo: 'Desfazer Finalização',
+            mensagem: `Tem certeza que deseja desfazer a finalização da lista "${lista.nome}"? Esta ação retornará todos os endereçamentos como disponíveis.`,
+            onConfirm: async () => {
+                setDialogConfirmacao((prev) => ({ ...prev, open: false }));
+                try {
+                    await listaService.desfazerFinalizacao(lista.id);
+                    await carregarListas();
+                    if (listaAtual?.id === lista.id) {
+                        await carregarEnderecamentosLista(lista.id);
+                    }
+                    mostrarSnackbar('Finalização desfeita com sucesso!', 'success');
+                } catch (error) {
+                    mostrarSnackbar('Erro ao desfazer finalização', 'error');
+                }
             }
-            mostrarSnackbar('Finalização desfeita com sucesso!', 'success');
-        } catch (error) {
-            mostrarSnackbar('Erro ao desfazer finalização', 'error');
-        }
+        });
     };
 
     // Adicionar endereçamentos à lista
@@ -900,6 +932,42 @@ const ListasPage: React.FC = () => {
                     >
                         Adicionar Selecionados ({enderecamentosSelecionados.length})
                     </Button>
+                </DialogActions>
+            </Dialog>
+
+            {/* Dialog de Confirmação */}
+            <Dialog
+                open={dialogConfirmacao.open}
+                onClose={() => setDialogConfirmacao((prev) => ({ ...prev, open: false }))}
+                maxWidth="xs"
+                fullWidth
+            >
+                <DialogTitle>{dialogConfirmacao.titulo}</DialogTitle>
+                <DialogContent>
+                    <Typography>{dialogConfirmacao.mensagem}</Typography>
+                </DialogContent>
+                <DialogActions>
+                    {dialogConfirmacao.onConfirm ? (
+                        <>
+                            <Button onClick={() => setDialogConfirmacao((prev) => ({ ...prev, open: false }))}>
+                                Cancelar
+                            </Button>
+                            <Button
+                                onClick={() => dialogConfirmacao.onConfirm && dialogConfirmacao.onConfirm()}
+                                variant="contained"
+                                color="error"
+                            >
+                                Confirmar
+                            </Button>
+                        </>
+                    ) : (
+                        <Button
+                            onClick={() => setDialogConfirmacao((prev) => ({ ...prev, open: false }))}
+                            variant="contained"
+                        >
+                            OK
+                        </Button>
+                    )}
                 </DialogActions>
             </Dialog>
 

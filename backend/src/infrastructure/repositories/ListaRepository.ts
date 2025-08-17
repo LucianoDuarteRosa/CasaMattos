@@ -75,20 +75,23 @@ export class ListaRepository implements IListaRepository {
     }
 
     async delete(id: number): Promise<boolean> {
-        // Verificar se há endereçamentos associados
-        const enderecamentosCount = await EnderecamentoModel.count({
-            where: { idLista: id }
-        });
+        // Remover associação de todos os endereçamentos antes de excluir a lista
+        const transaction: Transaction = await sequelize.transaction();
+        try {
+            // Buscar endereçamentos associados
+            const enderecamentos = await EnderecamentoModel.findAll({ where: { idLista: id }, transaction });
+            for (const enderecamento of enderecamentos) {
+                await enderecamento.update({ idLista: null }, { transaction });
+            }
 
-        if (enderecamentosCount > 0) {
-            throw new Error('Não é possível excluir lista que possui endereçamentos associados');
+            // Excluir a lista
+            const deletedRows = await ListaModel.destroy({ where: { id }, transaction });
+            await transaction.commit();
+            return deletedRows > 0;
+        } catch (error) {
+            await transaction.rollback();
+            throw error;
         }
-
-        const deletedRows = await ListaModel.destroy({
-            where: { id }
-        });
-
-        return deletedRows > 0;
     }
 
     async findDisponiveis(): Promise<ILista[]> {
