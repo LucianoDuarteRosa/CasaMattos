@@ -1,6 +1,6 @@
 // Página de configurações genérica (inicialmente para SMTP)
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import { api } from '../services/api';
 import { TextField, Button, Switch, FormControlLabel, Typography, Paper, Box } from '@mui/material';
 
 interface SmtpConfig {
@@ -22,11 +22,25 @@ export default function SettingsPage() {
     const [loading, setLoading] = useState(false);
 
     useEffect(() => {
-        axios.get('/api/settings?type=smtp').then(res => {
-            if (res.data.length > 0) {
-                const conf = JSON.parse(res.data[0].value);
-                setSmtp({ ...conf, id: res.data[0].id, active: res.data[0].active });
+        api.get('/settings?type=smtp').then(res => {
+            if (res.data.length > 0 && res.data[0].value) {
+                try {
+                    const conf = JSON.parse(res.data[0].value);
+                    setSmtp({ ...conf, id: res.data[0].id, active: res.data[0].active });
+                } catch (e) {
+                    setSmtp({
+                        host: '', port: 587, user: '', pass: '', from: '', to: '', secure: false, active: false
+                    });
+                }
+            } else {
+                setSmtp({
+                    host: '', port: 587, user: '', pass: '', from: '', to: '', secure: false, active: false
+                });
             }
+        }).catch(() => {
+            setSmtp({
+                host: '', port: 587, user: '', pass: '', from: '', to: '', secure: false, active: false
+            });
         });
     }, []);
 
@@ -43,9 +57,9 @@ export default function SettingsPage() {
             active: smtp.active,
         };
         if (smtp.id) {
-            await axios.put(`/api/settings/${smtp.id}`, payload);
+            await api.put(`/settings/${smtp.id}`, payload);
         } else {
-            await axios.post('/api/settings', payload);
+            await api.post('/settings', payload);
         }
         setLoading(false);
         alert('Configuração salva!');

@@ -5,7 +5,11 @@ interface AuthRequest extends Request {
 }
 
 export const isAdmin = (req: AuthRequest, res: Response, next: NextFunction) => {
-    if (req.user && req.user.role === 'admin') {
+    if (
+        req.user && (
+            req.user.role === 'admin' || req.user.idPerfil === 1
+        )
+    ) {
         return next();
     }
     return res.status(403).json({ error: 'Acesso restrito a administradores.' });
