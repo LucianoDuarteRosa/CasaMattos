@@ -546,7 +546,7 @@ const EnderecamentosPage: React.FC = () => {
             </Typography>
 
             {/* Barra de pesquisa e controles */}
-            <Box sx={{ display: 'flex', gap: 2, mb: 3, flexWrap: 'wrap', alignItems: 'center' }}>
+            <Box sx={{ display: 'flex', gap: 2, mb: 0, flexWrap: 'wrap', alignItems: 'center' }}>
                 <Box sx={{ display: 'flex', gap: 1, flex: 1, minWidth: '200px' }}>
                     <TextField
                         placeholder="Buscar por código ou descrição..."
@@ -569,8 +569,20 @@ const EnderecamentosPage: React.FC = () => {
                     >
                         Limpar
                     </Button>
+                    <Button
+                        variant="contained"
+                        startIcon={<Add />}
+                        onClick={handleAdd}
+                        sx={{ minWidth: '120px' }}
+                        size="medium"
+                    >
+                        Novo Endereçamento
+                    </Button>
                 </Box>
 
+
+            </Box>
+            <Box sx={{ mb: 2, mt: 0 }}>
                 <FormControlLabel
                     control={
                         <Checkbox
@@ -580,16 +592,6 @@ const EnderecamentosPage: React.FC = () => {
                     }
                     label="Apenas disponíveis"
                 />
-
-                <Button
-                    variant="contained"
-                    startIcon={<Add />}
-                    onClick={handleAdd}
-                    sx={{ minWidth: '120px' }}
-                    size="medium"
-                >
-                    Novo Endereçamento
-                </Button>
             </Box>
 
             <Paper sx={dataGridStyles.paperContainer}>
