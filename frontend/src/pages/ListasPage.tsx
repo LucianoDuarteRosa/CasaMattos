@@ -251,21 +251,25 @@ const ListasPage: React.FC = () => {
     };
 
     // Finalizar lista
-    const finalizarLista = async (lista: ILista) => {
-        if (!confirm(`Tem certeza que deseja finalizar a lista "${lista.nome}"? Esta ação marcará todos os endereçamentos como indisponíveis e moverá o estoque.`)) {
-            return;
-        }
-
-        try {
-            await listaService.finalizarLista(lista.id);
-            await carregarListas();
-            if (listaAtual?.id === lista.id) {
-                await carregarEnderecamentosLista(lista.id);
+    const finalizarLista = (lista: ILista) => {
+        setDialogConfirmacao({
+            open: true,
+            titulo: 'Finalizar Lista',
+            mensagem: `Tem certeza que deseja finalizar a lista "${lista.nome}"? Esta ação marcará todos os endereçamentos como indisponíveis e moverá o estoque.`,
+            onConfirm: async () => {
+                setDialogConfirmacao((prev) => ({ ...prev, open: false }));
+                try {
+                    await listaService.finalizarLista(lista.id);
+                    await carregarListas();
+                    if (listaAtual?.id === lista.id) {
+                        await carregarEnderecamentosLista(lista.id);
+                    }
+                    mostrarSnackbar('Lista finalizada com sucesso!', 'success');
+                } catch (error) {
+                    mostrarSnackbar('Erro ao finalizar lista', 'error');
+                }
             }
-            mostrarSnackbar('Lista finalizada com sucesso!', 'success');
-        } catch (error) {
-            mostrarSnackbar('Erro ao finalizar lista', 'error');
-        }
+        });
     };
 
     // Desfazer finalização

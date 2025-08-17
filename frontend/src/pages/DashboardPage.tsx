@@ -166,7 +166,10 @@ const DashboardPage: React.FC = () => {
                                     <TableHead>
                                         <TableRow>
                                             <TableCell>Descrição</TableCell>
-                                            <TableCell align="right">Total</TableCell>
+                                            <TableCell>Lote</TableCell>
+                                            <TableCell align="center">Tonalidade</TableCell>
+                                            <TableCell align="center">Bitola</TableCell>
+                                            <TableCell align="center">Total</TableCell>
                                             <TableCell align="right">Mín Venda</TableCell>
                                         </TableRow>
                                     </TableHead>
@@ -181,11 +184,14 @@ const DashboardPage: React.FC = () => {
                                                         {produto.fornecedor}
                                                     </Typography>
                                                 </TableCell>
-                                                <TableCell align="right">
+                                                <TableCell>{produto.lote}</TableCell>
+                                                <TableCell align="center">{produto.ton}</TableCell>
+                                                <TableCell align="center">{produto.bit}</TableCell>
+                                                <TableCell align="center">
                                                     {Number(produto.totalDisponivel).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} m²
                                                 </TableCell>
                                                 <TableCell align="right">
-                                                    {produto.quantMinVenda.toLocaleString('pt-BR', { maximumFractionDigits: 2 })}
+                                                    {Number(produto.quantMinVenda).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                                 </TableCell>
                                             </TableRow>
                                         ))}
