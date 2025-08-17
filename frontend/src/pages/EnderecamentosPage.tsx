@@ -596,10 +596,10 @@ const EnderecamentosPage: React.FC = () => {
                     rows={enderecamentos}
                     columns={columns}
                     loading={loading}
-                    pageSizeOptions={[25, 50, 100]}
+                    pageSizeOptions={[10, 25, 50, 100]}
                     initialState={{
                         pagination: {
-                            paginationModel: { pageSize: 25 },
+                            paginationModel: { pageSize: 10 },
                         },
                     }}
                     disableRowSelectionOnClick

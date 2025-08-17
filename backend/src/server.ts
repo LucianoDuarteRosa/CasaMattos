@@ -15,6 +15,7 @@ import { predioRoutes } from './presentation/routes/predioRoutes';
 import listaRoutes from './presentation/routes/listaRoutes';
 import dashboardRoutes from './presentation/routes/dashboardRoutes';
 import estoqueRoutes from './presentation/routes/estoqueRoutes';
+import { logRoutes } from './presentation/routes/logRoutes';
 // Importar associações para garantir que sejam carregadas
 import './infrastructure/database/models/associations';
 
@@ -92,6 +93,7 @@ app.use('/api/enderecamentos', enderecamentoRoutes);
 app.use('/api/listas', listaRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/estoque', estoqueRoutes);
+app.use('/api/logs', logRoutes);
 
 // Middleware de tratamento de erros
 app.use((error: any, req: express.Request, res: express.Response, next: express.NextFunction) => {

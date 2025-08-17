@@ -630,7 +630,7 @@ const ListasPage: React.FC = () => {
                     rows={listas}
                     columns={colunasListas}
                     loading={loading}
-                    pageSizeOptions={[5, 10, 25, 50]}
+                    pageSizeOptions={[10, 25, 50, 100]}
                     paginationMode="server"
                     rowCount={totalListas}
                     paginationModel={{ page, pageSize }}
@@ -762,7 +762,7 @@ const ListasPage: React.FC = () => {
                             rows={enderecamentosLista}
                             columns={colunasEnderecamentosLista}
                             loading={loadingEnderecamentos}
-                            pageSizeOptions={[5, 10, 25]}
+                            pageSizeOptions={[10, 25, 50, 100]}
                             initialState={{
                                 pagination: { paginationModel: { pageSize: 25 } },
                             }}
@@ -866,7 +866,7 @@ const ListasPage: React.FC = () => {
                             rows={enderecamentosDisponiveis}
                             columns={colunasEnderecamentosDisponiveis}
                             loading={loadingEnderecamentos}
-                            pageSizeOptions={[5, 10, 25]}
+                            pageSizeOptions={[10, 25, 50, 100]}
                             initialState={{
                                 pagination: { paginationModel: { pageSize: 10 } },
                             }}

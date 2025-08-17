@@ -290,10 +290,10 @@ const PrediosPage: React.FC = () => {
                     rows={predios}
                     columns={columns}
                     loading={loading}
-                    pageSizeOptions={[25, 50, 100]}
+                    pageSizeOptions={[10, 25, 50, 100]}
                     initialState={{
                         pagination: {
-                            paginationModel: { page: 0, pageSize: 25 },
+                            paginationModel: { page: 0, pageSize: 10 },
                         },
                     }}
                     disableRowSelectionOnClick

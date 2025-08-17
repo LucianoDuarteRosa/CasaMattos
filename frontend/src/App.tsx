@@ -16,6 +16,7 @@ import EnderecamentosPage from '@/pages/EnderecamentosPage';
 import ListasPage from '@/pages/ListasPage';
 import UsuariosPage from '@/pages/UsuariosPage';
 import PerfilPage from '@/pages/PerfilPage';
+import LogsPage from '@/pages/LogsPage';
 
 // Serviços
 import { authService } from '@/services/authService';
@@ -135,6 +136,14 @@ const App: React.FC = () => {
                                                         isDarkMode={isDarkMode}
                                                         toggleDarkMode={toggleDarkMode}
                                                     />
+                                                }
+                                            />
+                                            <Route
+                                                path="/logs"
+                                                element={
+                                                    <AdminRoute>
+                                                        <LogsPage />
+                                                    </AdminRoute>
                                                 }
                                             />
                                         </Routes>

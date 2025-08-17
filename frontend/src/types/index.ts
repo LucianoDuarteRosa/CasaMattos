@@ -1,3 +1,4 @@
+export * from './log';
 export interface IFornecedor {
     id: number;
     razaoSocial: string;

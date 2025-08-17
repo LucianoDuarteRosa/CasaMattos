@@ -33,6 +33,8 @@ import {
     LightMode,
     Apartment,
     Signpost,
+    LegendToggle,
+    Description,
 } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { authService } from '@/services/authService';
@@ -103,12 +105,15 @@ const Layout: React.FC<Props> = ({ children, isDarkMode, toggleDarkMode }) => {
             { text: 'Ruas', icon: <Signpost />, path: '/ruas' },
             { text: 'Prédios', icon: <Apartment />, path: '/predios' },
             { text: 'Endereçamentos', icon: <LocationOn />, path: '/enderecamentos' },
-            { text: 'Listas', icon: <Assignment />, path: '/listas' },
+            { text: 'Listas', icon: <Description />, path: '/listas' },
         ];
 
-        // Adicionar menu de usuários apenas para administradores
+        // Adicionar menu de usuários e logs apenas para administradores
         if (isAdmin) {
+            // Adiciona Usuários
             baseItems.push({ text: 'Usuários', icon: <People />, path: '/usuarios' });
+            // Adiciona Logs logo após Usuários
+            baseItems.push({ text: 'Logs', icon: <LegendToggle />, path: '/logs' });
         }
 
         return baseItems;
