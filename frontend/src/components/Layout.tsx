@@ -1,23 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import {
-    AppBar,
-    Box,
-    CssBaseline,
-    Drawer,
-    IconButton,
-    List,
-    ListItem,
-    ListItemButton,
-    ListItemIcon,
-    ListItemText,
-    Toolbar,
-    Typography,
     useTheme,
     useMediaQuery,
-    Avatar,
+    ListItemButton,
+    AppBar,
+    Toolbar,
+    Typography,
+    IconButton,
+    Drawer,
+    List,
+    ListItem,
+    ListItemIcon,
+    ListItemText,
+    Divider,
     Menu,
     MenuItem,
-    Divider,
+    Avatar,
+    Box,
+    CssBaseline,
     Button,
 } from '@mui/material';
 import {
@@ -36,6 +36,7 @@ import {
     Signpost,
     LegendToggle,
     Description,
+    Settings,
 } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { authService } from '@/services/authService';
@@ -109,12 +110,11 @@ const Layout: React.FC<Props> = ({ children, isDarkMode, toggleDarkMode }) => {
             { text: 'Listas', icon: <Description />, path: '/listas' },
         ];
 
-        // Adicionar menu de usuários e logs apenas para administradores
+        // Adicionar menu de usuários, logs e configurações apenas para administradores
         if (isAdmin) {
-            // Adiciona Usuários
             baseItems.push({ text: 'Usuários', icon: <People />, path: '/usuarios' });
-            // Adiciona Logs logo após Usuários
             baseItems.push({ text: 'Logs', icon: <LegendToggle />, path: '/logs' });
+            baseItems.push({ text: 'Configurações', icon: <Settings />, path: '/settings' });
         }
 
         return baseItems;

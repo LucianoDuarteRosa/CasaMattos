@@ -1,3 +1,9 @@
+import cron from 'node-cron';
+import { sendScheduledEmail } from './application/services/smtpService';
+// Agendamento diário às 20h
+cron.schedule('0 20 * * *', async () => {
+    await sendScheduledEmail();
+});
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
@@ -16,6 +22,7 @@ import listaRoutes from './presentation/routes/listaRoutes';
 import dashboardRoutes from './presentation/routes/dashboardRoutes';
 import estoqueRoutes from './presentation/routes/estoqueRoutes';
 import { logRoutes } from './presentation/routes/logRoutes';
+import { settingRoutes } from './presentation/routes/settingRoutes';
 // Importar associações para garantir que sejam carregadas
 import './infrastructure/database/models/associations';
 
@@ -94,6 +101,7 @@ app.use('/api/listas', listaRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/estoque', estoqueRoutes);
 app.use('/api/logs', logRoutes);
+app.use('/api/settings', settingRoutes);
 
 // Middleware de tratamento de erros
 app.use((error: any, req: express.Request, res: express.Response, next: express.NextFunction) => {

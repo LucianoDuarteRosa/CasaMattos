@@ -17,6 +17,7 @@ import ListasPage from '@/pages/ListasPage';
 import UsuariosPage from '@/pages/UsuariosPage';
 import PerfilPage from '@/pages/PerfilPage';
 import LogsPage from '@/pages/LogsPage';
+import SettingsPage from '@/pages/SettingsPage';
 
 // Serviços
 import { authService } from '@/services/authService';
@@ -155,6 +156,14 @@ const App: React.FC = () => {
                                                 element={
                                                     <AdminRoute>
                                                         <LogsPage />
+                                                    </AdminRoute>
+                                                }
+                                            />
+                                            <Route
+                                                path="/settings"
+                                                element={
+                                                    <AdminRoute>
+                                                        <SettingsPage />
                                                     </AdminRoute>
                                                 }
                                             />

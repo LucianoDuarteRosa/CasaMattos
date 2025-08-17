@@ -1,0 +1,9 @@
+CREATE TABLE IF NOT EXISTS "Settings" (
+    id SERIAL PRIMARY KEY,
+    key VARCHAR(255) NOT NULL,
+    value TEXT NOT NULL,
+    type VARCHAR(100) NOT NULL,
+    active BOOLEAN DEFAULT TRUE,
+    "createdAt" TIMESTAMP DEFAULT NOW(),
+    "updatedAt" TIMESTAMP DEFAULT NOW()
+);
