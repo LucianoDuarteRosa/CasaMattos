@@ -1,7 +1,7 @@
 import cron from 'node-cron';
 import { sendScheduledEmail } from './application/services/smtpService';
 // Agendamento diário às 20h
-cron.schedule('0 20 * * *', async () => {
+cron.schedule('0 19 * * *', async () => {
     await sendScheduledEmail();
 });
 // Envio de e-mail automático para teste após 10 segundos do start
