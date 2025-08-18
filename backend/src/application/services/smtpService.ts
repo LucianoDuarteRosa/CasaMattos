@@ -5,7 +5,6 @@ import { loggingService } from './LoggingService';
 import { FileExportService } from './FileExportService';
 
 export async function sendScheduledEmail() {
-    console.log('Iniciando envio de e-mail automático...');
     // Busca configuração SMTP ativa
     const smtpConfig = await Setting.findOne({ where: { type: 'smtp', active: true } });
     if (!smtpConfig) {
