@@ -106,6 +106,13 @@ const EnderecamentosPage: React.FC = () => {
             }
         },
         {
+            field: 'lote',
+            headerName: 'Lote',
+            width: 110,
+            minWidth: 80,
+            valueGetter: (params) => params.row.lote || 'N/I',
+        },
+        {
             field: 'tonalidade',
             headerName: 'Tonalidade',
             width: 90,
@@ -150,7 +157,10 @@ const EnderecamentosPage: React.FC = () => {
             minWidth: 90,
             valueGetter: (params) => {
                 const produto = params.row.produto;
-                return produto?.quantMinVenda || 'N/A';
+                if (produto?.quantMinVenda !== undefined && produto?.quantMinVenda !== null) {
+                    return Number(produto.quantMinVenda).toFixed(2).replace('.', ',');
+                }
+                return 'N/A';
             }
         },
         {

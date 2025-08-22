@@ -149,8 +149,8 @@ const ProdutosPage: React.FC = () => {
         {
             field: 'codFabricante',
             headerName: 'Cód. Fab.',
-            width: 130,
-            minWidth: 80
+            width: 150,
+            minWidth: 100
         },
         {
             field: 'idFornecedor',
