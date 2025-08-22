@@ -37,6 +37,10 @@ import {
     LegendToggle,
     Description,
     Settings,
+    CompareArrows,
+    Tune,
+    FileUpload,
+    FileDownload,
 } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { authService } from '@/services/authService';
@@ -108,6 +112,10 @@ const Layout: React.FC<Props> = ({ children, isDarkMode, toggleDarkMode }) => {
             { text: 'Prédios', icon: <Apartment />, path: '/predios' },
             { text: 'Endereçamentos', icon: <LocationOn />, path: '/enderecamentos' },
             { text: 'Listas', icon: <Description />, path: '/listas' },
+            { text: 'Movimentação', icon: <CompareArrows />, path: '/movimentacao' },
+            { text: 'Ajustar', icon: <Tune />, path: '/ajustar' },
+            { text: 'Exportação', icon: <FileDownload />, path: '/exportacao' },
+            { text: 'Importação', icon: <FileUpload />, path: '/importacao' },
         ];
 
         // Adicionar menu de usuários, logs e configurações apenas para administradores
