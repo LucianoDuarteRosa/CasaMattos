@@ -18,6 +18,7 @@ import UsuariosPage from '@/pages/UsuariosPage';
 import PerfilPage from '@/pages/PerfilPage';
 import LogsPage from '@/pages/LogsPage';
 import SettingsPage from '@/pages/SettingsPage';
+import ExportacaoPage from '@/pages/ExportacaoPage';
 
 // Serviços
 import { authService } from '@/services/authService';
@@ -166,6 +167,10 @@ const App: React.FC = () => {
                                                         <SettingsPage />
                                                     </AdminRoute>
                                                 }
+                                            />
+                                            <Route
+                                                path="/exportacao"
+                                                element={<ExportacaoPage />}
                                             />
                                         </Routes>
                                     </Layout>
