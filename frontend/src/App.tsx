@@ -19,6 +19,9 @@ import PerfilPage from '@/pages/PerfilPage';
 import LogsPage from '@/pages/LogsPage';
 import SettingsPage from '@/pages/SettingsPage';
 import ExportacaoPage from '@/pages/ExportacaoPage';
+import ImportacaoPage from '@/pages/ImportacaoPage';
+import MovimentacaoPage from '@/pages/MovimentacaoPage';
+import AjustarPage from '@/pages/AjustarPage';
 
 // Serviços
 import { authService } from '@/services/authService';
@@ -168,10 +171,10 @@ const App: React.FC = () => {
                                                     </AdminRoute>
                                                 }
                                             />
-                                            <Route
-                                                path="/exportacao"
-                                                element={<ExportacaoPage />}
-                                            />
+                                            <Route path="/exportacao" element={<ExportacaoPage />} />
+                                            <Route path="/importacao" element={<ImportacaoPage />} />
+                                            <Route path="/movimentacao" element={<MovimentacaoPage />} />
+                                            <Route path="/ajustar" element={<AjustarPage />} />
                                         </Routes>
                                     </Layout>
                                 </PrivateRoute>

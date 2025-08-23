@@ -16,6 +16,7 @@ import dotenv from 'dotenv';
 import path from 'path';
 import sequelize from './infrastructure/database/connection';
 import authRoutes from './presentation/routes/authRoutes';
+import exportacaoRoutes from './presentation/routes/exportacaoRoutes';
 import produtoRoutes from './presentation/routes/produtoRoutes';
 import fornecedorRoutes from './presentation/routes/fornecedorRoutes';
 import enderecamentoRoutes from './presentation/routes/enderecamentoRoutes';
@@ -106,6 +107,7 @@ app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/estoque', estoqueRoutes);
 app.use('/api/logs', logRoutes);
 app.use('/api/settings', settingRoutes);
+app.use('/api/exportacao', exportacaoRoutes);
 
 // Middleware de tratamento de erros
 app.use((error: any, req: express.Request, res: express.Response, next: express.NextFunction) => {

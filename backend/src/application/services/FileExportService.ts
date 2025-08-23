@@ -1,11 +1,18 @@
 
 import ExcelJS from 'exceljs';
-import { ListEnderecamentosDisponiveisUseCase } from '../usecases/ListEnderecamentosDisponiveisUseCase';
+import { ProdutoRepository } from '../../infrastructure/repositories/ProdutoRepository';
+import { EstoqueItemRepository } from '../../infrastructure/repositories/EstoqueItemRepository';
 import { EnderecamentoRepository } from '../../infrastructure/repositories/EnderecamentoRepository';
+import { ListEnderecamentosDisponiveisUseCase } from '../usecases/ListEnderecamentosDisponiveisUseCase';
 import { FornecedorRepository } from '../../infrastructure/repositories/FornecedorRepository';
+import { IProduto } from '../../domain/entities/Produto';
+import { IEstoqueItem } from '../../domain/entities/EstoqueItem';
 import { IEnderecamento } from '../../domain/entities/Enderecamento';
 
 export class FileExportService {
+    /**
+     * Exporta inventário geral ou por fornecedor, agrupando por lote/tonalidade/bitola e separando estoque e endereçamento.
+     */
     /**
      * Exporta endereçamentos disponíveis em um arquivo Excel, ordenado por rua e prédio, com separadores.
      */
@@ -142,6 +149,103 @@ export class FileExportService {
             rowIndex++;
         }
 
+        return workbook.xlsx.writeBuffer() as unknown as Promise<Buffer>;
+    }
+
+    /**
+     * Exporta inventário geral ou por fornecedor, agrupando por lote/tonalidade/bitola e separando estoque e endereçamento.
+     */
+    static async exportarInventarioExcel(fornecedorId?: number): Promise<Buffer> {
+        const produtoRepo = new ProdutoRepository();
+        const estoqueRepo = new EstoqueItemRepository();
+        const enderecamentoRepo = new EnderecamentoRepository();
+
+        // Buscar produtos
+        const produtos: IProduto[] = fornecedorId
+            ? await produtoRepo.findByFornecedor(fornecedorId)
+            : await produtoRepo.findAll();
+
+        // Montar dados agrupados
+        type Agrupado = {
+            produto: IProduto;
+            lote: string;
+            tonalidade: string;
+            bitola: string;
+            estoque: number;
+            enderecamento: number;
+            total: number;
+        };
+        const linhas: Agrupado[] = [];
+
+        for (const produto of produtos) {
+            // Buscar estoque e endereçamentos do produto
+            const estoqueItems: IEstoqueItem[] = await estoqueRepo.findByProdutoId(produto.id);
+            const enderecamentos: IEnderecamento[] = await enderecamentoRepo.findByProduto(produto.id);
+
+            // Agrupar estoque
+            const map: Record<string, Agrupado> = {};
+            for (const item of estoqueItems) {
+                const key = `${item.lote}|${item.ton}|${item.bit}`;
+                if (!map[key]) {
+                    map[key] = {
+                        produto,
+                        lote: item.lote,
+                        tonalidade: item.ton,
+                        bitola: item.bit,
+                        estoque: 0,
+                        enderecamento: 0,
+                        total: 0
+                    };
+                }
+                map[key].estoque += item.quantidade;
+            }
+            // Agrupar endereçamentos
+            for (const end of enderecamentos) {
+                if (!end.disponivel || !end.quantCaixas || end.quantCaixas <= 0) continue;
+                const key = `${end.lote?.toUpperCase() || ''}|${end.tonalidade}|${end.bitola}`;
+                if (!map[key]) {
+                    map[key] = {
+                        produto,
+                        lote: end.lote?.toUpperCase() || '',
+                        tonalidade: end.tonalidade,
+                        bitola: end.bitola,
+                        estoque: 0,
+                        enderecamento: 0,
+                        total: 0
+                    };
+                }
+                map[key].enderecamento += (end.quantCaixas || 0) * (produto.quantMinVenda || 1);
+            }
+            // Calcular total e adicionar às linhas
+            for (const key in map) {
+                map[key].total = map[key].estoque + map[key].enderecamento;
+                linhas.push(map[key]);
+            }
+        }
+
+        // Gerar Excel
+        const workbook = new ExcelJS.Workbook();
+        const sheet = workbook.addWorksheet('Inventário');
+        sheet.columns = [
+            { header: 'Produto', width: 30 },
+            { header: 'Lote', width: 15 },
+            { header: 'Tonalidade', width: 15 },
+            { header: 'Bitola', width: 15 },
+            { header: 'Estoque', width: 15 },
+            { header: 'Endereçamento', width: 18 },
+            { header: 'Total', width: 15 },
+        ];
+        for (const l of linhas) {
+            sheet.addRow([
+                l.produto.descricao,
+                l.lote,
+                l.tonalidade,
+                l.bitola,
+                l.estoque,
+                l.enderecamento,
+                l.total
+            ]);
+        }
         return workbook.xlsx.writeBuffer() as unknown as Promise<Buffer>;
     }
 }

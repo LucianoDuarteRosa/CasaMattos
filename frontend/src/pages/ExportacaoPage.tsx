@@ -19,6 +19,7 @@ import {
 
 import { useEffect } from 'react';
 import { fornecedorService } from '@/services/fornecedorService';
+import { exportacaoService } from '@/services/exportacaoService';
 import { IFornecedor } from '@/types';
 
 const ExportacaoPage: React.FC = () => {
@@ -58,24 +59,43 @@ const ExportacaoPage: React.FC = () => {
     };
 
     // Handlers de exportação
-    const handleExportarGeral = () => {
-        setExportando(true);
-        setTimeout(() => {
-            setExportando(false);
-            showNotification('Exportação de Inventário Geral iniciada!', 'success');
-        }, 1200);
+    const downloadExcel = (blob: Blob, filename: string) => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        window.URL.revokeObjectURL(url);
     };
 
-    const handleExportarFornecedor = () => {
+    const handleExportarGeral = async () => {
+        setExportando(true);
+        try {
+            const blob = await exportacaoService.exportarInventario();
+            downloadExcel(blob, 'inventario_geral.xlsx');
+            showNotification('Exportação de Inventário Geral iniciada!', 'success');
+        } catch (e) {
+            showNotification('Erro ao exportar inventário geral', 'error');
+        }
+        setExportando(false);
+    };
+
+    const handleExportarFornecedor = async () => {
         if (!fornecedorSelecionado) {
             showNotification('Selecione um fornecedor!', 'error');
             return;
         }
         setExportando(true);
-        setTimeout(() => {
-            setExportando(false);
+        try {
+            const blob = await exportacaoService.exportarInventario(Number(fornecedorSelecionado));
+            downloadExcel(blob, 'inventario_fornecedor.xlsx');
             showNotification('Exportação do Inventário do Fornecedor iniciada!', 'success');
-        }, 1200);
+        } catch (e) {
+            showNotification('Erro ao exportar inventário do fornecedor', 'error');
+        }
+        setExportando(false);
     };
 
     return (
