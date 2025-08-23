@@ -12,6 +12,8 @@ router.get('/:tipo', (req: Request, res: Response) => {
         filename = 'Template_Fornecedores.xlsx';
     } else if (tipo === 'produto') {
         filename = 'Template_Produtos.xlsx';
+    } else if (tipo === 'separacao') {
+        filename = 'Template_Separacao.xlsx';
     } else {
         return res.status(400).json({ error: 'Tipo de template inválido' });
     }

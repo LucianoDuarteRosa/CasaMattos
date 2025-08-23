@@ -33,10 +33,13 @@ const ExportacaoPage: React.FC = () => {
     const [fornecedores, setFornecedores] = useState<IFornecedor[]>([]);
 
     // Download de template usando o exportacaoService
-    const handleDownloadTemplate = async (tipo: 'fornecedor' | 'produto') => {
+    const handleDownloadTemplate = async (tipo: 'fornecedor' | 'produto' | 'separacao') => {
         try {
             const blob = await templateService.baixarTemplate(tipo);
-            const filename = tipo === 'fornecedor' ? 'Template_Fornecedores.xlsx' : 'Template_Produtos.xlsx';
+            let filename = '';
+            if (tipo === 'fornecedor') filename = 'Template_Fornecedores.xlsx';
+            else if (tipo === 'produto') filename = 'Template_Produtos.xlsx';
+            else if (tipo === 'separacao') filename = 'Template_Separacao.xlsx';
             downloadExcel(blob, filename);
         } catch (e) {
             showNotification('Erro ao baixar template', 'error');
@@ -213,9 +216,7 @@ const ExportacaoPage: React.FC = () => {
                     </Button>
                     <Button
                         variant="outlined"
-                        component="a"
-                        href="/template_separacao.csv"
-                        download
+                        onClick={() => handleDownloadTemplate('separacao')}
                     >
                         Template Separação
                     </Button>
