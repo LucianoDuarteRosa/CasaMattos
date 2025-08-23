@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import {
     Box,
@@ -20,6 +19,7 @@ import {
 import { useEffect } from 'react';
 import { fornecedorService } from '@/services/fornecedorService';
 import { exportacaoService } from '@/services/exportacaoService';
+import { templateService } from '@/services/templateService';
 import { IFornecedor } from '@/types';
 
 const ExportacaoPage: React.FC = () => {
@@ -30,8 +30,18 @@ const ExportacaoPage: React.FC = () => {
     const [snackbarMessage, setSnackbarMessage] = useState('');
     const [snackbarSeverity, setSnackbarSeverity] = useState<'success' | 'error' | 'info'>('info');
 
-
     const [fornecedores, setFornecedores] = useState<IFornecedor[]>([]);
+
+    // Download de template usando o exportacaoService
+    const handleDownloadTemplate = async (tipo: 'fornecedor' | 'produto') => {
+        try {
+            const blob = await templateService.baixarTemplate(tipo);
+            const filename = tipo === 'fornecedor' ? 'Template_Fornecedores.xlsx' : 'Template_Produtos.xlsx';
+            downloadExcel(blob, filename);
+        } catch (e) {
+            showNotification('Erro ao baixar template', 'error');
+        }
+    };
 
     useEffect(() => {
         loadFornecedores();
@@ -74,7 +84,9 @@ const ExportacaoPage: React.FC = () => {
         setExportando(true);
         try {
             const blob = await exportacaoService.exportarInventario();
-            downloadExcel(blob, 'inventario_geral.xlsx');
+            const agora = new Date();
+            const fileName = `Inventario_Geral_${agora.getFullYear()}${(agora.getMonth() + 1).toString().padStart(2, '0')}${agora.getDate().toString().padStart(2, '0')}.xlsx`;
+            downloadExcel(blob, fileName);
             showNotification('Exportação de Inventário Geral iniciada!', 'success');
         } catch (e) {
             showNotification('Erro ao exportar inventário geral', 'error');
@@ -90,7 +102,11 @@ const ExportacaoPage: React.FC = () => {
         setExportando(true);
         try {
             const blob = await exportacaoService.exportarInventario(Number(fornecedorSelecionado));
-            downloadExcel(blob, 'inventario_fornecedor.xlsx');
+            const fornecedor = fornecedores.find(f => f.id === Number(fornecedorSelecionado));
+            const nomeFornecedor = fornecedor?.razaoSocial ? fornecedor.razaoSocial.replace(/[^a-zA-Z0-9]/g, '_') : 'Fornecedor';
+            const agora = new Date();
+            const fileName = `Inventario_${nomeFornecedor}_${agora.getFullYear()}${(agora.getMonth() + 1).toString().padStart(2, '0')}${agora.getDate().toString().padStart(2, '0')}.xlsx`;
+            downloadExcel(blob, fileName);
             showNotification('Exportação do Inventário do Fornecedor iniciada!', 'success');
         } catch (e) {
             showNotification('Erro ao exportar inventário do fornecedor', 'error');
@@ -185,19 +201,15 @@ const ExportacaoPage: React.FC = () => {
                 <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', mt: 2 }}>
                     <Button
                         variant="outlined"
-                        component="a"
-                        href="/template_fornecedores.xlsx"
-                        download
+                        onClick={() => handleDownloadTemplate('fornecedor')}
                     >
                         Template Fornecedores
                     </Button>
                     <Button
                         variant="outlined"
-                        component="a"
-                        href="/template_produtos.xlsx"
-                        download
+                        onClick={() => handleDownloadTemplate('produto')}
                     >
-                        Template Produtos
+                        Template Produto
                     </Button>
                     <Button
                         variant="outlined"

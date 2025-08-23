@@ -9,4 +9,10 @@ export const exportacaoService = {
         });
         return response.data;
     },
+    async baixarTemplate(tipo: 'fornecedor' | 'produto') {
+        const response = await api.get(`/templates/${tipo}`, {
+            responseType: 'blob',
+        });
+        return response.data;
+    },
 };

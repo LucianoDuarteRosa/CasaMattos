@@ -227,11 +227,11 @@ export class FileExportService {
         const workbook = new ExcelJS.Workbook();
         const sheet = workbook.addWorksheet('Inventário');
         const columns = [
-            'Produto', 'Lote', 'Tonalidade', 'Bitola', 'Estoque', 'Endereçamento', 'Total'
+            'Produto', 'Lote', 'Tonalidade', 'Bitola', 'Estoque', 'Endereçamento', 'Total', 'Fornecedor'
         ];
         sheet.columns = columns.map((header, idx) => {
-            let col: any = { header, width: [30, 15, 15, 15, 15, 18, 15][idx] };
-            if (idx >= 4) col.style = { numFmt: '#,##0.00' };
+            let col: any = { header, width: [30, 15, 15, 15, 15, 18, 15, 30][idx] };
+            if (idx >= 4 && idx <= 6) col.style = { numFmt: '#,##0.00' };
             return col;
         });
 
@@ -242,8 +242,22 @@ export class FileExportService {
         headerRow.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFB0B0B0' } };
 
         // Adicionar linhas de dados, apenas uma linha por registro, sem linha extra com o nome do produto
+        // Cache para evitar múltiplas queries do mesmo fornecedor
+        const fornecedorRepo = new FornecedorRepository();
+        const fornecedorCache: Record<number, string> = {};
         for (let i = 0; i < linhas.length; i++) {
             const l = linhas[i];
+            let fornecedorNome = '';
+            if (l.produto.idFornecedor) {
+                if (fornecedorCache[l.produto.idFornecedor]) {
+                    fornecedorNome = fornecedorCache[l.produto.idFornecedor];
+                } else {
+                    // eslint-disable-next-line no-await-in-loop
+                    const fornecedor = await fornecedorRepo.findById(l.produto.idFornecedor);
+                    fornecedorNome = fornecedor?.razaoSocial || '';
+                    fornecedorCache[l.produto.idFornecedor] = fornecedorNome;
+                }
+            }
             const row = sheet.addRow([
                 l.produto.descricao,
                 l.lote,
@@ -251,7 +265,8 @@ export class FileExportService {
                 l.bitola,
                 typeof l.estoque === 'number' && !isNaN(l.estoque) ? Number(l.estoque.toFixed(2)) : 0,
                 typeof l.enderecamento === 'number' && !isNaN(l.enderecamento) ? Number(l.enderecamento.toFixed(2)) : 0,
-                typeof l.total === 'number' && !isNaN(l.total) ? Number(l.total.toFixed(2)) : 0
+                typeof l.total === 'number' && !isNaN(l.total) ? Number(l.total.toFixed(2)) : 0,
+                fornecedorNome
             ]);
             row.font = { size: 11 };
             row.alignment = { vertical: 'middle', horizontal: 'center' };
