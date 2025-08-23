@@ -14,7 +14,11 @@ import {
     DialogTitle,
     DialogContent,
     Alert,
-    DialogActions
+    DialogActions,
+    Select,
+    MenuItem,
+    InputLabel,
+    FormControl
 } from '@mui/material';
 import { DataGrid, GridColDef, GridActionsCellItem } from '@mui/x-data-grid';
 import { Add, Edit, Visibility, Delete, Search } from '@mui/icons-material';
@@ -54,6 +58,8 @@ const EnderecamentosPage: React.FC = () => {
     const [snackbarMessage, setSnackbarMessage] = useState('');
     const [snackbarSeverity, setSnackbarSeverity] = useState<'success' | 'error'>('success');
     const [searchTerm, setSearchTerm] = useState<string>('');
+    const [selectedRua, setSelectedRua] = useState<string>('');
+    const [selectedPredio, setSelectedPredio] = useState<string>('');
     const [showOnlyAvailable, setShowOnlyAvailable] = useState(true);
     const [formData, setFormData] = useState<FormData>({
         codigoBarras: '',
@@ -208,6 +214,21 @@ const EnderecamentosPage: React.FC = () => {
         loadPredios();
     }, [showOnlyAvailable]);
 
+    // Extrai ruas únicas dos prédios
+    const ruasUnicas = React.useMemo(() => {
+        const ruasSet = new Set<string>();
+        predios.forEach(p => {
+            if (p.rua?.nomeRua) ruasSet.add(p.rua.nomeRua);
+        });
+        return Array.from(ruasSet).sort();
+    }, [predios]);
+
+    // Filtra prédios pela rua selecionada
+    const prediosFiltrados = React.useMemo(() => {
+        if (!selectedRua) return predios;
+        return predios.filter(p => p.rua?.nomeRua === selectedRua);
+    }, [predios, selectedRua]);
+
     const loadProdutos = async () => {
         try {
             const data = await produtoService.getAll();
@@ -256,7 +277,8 @@ const EnderecamentosPage: React.FC = () => {
     };
 
     const handleSearch = async () => {
-        if (!searchTerm.trim()) {
+        // Se nenhum filtro, busca padrão
+        if (!searchTerm.trim() && !selectedRua && !selectedPredio) {
             loadEnderecamentos();
             return;
         }
@@ -264,7 +286,16 @@ const EnderecamentosPage: React.FC = () => {
         try {
             setLoading(true);
             setError('');
-            const data = await enderecamentoService.searchByCodigoOuDescricao(searchTerm);
+            // Busca por código/descrição + filtros
+            let data = await enderecamentoService.searchByCodigoOuDescricao(searchTerm);
+            // Filtro por rua
+            if (selectedRua) {
+                data = data.filter((e: any) => e.predio?.rua?.nomeRua === selectedRua);
+            }
+            // Filtro por prédio
+            if (selectedPredio) {
+                data = data.filter((e: any) => e.predio?.id?.toString() === selectedPredio);
+            }
             setEnderecamentos(data);
         } catch (error: any) {
             console.error('Erro ao buscar endereçamentos:', error);
@@ -556,15 +587,48 @@ const EnderecamentosPage: React.FC = () => {
             </Typography>
 
             {/* Barra de pesquisa e controles */}
-            <Box sx={{ display: 'flex', gap: 2, mb: 0, flexWrap: 'wrap', alignItems: 'center' }}>
+            <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
                 <Box sx={{ display: 'flex', gap: 1, flex: 1, minWidth: '200px' }}>
                     <TextField
                         placeholder="Buscar por código ou descrição..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value.toUpperCase())}
-                        sx={{ flex: 1 }}
+                        sx={{ flex: 1, minWidth: 200 }}
                         InputProps={{ startAdornment: <Search sx={{ mr: 1 }} /> }}
                     />
+                    {/* Select de Rua */}
+                    <FormControl sx={{ minWidth: 140 }}>
+                        <InputLabel id="select-rua-label">Rua</InputLabel>
+                        <Select
+                            labelId="select-rua-label"
+                            value={selectedRua}
+                            label="Rua"
+                            onChange={e => {
+                                setSelectedRua(e.target.value);
+                                setSelectedPredio('');
+                            }}
+                        >
+                            <MenuItem value="">Todas</MenuItem>
+                            {ruasUnicas.map((rua) => (
+                                <MenuItem key={rua} value={rua}>{rua}</MenuItem>
+                            ))}
+                        </Select>
+                    </FormControl>
+                    {/* Select de Prédio */}
+                    <FormControl sx={{ minWidth: 140 }} disabled={selectedRua === ''}>
+                        <InputLabel id="select-predio-label">Prédio</InputLabel>
+                        <Select
+                            labelId="select-predio-label"
+                            value={selectedPredio}
+                            label="Prédio"
+                            onChange={e => setSelectedPredio(e.target.value)}
+                        >
+                            <MenuItem value="">Todos</MenuItem>
+                            {prediosFiltrados.map((predio) => (
+                                <MenuItem key={predio.id} value={predio.id}>{predio.nomePredio}</MenuItem>
+                            ))}
+                        </Select>
+                    </FormControl>
                     <Button
                         variant="outlined"
                         onClick={handleSearch}
@@ -574,7 +638,12 @@ const EnderecamentosPage: React.FC = () => {
                     </Button>
                     <Button
                         variant="outlined"
-                        onClick={loadEnderecamentos}
+                        onClick={() => {
+                            setSearchTerm('');
+                            setSelectedRua('');
+                            setSelectedPredio('');
+                            loadEnderecamentos();
+                        }}
                         disabled={loading}
                     >
                         Limpar
@@ -589,8 +658,6 @@ const EnderecamentosPage: React.FC = () => {
                         Novo Endereçamento
                     </Button>
                 </Box>
-
-
             </Box>
             <Box sx={{ mb: 2, mt: 0 }}>
                 <FormControlLabel
