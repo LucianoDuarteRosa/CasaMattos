@@ -223,29 +223,43 @@ export class FileExportService {
             }
         }
 
-        // Gerar Excel
+        // Gerar Excel com layout simples para importação
         const workbook = new ExcelJS.Workbook();
         const sheet = workbook.addWorksheet('Inventário');
-        sheet.columns = [
-            { header: 'Produto', width: 30 },
-            { header: 'Lote', width: 15 },
-            { header: 'Tonalidade', width: 15 },
-            { header: 'Bitola', width: 15 },
-            { header: 'Estoque', width: 15 },
-            { header: 'Endereçamento', width: 18 },
-            { header: 'Total', width: 15 },
+        const columns = [
+            'Produto', 'Lote', 'Tonalidade', 'Bitola', 'Estoque', 'Endereçamento', 'Total'
         ];
-        for (const l of linhas) {
-            sheet.addRow([
+        sheet.columns = columns.map((header, idx) => {
+            let col: any = { header, width: [30, 15, 15, 15, 15, 18, 15][idx] };
+            if (idx >= 4) col.style = { numFmt: '#,##0.00' };
+            return col;
+        });
+
+        // Adicionar cabeçalho estilizado
+        const headerRow = sheet.getRow(1);
+        headerRow.font = { bold: true, size: 12 };
+        headerRow.alignment = { vertical: 'middle', horizontal: 'center' };
+        headerRow.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFB0B0B0' } };
+
+        // Adicionar linhas de dados, apenas uma linha por registro, sem linha extra com o nome do produto
+        for (let i = 0; i < linhas.length; i++) {
+            const l = linhas[i];
+            const row = sheet.addRow([
                 l.produto.descricao,
                 l.lote,
                 l.tonalidade,
                 l.bitola,
-                l.estoque,
-                l.enderecamento,
-                l.total
+                typeof l.estoque === 'number' && !isNaN(l.estoque) ? Number(l.estoque.toFixed(2)) : 0,
+                typeof l.enderecamento === 'number' && !isNaN(l.enderecamento) ? Number(l.enderecamento.toFixed(2)) : 0,
+                typeof l.total === 'number' && !isNaN(l.total) ? Number(l.total.toFixed(2)) : 0
             ]);
+            row.font = { size: 11 };
+            row.alignment = { vertical: 'middle', horizontal: 'center' };
+            row.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: (i % 2 === 0) ? 'FFFFFFFF' : 'FFF2F2F2' } };
         }
+
+        // Não precisa mais garantir formatação numérica pois já está formatado como string pt-BR
+
         return workbook.xlsx.writeBuffer() as unknown as Promise<Buffer>;
     }
 }

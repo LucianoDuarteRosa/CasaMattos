@@ -45,13 +45,15 @@ export class EstoqueItemRepository implements IEstoqueItemRepository {
 
         return estoqueItems.map((item: any) => {
             const data = item.toJSON() as IEstoqueItem;
+            // Garante que quantidade é number
+            const quantidade = typeof data.quantidade === 'string' ? Number(data.quantidade) : data.quantidade;
             return new EstoqueItem(
                 data.id,
                 data.produtoId,
                 data.lote,
                 data.ton,
                 data.bit,
-                data.quantidade,
+                quantidade,
                 data.createdAt,
                 data.updatedAt
             );
