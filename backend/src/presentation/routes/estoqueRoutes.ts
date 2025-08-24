@@ -1,12 +1,14 @@
+
 import express from 'express';
 import { EstoqueController } from '../controllers/EstoqueController';
+import { addExecutorUserId } from '../middlewares/executorUserId';
+import { authenticateToken } from '../middlewares/auth';
 
 const router = express.Router();
 const estoqueController = new EstoqueController();
 
-// POST /api/estoque/transferir-deposito-estoque - Transferir produto do depósito para estoque
-import { addExecutorUserId } from '../middlewares/executorUserId';
-import { authenticateToken } from '../middlewares/auth';
+// GET /api/estoque/produto/:produtoId/itens - Listar apenas os EstoqueItems de um produto
+router.get('/produto/:produtoId/itens', (req, res) => estoqueController.listarEstoqueItens(req, res));
 
 // Proteger e adicionar executorUserId
 router.post('/transferir-deposito-estoque', authenticateToken, addExecutorUserId, (req, res) => estoqueController.transferirDepositoParaEstoque(req, res));

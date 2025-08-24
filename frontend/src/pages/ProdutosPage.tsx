@@ -616,7 +616,6 @@ const ProdutosPage: React.FC = () => {
                             <Grid container spacing={1}>
                                 <Grid item xs={12} sm={6}>
                                     <TextField
-                                        margin="normal"
                                         fullWidth
                                         label="ID"
                                         value={viewingProduto.id}
@@ -626,7 +625,6 @@ const ProdutosPage: React.FC = () => {
                                 </Grid>
                                 <Grid item xs={12} sm={6}>
                                     <TextField
-                                        margin="normal"
                                         fullWidth
                                         label="Código Interno"
                                         value={viewingProduto.codInterno}
@@ -636,7 +634,6 @@ const ProdutosPage: React.FC = () => {
                                 </Grid>
                                 <Grid item xs={12}>
                                     <TextField
-                                        margin="normal"
                                         fullWidth
                                         label="Descrição"
                                         value={viewingProduto.descricao}
@@ -646,7 +643,6 @@ const ProdutosPage: React.FC = () => {
                                 </Grid>
                                 <Grid item xs={12} sm={6}>
                                     <TextField
-                                        margin="normal"
                                         fullWidth
                                         label="Quantidade Mínima de Venda"
                                         value={formatBrazilianNumber(viewingProduto.quantMinVenda)}
@@ -656,7 +652,6 @@ const ProdutosPage: React.FC = () => {
                                 </Grid>
                                 <Grid item xs={12} sm={6}>
                                     <TextField
-                                        margin="normal"
                                         fullWidth
                                         label="Código de Barras"
                                         value={viewingProduto.codBarras || 'Não informado'}
@@ -666,7 +661,6 @@ const ProdutosPage: React.FC = () => {
                                 </Grid>
                                 <Grid item xs={12} sm={6}>
                                     <TextField
-                                        margin="normal"
                                         fullWidth
                                         label="Depósito"
                                         value={
@@ -680,7 +674,6 @@ const ProdutosPage: React.FC = () => {
                                 </Grid>
                                 <Grid item xs={12} sm={6}>
                                     <TextField
-                                        margin="normal"
                                         fullWidth
                                         label="Estoque"
                                         value={formatBrazilianNumber(viewingProduto.estoque)}
@@ -690,7 +683,6 @@ const ProdutosPage: React.FC = () => {
                                 </Grid>
                                 <Grid item xs={12} sm={6}>
                                     <TextField
-                                        margin="normal"
                                         fullWidth
                                         label="Custo"
                                         value={viewingProduto.custo ? formatBrazilianCurrency(viewingProduto.custo) : 'Não informado'}
@@ -700,7 +692,6 @@ const ProdutosPage: React.FC = () => {
                                 </Grid>
                                 <Grid item xs={12} sm={6}>
                                     <TextField
-                                        margin="normal"
                                         fullWidth
                                         label="Código Fabricante"
                                         value={viewingProduto.codFabricante || 'Não informado'}
@@ -710,7 +701,6 @@ const ProdutosPage: React.FC = () => {
                                 </Grid>
                                 <Grid item xs={12} sm={6}>
                                     <TextField
-                                        margin="normal"
                                         fullWidth
                                         label="Quantidade de Caixas"
                                         value={viewingProduto.quantCaixas || 'Não informado'}
@@ -721,7 +711,6 @@ const ProdutosPage: React.FC = () => {
                                 {/* Removido campo extra de estoque exibido, pois agora é exibido em Depósito */}
                                 <Grid item xs={12} sm={6}>
                                     <TextField
-                                        margin="normal"
                                         fullWidth
                                         label="Fornecedor"
                                         value={getFornecedorInfo(viewingProduto.idFornecedor)}

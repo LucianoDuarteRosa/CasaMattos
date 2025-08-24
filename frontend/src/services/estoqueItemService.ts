@@ -14,7 +14,7 @@ export interface IEstoqueItem {
 
 export const estoqueItemService = {
     getByProdutoId: async (produtoId: number): Promise<IEstoqueItem[]> => {
-        const response = await api.get(`/estoque/produto/${produtoId}/detalhado`);
+        const response = await api.get(`/estoque/produto/${produtoId}/itens`);
         return response.data.data;
     },
     create: async (item: Omit<IEstoqueItem, 'id'>) => {

@@ -240,13 +240,14 @@ const AjustarPage: React.FC = () => {
                 <DialogTitle>Detalhes do Produto</DialogTitle>
                 <DialogContent>
                     {selectedProduto && (
-                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mb: 2 }}>
+                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mb: 0, mt: 1 }}>
                             {/* Linha 1: Descrição (full width) */}
                             <TextField
                                 label="Descrição"
                                 value={selectedProduto.descricao || ''}
                                 fullWidth
-                                disabled
+                                variant="filled"
+                                InputProps={{ readOnly: true }}
                             />
                             {/* Linha 2: Código Interno, Código de Barras, Fabricante */}
                             <Box sx={{ display: 'flex', gap: 2 }}>
@@ -254,19 +255,22 @@ const AjustarPage: React.FC = () => {
                                     label="Código Interno"
                                     value={selectedProduto.codInterno || ''}
                                     fullWidth
-                                    disabled
+                                    variant="filled"
+                                    InputProps={{ readOnly: true }}
                                 />
                                 <TextField
                                     label="Código de Barras"
                                     value={selectedProduto.codBarras || 'N/I'}
                                     fullWidth
-                                    disabled
+                                    variant="filled"
+                                    InputProps={{ readOnly: true }}
                                 />
                                 <TextField
                                     label="Fabricante"
                                     value={selectedProduto.codFabricante || 'N/I'}
                                     fullWidth
-                                    disabled
+                                    variant="filled"
+                                    InputProps={{ readOnly: true }}
                                 />
                             </Box>
                             {/* Linha 3: Estoque, Depósito */}
@@ -275,7 +279,8 @@ const AjustarPage: React.FC = () => {
                                     label="Estoque"
                                     value={selectedProduto.estoque !== undefined && selectedProduto.estoque !== null ? Number(selectedProduto.estoque).toFixed(2).replace('.', ',') : '0,00'}
                                     fullWidth
-                                    disabled
+                                    variant="filled"
+                                    InputProps={{ readOnly: true }}
                                 />
                                 <TextField
                                     label="Depósito"
@@ -283,7 +288,8 @@ const AjustarPage: React.FC = () => {
                                         ? (Number(enderecamentoEstoque) * Number(selectedProduto.quantMinVenda)).toFixed(2).replace('.', ',')
                                         : '0,00'}
                                     fullWidth
-                                    disabled
+                                    variant="filled"
+                                    InputProps={{ readOnly: true }}
                                 />
                             </Box>
                             {/* Itens de Estoque */}

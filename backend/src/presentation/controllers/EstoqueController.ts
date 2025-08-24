@@ -32,6 +32,20 @@ export class EstoqueController {
         this.consultarEstoqueProdutoUseCase = new ConsultarEstoqueProdutoUseCase(this.estoqueCalculoService);
     }
 
+    async listarEstoqueItens(req: Request, res: Response): Promise<void> {
+        try {
+            const produtoId = parseInt(req.params.produtoId);
+            if (isNaN(produtoId)) {
+                res.status(400).json({ success: false, message: 'ID do produto inválido' });
+                return;
+            }
+            const itens = await this.estoqueItemRepository.findByProdutoId(produtoId);
+            res.json({ success: true, data: itens });
+        } catch (error: any) {
+            res.status(500).json({ success: false, message: error.message || 'Erro ao listar itens de estoque' });
+        }
+    }
+
     async transferirDepositoParaEstoque(req: Request, res: Response): Promise<void> {
         try {
             const { produtoId, quantidade, lote, ton, bit } = req.body;
