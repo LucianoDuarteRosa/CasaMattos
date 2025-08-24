@@ -731,7 +731,7 @@ const ProdutosPage: React.FC = () => {
                                 </Grid>
                             </Grid>
                             {/* Lista de Itens de Estoque */}
-                            <Box sx={{ mt: 2 }}>
+                            <Box sx={{ mt: 1, mb: 0 }}>
                                 <Typography variant="h6" gutterBottom>Itens de Estoque</Typography>
                                 {loadingEstoqueItems ? (
                                     <Typography>Carregando itens de estoque...</Typography>

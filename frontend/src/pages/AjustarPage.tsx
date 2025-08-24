@@ -240,17 +240,54 @@ const AjustarPage: React.FC = () => {
                 <DialogTitle>Detalhes do Produto</DialogTitle>
                 <DialogContent>
                     {selectedProduto && (
-                        <Box>
-                            <Typography variant="h6">{selectedProduto.descricao}</Typography>
-                            <Typography variant="body2">Código Interno: {selectedProduto.codInterno}</Typography>
-                            <Typography variant="body2">Código de Barras: {selectedProduto.codBarras || 'N/I'}</Typography>
-                            <Typography variant="body2">Estoque: {selectedProduto.estoque !== undefined && selectedProduto.estoque !== null ? Number(selectedProduto.estoque).toFixed(2).replace('.', ',') : '0,00'}</Typography>
-                            <Typography variant="body2">
-                                Depósito: {selectedProduto && selectedProduto.quantMinVenda && enderecamentoEstoque
-                                    ? (Number(enderecamentoEstoque) * Number(selectedProduto.quantMinVenda)).toFixed(2).replace('.', ',')
-                                    : '0,00'} m²
-                            </Typography>
-                            <Box sx={{ mt: 2 }}>
+                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mb: 2 }}>
+                            {/* Linha 1: Descrição (full width) */}
+                            <TextField
+                                label="Descrição"
+                                value={selectedProduto.descricao || ''}
+                                fullWidth
+                                disabled
+                            />
+                            {/* Linha 2: Código Interno, Código de Barras, Fabricante */}
+                            <Box sx={{ display: 'flex', gap: 2 }}>
+                                <TextField
+                                    label="Código Interno"
+                                    value={selectedProduto.codInterno || ''}
+                                    fullWidth
+                                    disabled
+                                />
+                                <TextField
+                                    label="Código de Barras"
+                                    value={selectedProduto.codBarras || 'N/I'}
+                                    fullWidth
+                                    disabled
+                                />
+                                <TextField
+                                    label="Fabricante"
+                                    value={selectedProduto.codFabricante || 'N/I'}
+                                    fullWidth
+                                    disabled
+                                />
+                            </Box>
+                            {/* Linha 3: Estoque, Depósito */}
+                            <Box sx={{ display: 'flex', gap: 2 }}>
+                                <TextField
+                                    label="Estoque"
+                                    value={selectedProduto.estoque !== undefined && selectedProduto.estoque !== null ? Number(selectedProduto.estoque).toFixed(2).replace('.', ',') : '0,00'}
+                                    fullWidth
+                                    disabled
+                                />
+                                <TextField
+                                    label="Depósito (m²)"
+                                    value={selectedProduto && selectedProduto.quantMinVenda && enderecamentoEstoque
+                                        ? (Number(enderecamentoEstoque) * Number(selectedProduto.quantMinVenda)).toFixed(2).replace('.', ',')
+                                        : '0,00'}
+                                    fullWidth
+                                    disabled
+                                />
+                            </Box>
+                            {/* Itens de Estoque */}
+                            <Box sx={{ mt: 0, mb: 0, pb: 0 }}>
                                 <Typography variant="h6" gutterBottom>Itens de Estoque</Typography>
                                 {estoqueItens.length === 0 ? (
                                     <Typography>Nenhum item de estoque encontrado para este produto.</Typography>
@@ -282,14 +319,14 @@ const AjustarPage: React.FC = () => {
                                         </table>
                                     </Paper>
                                 )}
-                                <Box sx={{ mt: 2, textAlign: 'right' }}>
+                                <Box sx={{ mt: 2, mb: 0, pb: 0, textAlign: 'right' }}>
                                     <Button variant="contained" onClick={handleNewItem}>Novo Item</Button>
                                 </Box>
                                 {/* Modal de edição/criação de item de estoque */}
                                 <Dialog open={editDialogOpen} onClose={handleEditDialogClose} maxWidth="xs" fullWidth>
                                     <DialogTitle>{isNewItem ? 'Novo Item de Estoque' : 'Editar Item de Estoque'}</DialogTitle>
                                     <DialogContent>
-                                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
+                                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1, mb: 0}}>
                                             <TextField
                                                 label="Lote"
                                                 value={editItem?.lote || ''}
@@ -328,7 +365,7 @@ const AjustarPage: React.FC = () => {
                         </Box>
                     )}
                 </DialogContent>
-                <DialogActions>
+                <DialogActions sx={{ pt: 0 }}>
                     <Button onClick={handleCloseDetails}>Fechar</Button>
                 </DialogActions>
             </Dialog>
