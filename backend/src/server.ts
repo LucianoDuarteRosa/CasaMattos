@@ -28,7 +28,7 @@ import listaRoutes from './presentation/routes/listaRoutes';
 import dashboardRoutes from './presentation/routes/dashboardRoutes';
 import estoqueRoutes from './presentation/routes/estoqueRoutes';
 import { logRoutes } from './presentation/routes/logRoutes';
-import { settingRoutes } from './presentation/routes/settingRoutes';
+import { settingRoutes } from './presentation/routes/SettingRoutes';
 // Importar associações para garantir que sejam carregadas
 import './infrastructure/database/models/associations';
 

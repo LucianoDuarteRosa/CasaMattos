@@ -4,23 +4,101 @@ import { CreateBulkEnderecamentoUseCase } from '../../application/usecases/Creat
 import { GetEnderecamentoUseCase } from '../../application/usecases/GetEnderecamentoUseCase';
 import { ListEnderecamentosUseCase } from '../../application/usecases/ListEnderecamentosUseCase';
 import { ListEnderecamentosDisponiveisUseCase } from '../../application/usecases/ListEnderecamentosDisponiveisUseCase';
+import { SearchEnderecamentosDisponiveisUseCase } from '../../application/usecases/SearchEnderecamentosDisponiveisUseCase';
 import { UpdateEnderecamentoUseCase } from '../../application/usecases/UpdateEnderecamentoUseCase';
 import { DeleteEnderecamentoUseCase } from '../../application/usecases/DeleteEnderecamentoUseCase';
 import { SearchEnderecamentosUseCase } from '../../application/usecases/SearchEnderecamentosUseCase';
-import { SearchEnderecamentosDisponiveisUseCase } from '../../application/usecases/SearchEnderecamentosDisponiveisUseCase';
+
+import { GetEstoqueEnderecadoPorProdutoUseCase } from '../../application/usecases/GetEstoqueEnderecadoPorProdutoUseCase';
+import { IEnderecamentoRepository } from '../../domain/repositories/IEnderecamentoRepository';
+
+// ...restante da classe...
 
 export class EnderecamentoController {
+    private createEnderecamentoUseCase: CreateEnderecamentoUseCase;
+    private createBulkEnderecamentoUseCase: CreateBulkEnderecamentoUseCase;
+    private getEnderecamentoUseCase: GetEnderecamentoUseCase;
+    private listEnderecamentosUseCase: ListEnderecamentosUseCase;
+    private listEnderecamentosDisponiveisUseCase: ListEnderecamentosDisponiveisUseCase;
+    private searchEnderecamentosDisponiveisUseCase: SearchEnderecamentosDisponiveisUseCase;
+    private updateEnderecamentoUseCase: UpdateEnderecamentoUseCase;
+    private deleteEnderecamentoUseCase: DeleteEnderecamentoUseCase;
+    private searchEnderecamentosUseCase: SearchEnderecamentosUseCase;
+    private getEstoqueEnderecadoPorProdutoUseCase: GetEstoqueEnderecadoPorProdutoUseCase;
+
     constructor(
-        private createEnderecamentoUseCase: CreateEnderecamentoUseCase,
-        private createBulkEnderecamentoUseCase: CreateBulkEnderecamentoUseCase,
-        private getEnderecamentoUseCase: GetEnderecamentoUseCase,
-        private listEnderecamentosUseCase: ListEnderecamentosUseCase,
-        private listEnderecamentosDisponiveisUseCase: ListEnderecamentosDisponiveisUseCase,
-        private updateEnderecamentoUseCase: UpdateEnderecamentoUseCase,
-        private deleteEnderecamentoUseCase: DeleteEnderecamentoUseCase,
-        private searchEnderecamentosUseCase: SearchEnderecamentosUseCase,
-        private searchEnderecamentosDisponiveisUseCase: SearchEnderecamentosDisponiveisUseCase
-    ) { }
+        createEnderecamentoUseCase: CreateEnderecamentoUseCase,
+        createBulkEnderecamentoUseCase: CreateBulkEnderecamentoUseCase,
+        getEnderecamentoUseCase: GetEnderecamentoUseCase,
+        listEnderecamentosUseCase: ListEnderecamentosUseCase,
+        listEnderecamentosDisponiveisUseCase: ListEnderecamentosDisponiveisUseCase,
+        searchEnderecamentosDisponiveisUseCase: SearchEnderecamentosDisponiveisUseCase,
+        updateEnderecamentoUseCase: UpdateEnderecamentoUseCase,
+        deleteEnderecamentoUseCase: DeleteEnderecamentoUseCase,
+        searchEnderecamentosUseCase: SearchEnderecamentosUseCase,
+        enderecamentoRepository: IEnderecamentoRepository
+    ) {
+        this.createEnderecamentoUseCase = createEnderecamentoUseCase;
+        this.createBulkEnderecamentoUseCase = createBulkEnderecamentoUseCase;
+        this.getEnderecamentoUseCase = getEnderecamentoUseCase;
+        this.listEnderecamentosUseCase = listEnderecamentosUseCase;
+        this.listEnderecamentosDisponiveisUseCase = listEnderecamentosDisponiveisUseCase;
+        this.searchEnderecamentosDisponiveisUseCase = searchEnderecamentosDisponiveisUseCase;
+        this.updateEnderecamentoUseCase = updateEnderecamentoUseCase;
+        this.deleteEnderecamentoUseCase = deleteEnderecamentoUseCase;
+        this.searchEnderecamentosUseCase = searchEnderecamentosUseCase;
+        this.getEstoqueEnderecadoPorProdutoUseCase = new GetEstoqueEnderecadoPorProdutoUseCase(enderecamentoRepository);
+    }
+
+    /**
+     * GET /enderecamentos/estoque-enderecado-v2/:idProduto
+     * Retorna o estoque endereçado de um produto (versão alternativa, consulta direta)
+     */
+    async getEstoqueEnderecadoV2(req: Request, res: Response): Promise<void> {
+        try {
+            const { idProduto } = req.params;
+            if (!idProduto || isNaN(Number(idProduto))) {
+                res.status(400).json({ error: 'idProduto inválido' });
+                return;
+            }
+            // Importação direta do model (ajuste o caminho se necessário)
+            // Se já houver import do model no topo, remova este comentário e use direto
+            const EstoqueItem = require('../../domain/entities/EstoqueItem').EstoqueItem;
+            const itensEnderecados = await EstoqueItem.findAll({
+                where: {
+                    produtoId: Number(idProduto),
+                    idPredio: { $ne: null } // ou outro campo que indica endereçamento
+                }
+            });
+            const totalEnderecado = itensEnderecados.reduce((acc: number, item: any) => acc + (item.quantidade || 0), 0);
+            res.json({ success: true, data: { totalEnderecado } });
+        } catch (error) {
+            console.error('Erro ao buscar estoque endereçado (V2):', error);
+            res.status(500).json({
+                error: error instanceof Error ? error.message : 'Erro interno do servidor'
+            });
+        }
+    }
+
+    // ...outros métodos...
+    /**
+     * GET /enderecamentos/estoque-enderecado/:idProduto
+     * Retorna o estoque endereçado (soma das quantidades dos endereçamentos disponíveis) de um produto
+     */
+    async getEstoqueEnderecadoPorProduto(req: Request, res: Response): Promise<void> {
+        try {
+            const { idProduto } = req.params;
+            if (!idProduto) {
+                res.status(400).json({ error: 'idProduto é obrigatório' });
+                return;
+            }
+            const estoque = await this.getEstoqueEnderecadoPorProdutoUseCase.execute(Number(idProduto));
+            res.json({ estoque });
+        } catch (error) {
+            console.error('Erro ao buscar estoque endereçado:', error);
+            res.status(500).json({ error: error instanceof Error ? error.message : 'Erro interno do servidor' });
+        }
+    }
 
     async create(req: Request, res: Response): Promise<void> {
         try {

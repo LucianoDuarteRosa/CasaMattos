@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { CssBaseline } from '@mui/material';
 import { SnackbarProvider } from 'notistack';
@@ -120,7 +120,7 @@ const App: React.FC = () => {
         <ThemeProvider theme={theme}>
             <CssBaseline />
             <SnackbarProvider maxSnack={3}>
-                <Router>
+                <BrowserRouter future={{ v7_relativeSplatPath: true, v7_startTransition: true }}>
                     <Routes>
                         <Route path="/login" element={<LoginPage />} />
                         <Route
@@ -179,7 +179,7 @@ const App: React.FC = () => {
                             }
                         />
                     </Routes>
-                </Router>
+                </BrowserRouter>
             </SnackbarProvider>
         </ThemeProvider>
     );

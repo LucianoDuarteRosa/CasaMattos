@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { getSettings, getSetting, createSetting, updateSetting, deleteSetting } from '../controllers/settingController';
+import { getSettings, getSetting, createSetting, updateSetting, deleteSetting } from '../controllers/SettingController';
 import { isAdmin } from '../middlewares/authMiddleware';
 import { authenticateToken } from '../middlewares/auth';
 import { contextMiddleware } from '../middlewares/contextMiddleware';

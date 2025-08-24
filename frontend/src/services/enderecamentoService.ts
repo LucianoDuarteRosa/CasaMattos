@@ -130,5 +130,12 @@ export const enderecamentoService = {
             params: { q: termo }
         });
         return response.data;
+    },
+
+    // Buscar estoque endereçado de um produto (novo endpoint)
+    async getEstoqueEnderecado(idProduto: number): Promise<number> {
+        const response = await api.get(`/estoque-enderecado/${idProduto}`);
+        // O backend retorna { estoque: number }
+        return response.data?.estoque ?? 0;
     }
 };

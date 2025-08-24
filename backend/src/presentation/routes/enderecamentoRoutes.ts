@@ -43,11 +43,14 @@ const enderecamentoController = new EnderecamentoController(
     getEnderecamentoUseCase,
     listEnderecamentosUseCase,
     listEnderecamentosDisponiveisUseCase,
+    searchEnderecamentosDisponiveisUseCase,
     updateEnderecamentoUseCase,
     deleteEnderecamentoUseCase,
     searchEnderecamentosUseCase,
-    searchEnderecamentosDisponiveisUseCase
+    enderecamentoRepository // para o novo use case
 );
+// Novo endpoint para estoque endereçado por produto
+router.get('/estoque-enderecado/:idProduto', (req, res) => enderecamentoController.getEstoqueEnderecadoPorProduto(req, res));
 
 // Rotas
 router.post('/', (req, res) => enderecamentoController.create(req, res));
