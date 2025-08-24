@@ -196,7 +196,7 @@ const AjustarPage: React.FC = () => {
                         },
                         {
                             field: 'estoqueEnderecamento',
-                            headerName: 'Endereçamento',
+                            headerName: 'Depósito',
                             width: 150,
                             type: 'number',
                             valueFormatter: (params) => {
@@ -278,7 +278,7 @@ const AjustarPage: React.FC = () => {
                                     disabled
                                 />
                                 <TextField
-                                    label="Depósito (m²)"
+                                    label="Depósito"
                                     value={selectedProduto && selectedProduto.quantMinVenda && enderecamentoEstoque
                                         ? (Number(enderecamentoEstoque) * Number(selectedProduto.quantMinVenda)).toFixed(2).replace('.', ',')
                                         : '0,00'}
@@ -309,7 +309,7 @@ const AjustarPage: React.FC = () => {
                                                         <td style={{ padding: 8, borderBottom: '1px solid #eee', textAlign: 'center' }}>{item.lote}</td>
                                                         <td style={{ padding: 8, borderBottom: '1px solid #eee', textAlign: 'center' }}>{item.ton}</td>
                                                         <td style={{ padding: 8, borderBottom: '1px solid #eee', textAlign: 'center' }}>{item.bit}</td>
-                                                        <td style={{ padding: 8, borderBottom: '1px solid #eee', textAlign: 'center' }}>{item.quantidade}</td>
+                                                        <td style={{ padding: 8, borderBottom: '1px solid #eee', textAlign: 'center' }}>{Number(item.quantidade).toFixed(2).replace('.', ',')}</td>
                                                         <td style={{ padding: 8, borderBottom: '1px solid #eee', textAlign: 'center' }}>
                                                             <Button size="small" variant="outlined" onClick={() => handleEditItem(item)}>Editar</Button>
                                                         </td>
@@ -326,7 +326,7 @@ const AjustarPage: React.FC = () => {
                                 <Dialog open={editDialogOpen} onClose={handleEditDialogClose} maxWidth="xs" fullWidth>
                                     <DialogTitle>{isNewItem ? 'Novo Item de Estoque' : 'Editar Item de Estoque'}</DialogTitle>
                                     <DialogContent>
-                                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1, mb: 0}}>
+                                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1, mb: 0 }}>
                                             <TextField
                                                 label="Lote"
                                                 value={editItem?.lote || ''}
@@ -347,9 +347,13 @@ const AjustarPage: React.FC = () => {
                                             />
                                             <TextField
                                                 label="Quantidade"
-                                                type="number"
-                                                value={editItem?.quantidade ?? 0}
-                                                onChange={e => setEditItem(editItem ? { ...editItem, quantidade: Number(e.target.value) } : null)}
+                                                type="text"
+                                                value={editItem?.quantidade !== undefined && editItem?.quantidade !== null ? Number(editItem.quantidade).toFixed(2).replace('.', ',') : '0,00'}
+                                                onChange={e => {
+                                                    // Aceita vírgula ou ponto, converte para número
+                                                    const valor = e.target.value.replace(',', '.');
+                                                    setEditItem(editItem ? { ...editItem, quantidade: Number(valor) } : null);
+                                                }}
                                                 fullWidth
                                             />
                                         </Box>
