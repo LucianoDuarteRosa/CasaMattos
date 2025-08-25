@@ -273,7 +273,7 @@ const AjustarPage: React.FC = () => {
                                     InputProps={{ readOnly: true }}
                                 />
                             </Box>
-                            {/* Linha 3: Estoque, Depósito */}
+                            {/* Linha 3: Estoque, Depósito, Quantidade Mínima de Venda */}
                             <Box sx={{ display: 'flex', gap: 2 }}>
                                 <TextField
                                     label="Estoque"
@@ -286,6 +286,15 @@ const AjustarPage: React.FC = () => {
                                     label="Depósito"
                                     value={selectedProduto && selectedProduto.quantMinVenda && enderecamentoEstoque
                                         ? (Number(enderecamentoEstoque) * Number(selectedProduto.quantMinVenda)).toFixed(2).replace('.', ',')
+                                        : '0,00'}
+                                    fullWidth
+                                    variant="filled"
+                                    InputProps={{ readOnly: true }}
+                                />
+                                <TextField
+                                    label="Quant. Mín. Venda"
+                                    value={selectedProduto.quantMinVenda !== undefined && selectedProduto.quantMinVenda !== null
+                                        ? Number(selectedProduto.quantMinVenda).toFixed(2).replace('.', ',')
                                         : '0,00'}
                                     fullWidth
                                     variant="filled"
