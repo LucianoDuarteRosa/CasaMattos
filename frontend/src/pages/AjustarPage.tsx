@@ -136,7 +136,19 @@ const AjustarPage: React.FC = () => {
             // Atualizar lista de itens
             const lotes = await estoqueItemService.getByProdutoId(selectedProduto.id);
             setEstoqueItens(lotes);
-            // Não atualizar endereçamento nos detalhes
+
+            // Atualizar o produto no grid principal
+            // Buscar estoque atualizado e endereçamento
+            const [estoqueEnderecamento, produtoAtualizado] = await Promise.all([
+                enderecamentoService.getEstoqueEnderecado(selectedProduto.id),
+                produtoService.getById(selectedProduto.id)
+            ]);
+            setProdutosComEnderecamento(prev => prev.map(prod =>
+                prod.id === selectedProduto.id
+                    ? { ...produtoAtualizado, estoqueEnderecamento }
+                    : prod
+            ));
+
             handleEditDialogClose();
         } catch {
             setSnackbar({ open: true, message: 'Erro ao salvar item', severity: 'error' });
