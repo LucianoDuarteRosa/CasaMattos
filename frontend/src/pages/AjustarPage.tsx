@@ -336,30 +336,30 @@ const AjustarPage: React.FC = () => {
                                             <TextField
                                                 label="Lote"
                                                 value={editItem?.lote || ''}
-                                                onChange={e => setEditItem(editItem ? { ...editItem, lote: e.target.value } : null)}
+                                                onChange={e => setEditItem(editItem ? { ...editItem, lote: e.target.value.toUpperCase() } : null)}
                                                 fullWidth
                                             />
                                             <TextField
                                                 label="Tonalidade"
                                                 value={editItem?.ton || ''}
-                                                onChange={e => setEditItem(editItem ? { ...editItem, ton: e.target.value } : null)}
+                                                onChange={e => setEditItem(editItem ? { ...editItem, ton: e.target.value.toUpperCase() } : null)}
                                                 fullWidth
                                             />
                                             <TextField
                                                 label="Bitola"
                                                 value={editItem?.bit || ''}
-                                                onChange={e => setEditItem(editItem ? { ...editItem, bit: e.target.value } : null)}
+                                                onChange={e => setEditItem(editItem ? { ...editItem, bit: e.target.value.toUpperCase() } : null)}
                                                 fullWidth
                                             />
                                             <TextField
                                                 label="Quantidade"
-                                                type="text"
-                                                value={editItem?.quantidade !== undefined && editItem?.quantidade !== null ? Number(editItem.quantidade).toFixed(2).replace('.', ',') : '0,00'}
+                                                type="number"
+                                                value={editItem?.quantidade ?? ''}
                                                 onChange={e => {
-                                                    // Aceita vírgula ou ponto, converte para número
-                                                    const valor = e.target.value.replace(',', '.');
-                                                    setEditItem(editItem ? { ...editItem, quantidade: Number(valor) } : null);
+                                                    const valor = e.target.value;
+                                                    setEditItem(editItem ? { ...editItem, quantidade: valor === '' ? 0 : Number(valor) } : null);
                                                 }}
+                                                inputProps={{ step: '0.01', inputMode: 'decimal' }}
                                                 fullWidth
                                             />
                                         </Box>

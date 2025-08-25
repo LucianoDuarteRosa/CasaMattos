@@ -18,11 +18,11 @@ export const estoqueItemService = {
         return response.data.data;
     },
     create: async (item: Omit<IEstoqueItem, 'id'>) => {
-        const response = await api.post('/estoque/item', item);
+        const response = await api.post('/estoque-item', item);
         return response.data;
     },
     update: async (id: number, item: Partial<IEstoqueItem>) => {
-        const response = await api.put(`/estoque/item/${id}`, item);
+        const response = await api.put(`/estoque-item/${id}`, item);
         return response.data;
     },
 };

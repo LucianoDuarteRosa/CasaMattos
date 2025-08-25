@@ -26,9 +26,10 @@ import { ruaRoutes } from './presentation/routes/ruaRoutes';
 import { predioRoutes } from './presentation/routes/predioRoutes';
 import listaRoutes from './presentation/routes/listaRoutes';
 import dashboardRoutes from './presentation/routes/dashboardRoutes';
-import estoqueRoutes from './presentation/routes/estoqueRoutes';
+import estoqueRoutes from './presentation/routes/estoqueItemRoutes';
 import { logRoutes } from './presentation/routes/logRoutes';
 import { settingRoutes } from './presentation/routes/SettingRoutes';
+import estoqueItemRoutes from './presentation/routes/estoqueItemRoutes';
 // Importar associações para garantir que sejam carregadas
 import './infrastructure/database/models/associations';
 
@@ -106,6 +107,7 @@ app.use('/api/enderecamentos', enderecamentoRoutes);
 app.use('/api/listas', listaRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/estoque', estoqueRoutes);
+app.use('/api/estoque-item', estoqueItemRoutes);
 app.use('/api/logs', logRoutes);
 app.use('/api/settings', settingRoutes);
 app.use('/api/exportacao', exportacaoRoutes);
