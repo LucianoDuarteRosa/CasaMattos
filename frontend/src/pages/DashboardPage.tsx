@@ -96,6 +96,18 @@ const DashboardPage: React.FC = () => {
             icon: <Inventory fontSize="large" />,
             color: '#1976d2',
         },
+        ...(produtosPontaEstoque.length > 0 ? [{
+            title: 'Itens em Ponta de Estoque',
+            value: produtosPontaEstoque.length.toString(),
+            icon: <Recycling fontSize="large" />,
+            color: '#009688',
+        }] : []),
+        {
+            title: 'Listas Ativas',
+            value: stats?.listasAtivas.toString() || '0',
+            icon: <Assignment fontSize="large" />,
+            color: '#d32f2f',
+        },
         {
             title: 'Metragem Total',
             value: stats?.metragemTotal || '0,00',
@@ -108,24 +120,12 @@ const DashboardPage: React.FC = () => {
             icon: <LocationOn fontSize="large" />,
             color: '#f57c00',
         },
-        {
-            title: 'Listas Ativas',
-            value: stats?.listasAtivas.toString() || '0',
-            icon: <Assignment fontSize="large" />,
-            color: '#d32f2f',
-        },
         ...(stats?.vagasRestantes !== null && stats?.vagasRestantes !== undefined && stats?.vagasRestantes >= 0 ? [{
             title: 'Vagas Restantes',
             value: stats.vagasRestantes.toString(),
             icon: <QueryStats fontSize="large" />,
             color: '#7b1fa2',
         }] : []),
-            ...(produtosPontaEstoque.length > 0 ? [{
-                title: 'Itens em Ponta de Estoque',
-                value: produtosPontaEstoque.length.toString(),
-                icon: <Recycling fontSize="large" />,
-                color: '#009688',
-            }] : []),
     ];
 
     return (
@@ -147,7 +147,7 @@ const DashboardPage: React.FC = () => {
 
             <Grid container spacing={3}>
                 {statsConfig.map((stat, index) => (
-                    <Grid item xs={12} sm={6} md={3} key={index}>
+                    <Grid item xs={12} sm={6} md={4} key={index}>
                         <Card>
                             <CardContent>
                                 <Box display="flex" alignItems="center" justifyContent="space-between">
