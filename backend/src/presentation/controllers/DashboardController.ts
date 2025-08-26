@@ -77,6 +77,33 @@ export class DashboardController {
                 type: QueryTypes.SELECT
             });
 
+            // Calcular vagas restantes nos prédios
+            // Busca prédios com vagas > 0
+            const predios = await sequelize.query(`
+                SELECT id, vagas FROM "Predios" WHERE vagas IS NOT NULL AND vagas > 0
+            `, { type: QueryTypes.SELECT });
+
+            // Busca endereçamentos disponíveis agrupados por prédio
+            const enderecamentosPorPredio = await sequelize.query(`
+                SELECT "idPredio", COUNT(*) as total FROM "Enderecamentos" WHERE "disponivel" = true GROUP BY "idPredio"
+            `, { type: QueryTypes.SELECT });
+
+            let vagasRestantes = null;
+            if (predios.length > 0) {
+                let totalVagas = 0;
+                let totalEnderecamentos = 0;
+                predios.forEach((predio: any) => {
+                    totalVagas += predio.vagas;
+                    const enderecamentos = enderecamentosPorPredio.find((e: any) => e.idPredio === predio.id);
+                    // Garantir que o objeto é do tipo certo e acessar o campo corretamente
+                    if (enderecamentos && (typeof enderecamentos === 'object')) {
+                        const total = (enderecamentos as { total: string | number }).total;
+                        totalEnderecamentos += total ? parseInt(total as string) : 0;
+                    }
+                });
+                vagasRestantes = totalVagas - totalEnderecamentos;
+            }
+
             res.json({
                 success: true,
                 data: {
@@ -86,7 +113,8 @@ export class DashboardController {
                         maximumFractionDigits: 2
                     }),
                     enderecamentosDisponiveis: (enderecamentosDisponiveis[0] as any).total || 0,
-                    listasAtivas: (listasAtivas[0] as any).total || 0
+                    listasAtivas: (listasAtivas[0] as any).total || 0,
+                    vagasRestantes: vagasRestantes
                 }
             });
 

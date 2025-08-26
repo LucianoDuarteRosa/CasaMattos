@@ -5,6 +5,7 @@ export interface DashboardStats {
     metragemTotal: string;
     enderecamentosDisponiveis: number;
     listasAtivas: number;
+    vagasRestantes?: number;
 }
 
 export interface ProdutoPontaEstoque {

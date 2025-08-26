@@ -20,7 +20,10 @@ import {
     Business,
     LocationOn,
     Assignment,
+    QueryStats
 } from '@mui/icons-material';
+
+import Recycling from '@mui/icons-material/Recycling';
 import {
     dashboardService,
     DashboardStats,
@@ -111,6 +114,18 @@ const DashboardPage: React.FC = () => {
             icon: <Assignment fontSize="large" />,
             color: '#d32f2f',
         },
+        ...(stats?.vagasRestantes !== null && stats?.vagasRestantes !== undefined && stats?.vagasRestantes >= 0 ? [{
+            title: 'Vagas Restantes',
+            value: stats.vagasRestantes.toString(),
+            icon: <QueryStats fontSize="large" />,
+            color: '#7b1fa2',
+        }] : []),
+            ...(produtosPontaEstoque.length > 0 ? [{
+                title: 'Itens em Ponta de Estoque',
+                value: produtosPontaEstoque.length.toString(),
+                icon: <Recycling fontSize="large" />,
+                color: '#009688',
+            }] : []),
     ];
 
     return (

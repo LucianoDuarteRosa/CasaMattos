@@ -711,6 +711,7 @@ const EnderecamentosPage: React.FC = () => {
                                 <TextField
                                     margin="normal"
                                     fullWidth
+                                    focused={true}
                                     label="Código de Barras"
                                     value={formData.codigoBarras}
                                     onChange={handleInputChange('codigoBarras')}
