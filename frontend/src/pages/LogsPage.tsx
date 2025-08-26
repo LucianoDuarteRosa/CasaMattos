@@ -86,18 +86,17 @@ const LogsPage: React.FC = () => {
         {
             field: 'dataHora',
             headerName: 'Data/Hora',
-            minWidth: 170,
-            flex: 0.7,
+            minWidth: 120,
+            flex: 0.4,
             valueFormatter: (params) => {
-                // Converter para horário de Brasília (UTC-3)
                 const date = new Date(params.value);
                 return date.toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
             }
         },
-        { field: 'usuario', headerName: 'Usuário', minWidth: 150, flex: 0.7 },
-        { field: 'entidade', headerName: 'Entidade', minWidth: 120, flex: 0.6 },
-        { field: 'tipo', headerName: 'Tipo', minWidth: 120, flex: 0.5 },
-        { field: 'detalhes', headerName: 'Detalhes', minWidth: 250, flex: 1.2 },
+        { field: 'usuario', headerName: 'Usuário', minWidth: 100, flex: 0.4 },
+        { field: 'entidade', headerName: 'Entidade', minWidth: 100, flex: 0.4 },
+        { field: 'tipo', headerName: 'Tipo', minWidth: 80, flex: 0.3 },
+        { field: 'detalhes', headerName: 'Detalhes', minWidth: 300, flex: 2.2 },
     ];
 
     return (
@@ -149,30 +148,33 @@ const LogsPage: React.FC = () => {
                     Filtrar
                 </Button>
             </Box>
-            <Paper sx={dataGridStyles.paperContainer}>
-                <DataGrid
-                    rows={logs}
-                    columns={columns}
-                    loading={loading}
-                    pageSizeOptions={[10, 25, 50, 100]}
-                    initialState={{
-                        pagination: {
-                            paginationModel: { page: 0, pageSize: 10 },
-                        },
-                    }}
-                    disableRowSelectionOnClick
-                    localeText={dataGridPtBR}
-                    sx={{
-                        ...dataGridStyles.dataGridSx,
-                        '& .MuiDataGrid-columnHeaders': {
-                            backgroundColor: 'rgba(0, 0, 0, 0.04)',
-                        },
-                        '& .MuiDataGrid-row:hover': {
-                            backgroundColor: 'rgba(0, 0, 0, 0.04)',
-                        }
-                    }}
-                />
-            </Paper>
+            <Box sx={{ width: '100%', overflowX: 'auto' }}>
+                <Paper sx={{ ...dataGridStyles.paperContainer, minWidth: 900 }}>
+                    <DataGrid
+                        rows={logs}
+                        columns={columns}
+                        loading={loading}
+                        pageSizeOptions={[10, 25, 50, 100]}
+                        initialState={{
+                            pagination: {
+                                paginationModel: { page: 0, pageSize: 10 },
+                            },
+                        }}
+                        disableRowSelectionOnClick
+                        localeText={dataGridPtBR}
+                        sx={{
+                            ...dataGridStyles.dataGridSx,
+                            '& .MuiDataGrid-columnHeaders': {
+                                backgroundColor: 'rgba(0, 0, 0, 0.04)',
+                            },
+                            '& .MuiDataGrid-row:hover': {
+                                backgroundColor: 'rgba(0, 0, 0, 0.04)',
+                            },
+                            minWidth: 900
+                        }}
+                    />
+                </Paper>
+            </Box>
             <Snackbar
                 open={snackbarOpen}
                 autoHideDuration={4000}

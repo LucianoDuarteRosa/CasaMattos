@@ -38,6 +38,9 @@ bld/
 #wwwroot/
 
 # Visual Studio 2017 auto generated files
+
+# Arquivo de senha do app Gmail
+senhadoappgmail.txt
 Generated\ Files/
 
 # MSTest test Results

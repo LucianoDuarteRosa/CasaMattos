@@ -201,7 +201,15 @@ export class EstoqueItemController {
             // Log de atualização
             const userId = req.body.executorUserId;
             if (userId && oldItem) {
-                await this.loggingService.logUpdate(userId, 'EstoqueItem', oldItem, atualizado, 'Item de estoque atualizado');
+                // Monta referência para o log
+                const ref = `Produto ID: ${atualizado.produtoId}, Lote: ${atualizado.lote}, Ton: ${atualizado.ton}, Bit: ${atualizado.bit}`;
+                await this.loggingService.logUpdate(
+                    userId,
+                    'EstoqueItem',
+                    oldItem,
+                    atualizado,
+                    `Item de estoque atualizado (${ref})`
+                );
             }
 
             res.json({ success: true, data: atualizado });

@@ -124,6 +124,16 @@ const AjustarPage: React.FC = () => {
 
     const handleEditDialogSave = async () => {
         if (!editItem || !selectedProduto) return;
+        // Validação: quantidade deve ser múltiplo da quantMinVenda
+        const quantMinVenda = Number(selectedProduto.quantMinVenda);
+        const quantidade = Number(editItem.quantidade);
+        if (
+            quantMinVenda > 0 &&
+            (quantidade % quantMinVenda !== 0 && Math.abs((quantidade / quantMinVenda) - Math.round(quantidade / quantMinVenda)) > 1e-6)
+        ) {
+            setSnackbar({ open: true, message: `A quantidade deve ser múltiplo de ${quantMinVenda.toLocaleString('pt-BR')}!`, severity: 'error' });
+            return;
+        }
         setLoading(true);
         try {
             if (isNewItem) {
