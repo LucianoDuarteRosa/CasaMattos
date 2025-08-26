@@ -68,7 +68,7 @@ const ProdutosPage: React.FC = () => {
         if (!idFornecedor) return 'Fornecedor não informado';
         const fornecedor = fornecedores.find(f => f.id === Number(idFornecedor));
         if (fornecedor) {
-            return `${fornecedor.razaoSocial} - ${formatCnpj(fornecedor.cnpj)}`;
+            return `${fornecedor.razaoSocial}`;
         }
         return `Fornecedor ${idFornecedor}`;
     };
