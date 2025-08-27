@@ -1,5 +1,6 @@
 
 import React, { useState } from 'react';
+import { importacaoService } from '@/services/importacaoService';
 import {
     Box,
     Typography,
@@ -52,9 +53,9 @@ const ImportacaoPage: React.FC = () => {
                 { field: 'quantidade', headerName: 'Quantidade', width: 120 },
             ]);
         }
-    setRows([]);
-    setFile(null);
-    setFileRead(false);
+        setRows([]);
+        setFile(null);
+        setFileRead(false);
     }, [importType]);
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -67,28 +68,21 @@ const ImportacaoPage: React.FC = () => {
         }
     };
 
-    // Placeholder para leitura do arquivo
-    const handleReadFile = () => {
+    // Envia arquivo e tipo para a API
+    const handleReadFile = async () => {
         if (!file) return;
         setLoading(true);
-        // Simulação: adicionar linhas fake
-        setTimeout(() => {
-            if (importType === 'produtos') {
-                setRows([
-                    { id: 1, codInterno: 123, descricao: 'Produto Exemplo', quantMinVenda: 1, estoque: 10 },
-                ]);
-            } else if (importType === 'fornecedores') {
-                setRows([
-                    { id: 1, razaoSocial: 'Fornecedor Exemplo', cnpj: '00.000.000/0000-00' },
-                ]);
-            } else if (importType === 'separacao') {
-                setRows([
-                    { id: 1, descricao: 'Separação Exemplo', quantidade: 5 },
-                ]);
-            }
+        try {
+            const resp = await importacaoService.importar(importType, file);
+            // Apenas exibe resposta simples, ajuste depois para preview real
+            setRows([{ id: 1, descricao: resp.message }]);
             setFileRead(true);
+        } catch (e: any) {
+            setRows([{ id: 1, descricao: 'Erro ao importar arquivo' }]);
+            setFileRead(false);
+        } finally {
             setLoading(false);
-        }, 800);
+        }
     };
 
     const handleImport = () => {
