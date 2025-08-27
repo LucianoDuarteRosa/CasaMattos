@@ -9,6 +9,7 @@ import {
     MenuItem,
     FormControl,
     InputLabel,
+    TextField,
 } from '@mui/material';
 import { DataGrid, GridColDef } from '@mui/x-data-grid';
 import { dataGridPtBR } from '@/utils/dataGridLocale';
@@ -51,9 +52,9 @@ const ImportacaoPage: React.FC = () => {
                 { field: 'quantidade', headerName: 'Quantidade', width: 120 },
             ]);
         }
-        setRows([]);
-        setFile(null);
-        setFileRead(false);
+    setRows([]);
+    setFile(null);
+    setFileRead(false);
     }, [importType]);
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -61,6 +62,8 @@ const ImportacaoPage: React.FC = () => {
             setFile(e.target.files[0]);
             setFileRead(false);
             setRows([]);
+            // Limpa o valor do input para permitir selecionar o mesmo arquivo novamente
+            e.target.value = '';
         }
     };
 
@@ -99,49 +102,57 @@ const ImportacaoPage: React.FC = () => {
                 Importação
             </Typography>
             {/* Controles de importação, alinhados à esquerda/topo */}
-            <Box sx={{ display: 'flex', gap: 2, mb: 3, flexWrap: 'wrap' }}>
-                <FormControl sx={{ minWidth: 200 }}>
-                    <InputLabel id="import-type-label">Tipo de Importação</InputLabel>
-                    <Select
-                        labelId="import-type-label"
-                        value={importType}
-                        label="Tipo de Importação"
-                        onChange={e => setImportType(e.target.value)}
+            <Box sx={{ display: 'flex', gap: 2, mb: 3, flexWrap: 'wrap', alignItems: 'center' }}>
+                <Box sx={{ display: 'flex', gap: 1, flex: 1, minWidth: '200px' }}>
+                    <FormControl sx={{ minWidth: 220 }}>
+                        <InputLabel id="import-type-label">Tipo de Importação</InputLabel>
+                        <Select
+                            labelId="import-type-label"
+                            value={importType}
+                            label="Tipo de Importação"
+                            onChange={e => setImportType(e.target.value)}
+                        >
+                            {importTypes.map(opt => (
+                                <MenuItem key={opt.value} value={opt.value}>{opt.label}</MenuItem>
+                            ))}
+                        </Select>
+                    </FormControl>
+                    <Button
+                        variant="outlined"
+                        component="label"
                     >
-                        {importTypes.map(opt => (
-                            <MenuItem key={opt.value} value={opt.value}>{opt.label}</MenuItem>
-                        ))}
-                    </Select>
-                </FormControl>
-                <Button
-                    variant="outlined"
-                    component="label"
-                >
-                    Selecionar Arquivo
-                    <input
-                        type="file"
-                        accept=".xlsx,.xls,.csv"
-                        hidden
-                        onChange={handleFileChange}
+                        Selecionar Arquivo
+                        <input
+                            type="file"
+                            accept=".xlsx,.xls,.csv"
+                            hidden
+                            onChange={handleFileChange}
+                        />
+                    </Button>
+                    <TextField
+                        label="Arquivo Selecionado"
+                        value={file ? file.name : ''}
+                        disabled
+                        sx={{ flex: 1, minWidth: 180 }}
                     />
-                </Button>
-                {file && <Typography variant="body2" sx={{ alignSelf: 'center' }}>{file.name}</Typography>}
-                <Button
-                    variant="contained"
-                    color="primary"
-                    disabled={!file}
-                    onClick={handleReadFile}
-                >
-                    Ler Arquivo
-                </Button>
-                <Button
-                    variant="contained"
-                    color="success"
-                    disabled={!fileRead || rows.length === 0}
-                    onClick={handleImport}
-                >
-                    Importar
-                </Button>
+                    <Button
+                        variant="contained"
+                        color="primary"
+                        disabled={!file}
+                        onClick={handleReadFile}
+                    >
+                        Ler Arquivo
+                    </Button>
+                    <Button
+                        variant="contained"
+                        color="success"
+                        disabled={!fileRead || rows.length === 0}
+                        onClick={handleImport}
+                    >
+                        Importar
+                    </Button>
+                </Box>
+
             </Box>
             <Box sx={{ maxWidth: '100%', mt: 1 }}>
                 <Paper sx={dataGridStyles.paperContainer}>
