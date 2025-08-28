@@ -44,14 +44,20 @@ const ImportacaoPage: React.FC = () => {
                     headerName: 'Qtd. Mín. Venda',
                     width: 120,
                     type: 'number',
-                    valueFormatter: (params: any) => params.value && params.value !== '' ? params.value : 0
+                    valueFormatter: (params: any) => {
+                        const value = params.value && params.value !== '' ? Number(params.value) : 0;
+                        return value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                    }
                 },
                 {
                     field: 'custo',
                     headerName: 'Custo',
                     width: 100,
                     type: 'number',
-                    valueFormatter: (params: any) => params.value && params.value !== '' ? params.value : 0
+                    valueFormatter: (params: any) => {
+                        const value = params.value && params.value !== '' ? Number(params.value) : 0;
+                        return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 2 });
+                    }
                 },
                 { field: 'fornecedor', headerName: 'Fornecedor', width: 180 },
                 { field: 'status', headerName: 'Status', width: 120 },

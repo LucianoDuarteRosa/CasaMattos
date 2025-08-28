@@ -96,12 +96,12 @@ export class ImportacaoController {
                             let produtoExistente = await produtoRepository.findByCodInterno(Number(codInterno));
                             status = 'Sucesso';
                             if (!fornecedor && !produtoExistente) {
-                                observacao += 'Fornecedor e produto serão cadastrados na confirmação.';
+                                observacao += 'Fornecedor e produto serão cadastrados!';
                             } else if (!fornecedor) {
-                                observacao += 'Fornecedor será cadastrado na confirmação.';
+                                observacao += 'Fornecedor será cadastrado!';
                                 observacao += produtoExistente ? ' Produto será atualizado!' : ' Produto será cadastrado!';
                             } else if (!produtoExistente) {
-                                observacao += 'Produto será cadastrado na confirmação.';
+                                observacao += 'Produto será cadastrado!';
                             } else {
                                 observacao += 'Produto será atualizado!';
                             }
