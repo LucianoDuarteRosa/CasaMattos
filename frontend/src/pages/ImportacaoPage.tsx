@@ -39,8 +39,30 @@ const ImportacaoPage: React.FC = () => {
                 { field: 'id', headerName: 'ID', width: 70 },
                 { field: 'codInterno', headerName: 'Código', width: 100 },
                 { field: 'descricao', headerName: 'Descrição', flex: 1, minWidth: 180 },
-                { field: 'quantMinVenda', headerName: 'Qtd. Mín. Venda', width: 120 },
-                { field: 'estoque', headerName: 'Estoque', width: 100 },
+                {
+                    field: 'quantidadeMinimaVenda',
+                    headerName: 'Qtd. Mín. Venda',
+                    width: 120,
+                    type: 'number',
+                    valueFormatter: (params: any) => params.value && params.value !== '' ? params.value : 0
+                },
+                {
+                    field: 'estoque',
+                    headerName: 'Estoque',
+                    width: 100,
+                    type: 'number',
+                    valueFormatter: (params: any) => params.value && params.value !== '' ? params.value : 0
+                },
+                {
+                    field: 'custo',
+                    headerName: 'Custo',
+                    width: 100,
+                    type: 'number',
+                    valueFormatter: (params: any) => params.value && params.value !== '' ? params.value : 0
+                },
+                { field: 'fornecedor', headerName: 'Fornecedor', width: 180 },
+                { field: 'status', headerName: 'Status', width: 120 },
+                { field: 'observacao', headerName: 'Observação', flex: 1, minWidth: 180 },
             ]);
         } else if (importType === 'fornecedores') {
             setColumns([
@@ -78,8 +100,9 @@ const ImportacaoPage: React.FC = () => {
         setLoading(true);
         try {
             const resp = await importacaoService.importar(importType, file);
-            if (importType === 'fornecedores' && resp.resultados) {
+            if ((importType === 'fornecedores' || importType === 'produtos') && resp.resultados) {
                 // Adiciona id incremental para o DataGrid
+                console.log(resp.resultados)
                 const rowsWithId = resp.resultados.map((row: any, idx: number) => ({
                     id: idx + 1,
                     ...row
