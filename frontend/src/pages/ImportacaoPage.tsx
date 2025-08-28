@@ -47,13 +47,6 @@ const ImportacaoPage: React.FC = () => {
                     valueFormatter: (params: any) => params.value && params.value !== '' ? params.value : 0
                 },
                 {
-                    field: 'estoque',
-                    headerName: 'Estoque',
-                    width: 100,
-                    type: 'number',
-                    valueFormatter: (params: any) => params.value && params.value !== '' ? params.value : 0
-                },
-                {
                     field: 'custo',
                     headerName: 'Custo',
                     width: 100,

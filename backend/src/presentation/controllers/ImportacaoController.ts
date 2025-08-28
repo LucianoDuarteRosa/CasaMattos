@@ -65,9 +65,15 @@ export class ImportacaoController {
                     // Exemplo para outros campos numéricos:
                     let preco = safeString(row.Preco); // se existir campo Preco
                     let quantidade = safeString(row.Quantidade); // se existir campo Quantidade
-                    let quantidadeMinimaVenda = safeString(row.QuantidadeMinimaVenda || row.Quantidade_Minima_Venda || row.QtdMinimaVenda || row.Qtd_Minima_Venda);
-                    let estoque = safeString(row.Estoque || row.QuantidadeEstoque || row.QtdEstoque || row.Qtd_Estoque);
-                    let custo = safeString(row.Custo || row.PrecoCusto || row.Preco_Custo);
+                    let quantidadeMinimaVenda = safeString(
+                        row.QuantidadeMinimaVenda ||
+                        row.Quantidade_Minima_Venda ||
+                        row.QtdMinimaVenda ||
+                        row.Qtd_Minima_Venda ||
+                        row.QuantMinVenda ||
+                        row.Quant_Min_Venda
+                    );
+                    let custo = safeString(row.Custo || row.PrecoCusto || row.Preco_Custo || row.ValorCusto);
                     let fornecedorNome = safeString(row.Fornecedor || row.RazaoSocial || row.FornecedorNome);
 
                     let status = 'Falha';
@@ -113,7 +119,6 @@ export class ImportacaoController {
                             preco,
                             quantidade,
                             quantidadeMinimaVenda,
-                            estoque,
                             custo
                         });
                     } catch (rowErr) {
