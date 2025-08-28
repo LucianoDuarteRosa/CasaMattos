@@ -1,5 +1,6 @@
 
 import React, { useState } from 'react';
+import { useSnackbar } from '@/components/SnackbarProvider';
 import { importacaoService } from '@/services/importacaoService';
 import {
     Box,
@@ -29,6 +30,7 @@ const ImportacaoPage: React.FC = () => {
     const [rows, setRows] = useState<any[]>([]);
     const [columns, setColumns] = useState<GridColDef[]>([]);
     const [loading, setLoading] = useState(false);
+    const { showSnackbar } = useSnackbar();
 
     // Exemplo de colunas para produtos (ajustar depois para leitura real do arquivo)
     React.useEffect(() => {
@@ -43,8 +45,10 @@ const ImportacaoPage: React.FC = () => {
         } else if (importType === 'fornecedores') {
             setColumns([
                 { field: 'id', headerName: 'ID', width: 70 },
-                { field: 'razaoSocial', headerName: 'Razão Social', flex: 1, minWidth: 180 },
-                { field: 'cnpj', headerName: 'CNPJ', width: 150 },
+                { field: 'razaoSocial', headerName: 'Razão Social', flex: 1, minWidth: 200 },
+                { field: 'cnpj', headerName: 'CNPJ', width: 180 },
+                { field: 'status', headerName: 'Status', width: 120 },
+                { field: 'observacao', headerName: 'Observação', flex: 2, minWidth: 300 },
             ]);
         } else if (importType === 'separacao') {
             setColumns([
@@ -74,8 +78,16 @@ const ImportacaoPage: React.FC = () => {
         setLoading(true);
         try {
             const resp = await importacaoService.importar(importType, file);
-            // Apenas exibe resposta simples, ajuste depois para preview real
-            setRows([{ id: 1, descricao: resp.message }]);
+            if (importType === 'fornecedores' && resp.resultados) {
+                // Adiciona id incremental para o DataGrid
+                const rowsWithId = resp.resultados.map((row: any, idx: number) => ({
+                    id: idx + 1,
+                    ...row
+                }));
+                setRows(rowsWithId);
+            } else {
+                setRows([{ id: 1, descricao: resp.message }]);
+            }
             setFileRead(true);
         } catch (e: any) {
             setRows([{ id: 1, descricao: 'Erro ao importar arquivo' }]);
@@ -85,9 +97,26 @@ const ImportacaoPage: React.FC = () => {
         }
     };
 
-    const handleImport = () => {
-        // Implementar lógica de importação real
-        alert('Importação realizada!');
+    const handleImport = async () => {
+        if (importType === 'fornecedores') {
+            const fornecedoresParaEnviar = rows.filter((row: any) => row.status === 'Sucesso')
+                .map((row: any) => ({ cnpj: row.cnpj, razaoSocial: row.razaoSocial }));
+            if (fornecedoresParaEnviar.length === 0) {
+                showSnackbar('Nenhum fornecedor válido para importar.', 'info');
+                return;
+            }
+            setLoading(true);
+            try {
+                const resp = await importacaoService.confirmarImportacao(fornecedoresParaEnviar);
+                showSnackbar(resp.message || 'Importação realizada!', 'success');
+            } catch (e: any) {
+                showSnackbar('Erro ao importar fornecedores', 'error');
+            } finally {
+                setLoading(false);
+            }
+        } else {
+            alert('Importação realizada!');
+        }
     };
 
     return (

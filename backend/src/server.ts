@@ -21,6 +21,7 @@ import templateRoutes from './presentation/routes/templateRoutes';
 import produtoRoutes from './presentation/routes/produtoRoutes';
 import fornecedorRoutes from './presentation/routes/fornecedorRoutes';
 import enderecamentoRoutes from './presentation/routes/enderecamentoRoutes';
+import importacaoRoutes from './presentation/routes/importacaoRoutes';
 import { usuarioRoutes } from './presentation/routes/usuarioRoutes';
 import { ruaRoutes } from './presentation/routes/ruaRoutes';
 import { predioRoutes } from './presentation/routes/predioRoutes';
@@ -112,6 +113,7 @@ app.use('/api/logs', logRoutes);
 app.use('/api/settings', settingRoutes);
 app.use('/api/exportacao', exportacaoRoutes);
 app.use('/api/templates', templateRoutes);
+app.use('/api/importacao', importacaoRoutes);
 
 // Middleware de tratamento de erros
 app.use((error: any, req: express.Request, res: express.Response, next: express.NextFunction) => {

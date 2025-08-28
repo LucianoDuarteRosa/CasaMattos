@@ -4,9 +4,11 @@ import { Request } from 'express';
  * Extrai informações de contexto da requisição para uso em logging
  */
 export function extractRequestContext(req: Request) {
+    // Padrão: req.user vem do middleware authenticateToken
+    const user = (req as any).user;
     return {
-        executorUserId: (req as any).userId || 0,
-        userPerfilId: (req as any).userPerfilId || 0,
+        executorUserId: user?.userId || (req as any).userId || 0,
+        userPerfilId: user?.userPerfilId || (req as any).userPerfilId || 0,
         ipAddress: req.userContext?.ipAddress || 'IP não identificado',
         userAgent: req.userContext?.userAgent || 'User-Agent não identificado'
     };

@@ -10,4 +10,8 @@ export const importacaoService = {
         });
         return response.data;
     },
+    confirmarImportacao: async (fornecedores: { cnpj: string, razaoSocial: string }[]) => {
+        const response = await api.post('/importacao/confirmar', { fornecedores });
+        return response.data;
+    },
 };
