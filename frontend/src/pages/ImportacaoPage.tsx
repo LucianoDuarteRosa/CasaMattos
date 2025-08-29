@@ -39,6 +39,8 @@ const ImportacaoPage: React.FC = () => {
                 { field: 'id', headerName: 'ID', width: 70 },
                 { field: 'codInterno', headerName: 'Código', width: 100 },
                 { field: 'descricao', headerName: 'Descrição', flex: 1, minWidth: 180 },
+                { field: 'codBarras', headerName: 'Cód. Barras', width: 140 },
+                { field: 'codFabricante', headerName: 'Cód. Fabricante', width: 140 },
                 {
                     field: 'quantidadeMinimaVenda',
                     headerName: 'Qtd. Mín. Venda',
@@ -99,9 +101,8 @@ const ImportacaoPage: React.FC = () => {
         setLoading(true);
         try {
             const resp = await importacaoService.importar(importType, file);
+            console.log(resp.resultados)
             if ((importType === 'fornecedores' || importType === 'produtos') && resp.resultados) {
-                // Adiciona id incremental para o DataGrid
-                console.log(resp.resultados)
                 const rowsWithId = resp.resultados.map((row: any, idx: number) => ({
                     id: idx + 1,
                     ...row
@@ -136,8 +137,23 @@ const ImportacaoPage: React.FC = () => {
             } finally {
                 setLoading(false);
             }
+        } else if (importType === 'produtos') {
+            const produtosParaEnviar = rows.filter((row: any) => row.status === 'Sucesso');
+            if (produtosParaEnviar.length === 0) {
+                showSnackbar('Nenhum produto válido para importar.', 'info');
+                return;
+            }
+            setLoading(true);
+            try {
+                const resp = await importacaoService.confirmarImportacaoProdutos(produtosParaEnviar);
+                showSnackbar(resp.message || `Importação de produtos realizada! ${resp.adicionados || 0} cadastrado(s), ${resp.atualizados || 0} atualizado(s).`, 'success');
+            } catch (e: any) {
+                showSnackbar('Erro ao importar produtos', 'error');
+            } finally {
+                setLoading(false);
+            }
         } else {
-            alert('Importação realizada!');
+            showSnackbar('Importação realizada!', 'success');
         }
     };
 

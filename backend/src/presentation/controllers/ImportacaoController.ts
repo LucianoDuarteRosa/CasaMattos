@@ -111,6 +111,8 @@ export class ImportacaoController {
                             id: seqId++, // id sequencial provisório
                             codInterno,
                             descricao,
+                            codBarras: safeString(row.CodBarras || row.codBarras),
+                            codFabricante: safeString(row.CodFabricante || row.codFabricante),
                             cnpjFornecedor: isCnpjValid(cnpjNumerico) ? maskCnpj(cnpjNumerico) : cnpjOriginal,
                             fornecedor: fornecedorNome,
                             razaoSocial,
@@ -138,8 +140,11 @@ export class ImportacaoController {
 
     async confirmarImportacaoProdutos(req: Request, res: Response) {
         try {
+            console.log('Recebida requisição para confirmarImportacaoProdutos');
             const produtos: any[] = req.body.produtos || [];
+            console.log('Produtos recebidos:', produtos);
             if (!Array.isArray(produtos) || produtos.length === 0) {
+                console.log('Nenhum produto enviado para confirmação.');
                 return res.status(400).json({ message: 'Nenhum produto enviado para confirmação.' });
             }
             const fornecedorRepository = new (await import('../../infrastructure/repositories/FornecedorRepository')).FornecedorRepository();
@@ -152,32 +157,60 @@ export class ImportacaoController {
             let adicionados = 0;
             let atualizados = 0;
             for (const row of produtos) {
-                const codInterno = row.codInterno;
-                const descricao = row.descricao;
-                const cnpjNumerico = sanitizeCnpj(row.cnpjFornecedor);
-                let fornecedor = await fornecedorRepository.findByCNPJ(cnpjNumerico);
-                if (!fornecedor) {
-                    // tenta buscar com máscara
-                    fornecedor = await fornecedorRepository.findByCNPJ(row.cnpjFornecedor);
-                }
-                if (!fornecedor && isCnpjValid(cnpjNumerico)) {
-                    fornecedor = await fornecedorRepository.create({ cnpj: row.cnpjFornecedor, razaoSocial: row.razaoSocial });
-                }
-                let produtoExistente = await produtoRepository.findByCodInterno(codInterno);
-                if (produtoExistente) {
-                    await updateProdutoUseCase.execute(produtoExistente.id, { ...row, fornecedorId: fornecedor?.id, executorUserId });
-                    atualizados++;
-                } else {
-                    await createProdutoUseCase.execute({ ...row, fornecedorId: fornecedor?.id, executorUserId });
-                    adicionados++;
+                try {
+                    const codInterno = row.codInterno;
+                    const descricao = row.descricao;
+                    const cnpjNumerico = sanitizeCnpj(row.cnpjFornecedor);
+                    let fornecedor = await fornecedorRepository.findByCNPJ(cnpjNumerico);
+                    if (!fornecedor) {
+                        // tenta buscar com máscara
+                        fornecedor = await fornecedorRepository.findByCNPJ(row.cnpjFornecedor);
+                    }
+                    if (!fornecedor && isCnpjValid(cnpjNumerico)) {
+                        fornecedor = await fornecedorRepository.create({ cnpj: row.cnpjFornecedor, razaoSocial: row.razaoSocial });
+                    }
+                    // Conversão dos campos numéricos e tratamento de string vazia
+                    function parseOrZero(val: any): number {
+                        if (val === undefined || val === null || val === '') return 0;
+                        return Number(val);
+                    }
+                    function parseOrUndefined(val: any): number | undefined {
+                        if (val === undefined || val === null || val === '') return undefined;
+                        return Number(val);
+                    }
+                    // Mapeamento para os nomes esperados pelo banco (Produto)
+                    const produtoData = {
+                        codInterno: parseOrZero(row.codInterno), // obrigatório
+                        descricao: row.descricao,
+                        quantMinVenda: parseOrZero(row.quantidadeMinimaVenda), // obrigatório
+                        custo: parseOrUndefined(row.custo), // opcional
+                        codBarras: row.codBarras || undefined,
+                        codFabricante: row.codFabricante || undefined,
+                        idFornecedor: fornecedor?.id ?? 0,
+                        executorUserId
+                    };
+                    let produtoExistente = await produtoRepository.findByCodInterno(codInterno);
+                    if (produtoExistente) {
+                        await updateProdutoUseCase.execute(produtoExistente.id, produtoData);
+                        atualizados++;
+                        console.log(`Produto atualizado: ${codInterno}`);
+                    } else {
+                        await createProdutoUseCase.execute(produtoData);
+                        adicionados++;
+                        console.log(`Produto cadastrado: ${codInterno}`);
+                    }
+                } catch (erroRow) {
+                    console.error('Erro ao processar produto:', row, erroRow);
                 }
             }
+            console.log(`Importação concluída: ${adicionados} adicionados, ${atualizados} atualizados.`);
             return res.json({
                 message: `Importação concluída com sucesso! ${adicionados} produto(s) adicionado(s), ${atualizados} atualizado(s).`,
                 adicionados,
                 atualizados
             });
         } catch (err) {
+            console.error('Erro geral no confirmarImportacaoProdutos:', err);
             return res.status(500).json({ message: 'Erro ao confirmar importação de produtos', error: (err as Error).message });
         }
     }

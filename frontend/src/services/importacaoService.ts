@@ -15,17 +15,8 @@ export const importacaoService = {
         const response = await api.post('/importacao/confirmar', { fornecedores });
         return response.data;
     },
-    importarProdutos: async (arquivo: File) => {
-        const formData = new FormData();
-        formData.append('tipo', 'produtos');
-        formData.append('arquivo', arquivo);
-        const response = await api.post('/importacao', formData, {
-            headers: { 'Content-Type': 'multipart/form-data' },
-        });
-        return response.data;
-    },
     confirmarImportacaoProdutos: async (produtos: any[]) => {
-        const response = await api.post('/importacao/produtos/confirmar', { produtos });
+        const response = await api.post('/importacao/confirmar-produtos', { produtos });
         return response.data;
     },
 };

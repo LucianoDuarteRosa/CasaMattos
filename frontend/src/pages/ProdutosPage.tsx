@@ -144,7 +144,7 @@ const ProdutosPage: React.FC = () => {
             field: 'descricao',
             headerName: 'Descrição',
             flex: 1,
-            minWidth: 150
+            minWidth: 200
         },
         {
             field: 'codFabricante',
@@ -155,12 +155,11 @@ const ProdutosPage: React.FC = () => {
         {
             field: 'idFornecedor',
             headerName: 'Fornecedor',
-            width: 200,
-            minWidth: 120,
+            width: 230,
+            minWidth: 150,
             valueFormatter: (params) => {
                 const info = getFornecedorInfo(params.value);
-                // Truncar texto longo em telas pequenas
-                return info.length > 25 ? `${info.substring(0, 22)}...` : info;
+                return info;
             }
         },
         {
