@@ -6,22 +6,13 @@ import {
     Paper,
     Card,
     CardContent,
-    Table,
-    TableBody,
-    TableCell,
-    TableContainer,
-    TableHead,
-    TableRow,
     CircularProgress,
     Alert,
 } from '@mui/material';
-import {
-    Inventory,
-    Business,
-    LocationOn,
-    Assignment,
-    QueryStats
-} from '@mui/icons-material';
+import { DataGrid } from '@mui/x-data-grid';
+import { dataGridPtBR } from '@/utils/dataGridLocale';
+import { dataGridStyles } from '@/utils/dataGridStyles';
+import { Inventory, Business, LocationOn, Assignment, QueryStats } from '@mui/icons-material';
 
 import Recycling from '@mui/icons-material/Recycling';
 import {
@@ -176,57 +167,54 @@ const DashboardPage: React.FC = () => {
                             Ponta de Estoque
                         </Typography>
                         {produtosPontaEstoque.length > 0 ? (
-                            <TableContainer sx={{
-                                maxHeight: 400, overflowY: 'auto',
-                                '&::-webkit-scrollbar': {
-                                    width: 8,
-                                    backgroundColor: '#f1f1f1',
-                                    borderRadius: 4,
-                                },
-                                '&::-webkit-scrollbar-thumb': {
-                                    backgroundColor: '#bdbdbd',
-                                    borderRadius: 4,
-                                },
-                                '&::-webkit-scrollbar-thumb:hover': {
-                                    backgroundColor: '#888',
-                                }
-                            }}>
-                                <Table size="small" stickyHeader>
-                                    <TableHead>
-                                        <TableRow>
-                                            <TableCell>Descrição</TableCell>
-                                            <TableCell>Lote</TableCell>
-                                            <TableCell align="center">Tonalidade</TableCell>
-                                            <TableCell align="center">Bitola</TableCell>
-                                            <TableCell align="center">Total</TableCell>
-                                            <TableCell align="right">Mín Venda</TableCell>
-                                        </TableRow>
-                                    </TableHead>
-                                    <TableBody>
-                                        {produtosPontaEstoque.map((produto) => (
-                                            <TableRow key={`${produto.id || produto.id}-${produto.lote}-${produto.ton}-${produto.bit}`}>
-                                                <TableCell>
-                                                    <Typography variant="body2" noWrap>
-                                                        {produto.descricao}
-                                                    </Typography>
-                                                    <Typography variant="caption" color="textSecondary">
-                                                        {produto.fornecedor}
-                                                    </Typography>
-                                                </TableCell>
-                                                <TableCell>{produto.lote}</TableCell>
-                                                <TableCell align="center">{produto.ton}</TableCell>
-                                                <TableCell align="center">{produto.bit}</TableCell>
-                                                <TableCell align="center">
-                                                    {Number(produto.totalDisponivel).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} m²
-                                                </TableCell>
-                                                <TableCell align="right">
-                                                    {Number(produto.quantMinVenda).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                                </TableCell>
-                                            </TableRow>
-                                        ))}
-                                    </TableBody>
-                                </Table>
-                            </TableContainer>
+                            <Box sx={{ height: 390, width: '100%' }}>
+                                <DataGrid
+                                    rows={produtosPontaEstoque.map((produto, idx) => ({
+                                        id: `${produto.id || idx}-${produto.lote}-${produto.ton}-${produto.bit}`,
+                                        descricao: produto.descricao,
+                                        fornecedor: produto.fornecedor,
+                                        lote: produto.lote,
+                                        ton: produto.ton,
+                                        bit: produto.bit,
+                                        totalDisponivel: produto.totalDisponivel,
+                                        quantMinVenda: produto.quantMinVenda
+                                    }))}
+                                    columns={[
+                                        {
+                                            field: 'descricao',
+                                            headerName: 'Descrição',
+                                            flex: 1.2,
+                                            renderCell: (params) => (
+                                                <Box>
+                                                    <Typography variant="body2" noWrap>{params.value}</Typography>
+                                                    <Typography variant="caption" color="textSecondary">{params.row.fornecedor}</Typography>
+                                                </Box>
+                                            )
+                                        },
+                                        { field: 'lote', headerName: 'Lote', flex: 0.7 },
+                                        { field: 'ton', headerName: 'Tonalidade', flex: 0.7 },
+                                        { field: 'bit', headerName: 'Bitola', flex: 0.7 },
+                                        {
+                                            field: 'totalDisponivel',
+                                            headerName: 'Total',
+                                            flex: 0.9,
+                                            valueFormatter: ({ value }) => `${Number(value).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} m²`
+                                        },
+                                        {
+                                            field: 'quantMinVenda',
+                                            headerName: 'Mín Venda',
+                                            flex: 0.9,
+                                            align: 'right',
+                                            headerAlign: 'right',
+                                            valueFormatter: ({ value }) => Number(value).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+                                        }
+                                    ]}
+                                    pageSizeOptions={[5]}
+                                    initialState={{ pagination: { paginationModel: { pageSize: 5, page: 0 } } }}
+                                    localeText={dataGridPtBR}
+                                    sx={dataGridStyles.dataGridSx}
+                                />
+                            </Box>
                         ) : (
                             <Typography color="textSecondary" sx={{ mt: 2 }}>
                                 Nenhum produto em ponta de estoque encontrado.
@@ -241,53 +229,51 @@ const DashboardPage: React.FC = () => {
                             Estoque Baixo na Separação
                         </Typography>
                         {produtosEstoqueBaixo.length > 0 ? (
-                            <TableContainer sx={{
-                                maxHeight: 400, overflowY: 'auto',
-                                '&::-webkit-scrollbar': {
-                                    width: 8,
-                                    backgroundColor: '#f1f1f1',
-                                    borderRadius: 4,
-                                },
-                                '&::-webkit-scrollbar-thumb': {
-                                    backgroundColor: '#bdbdbd',
-                                    borderRadius: 4,
-                                },
-                                '&::-webkit-scrollbar-thumb:hover': {
-                                    backgroundColor: '#888',
-                                }
-                            }}>
-                                <Table size="small" stickyHeader>
-                                    <TableHead>
-                                        <TableRow>
-                                            <TableCell>Descrição</TableCell>
-                                            <TableCell align="right">Estoque Atual</TableCell>
-                                            <TableCell align="right">Status</TableCell>
-                                        </TableRow>
-                                    </TableHead>
-                                    <TableBody>
-                                        {produtosEstoqueBaixo.map((produto) => (
-                                            <TableRow key={produto.id}>
-                                                <TableCell>
-                                                    <Typography variant="body2" noWrap>
-                                                        {produto.descricao}
-                                                    </Typography>
-                                                    <Typography variant="caption" color="textSecondary">
-                                                        {produto.fornecedor}
-                                                    </Typography>
-                                                </TableCell>
-                                                <TableCell align="right">
-                                                    {Number(produto.estoque ?? 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} m²
-                                                </TableCell>
-                                                <TableCell align="right" sx={{
-                                                    color: 'error.main'
-                                                }}>
-                                                    Baixo
-                                                </TableCell>
-                                            </TableRow>
-                                        ))}
-                                    </TableBody>
-                                </Table>
-                            </TableContainer>
+                            <Box sx={{ height: 390, width: '100%' }}>
+                                <DataGrid
+                                    rows={produtosEstoqueBaixo.map((produto, idx) => ({
+                                        id: produto.id || idx,
+                                        descricao: produto.descricao,
+                                        fornecedor: produto.fornecedor,
+                                        estoque: produto.estoque ?? 0
+                                    }))}
+                                    columns={[
+                                        {
+                                            field: 'descricao',
+                                            headerName: 'Descrição',
+                                            flex: 1.2,
+                                            renderCell: (params) => (
+                                                <Box>
+                                                    <Typography variant="body2" noWrap>{params.value}</Typography>
+                                                    <Typography variant="caption" color="textSecondary">{params.row.fornecedor}</Typography>
+                                                </Box>
+                                            )
+                                        },
+                                        {
+                                            field: 'estoque',
+                                            headerName: 'Estoque Atual',
+                                            flex: 0.9,
+                                            align: 'right',
+                                            headerAlign: 'right',
+                                            valueFormatter: ({ value }) => `${Number(value).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} m²`
+                                        },
+                                        {
+                                            field: 'status',
+                                            headerName: 'Status',
+                                            flex: 0.7,
+                                            align: 'right',
+                                            headerAlign: 'right',
+                                            renderCell: () => (
+                                                <Typography sx={{ color: 'error.main' }}>Baixo</Typography>
+                                            )
+                                        }
+                                    ]}
+                                    pageSizeOptions={[5]}
+                                    initialState={{ pagination: { paginationModel: { pageSize: 5, page: 0 } } }}
+                                    localeText={dataGridPtBR}
+                                    sx={dataGridStyles.dataGridSx}
+                                />
+                            </Box>
                         ) : (
                             <Typography color="textSecondary" sx={{ mt: 2 }}>
                                 Nenhum produto com estoque baixo encontrado.
