@@ -61,6 +61,16 @@ const ImportacaoPage: React.FC = () => {
                         return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 2 });
                     }
                 },
+                {
+                    field: 'quantCaixas',
+                    headerName: 'Quant. Caixas',
+                    width: 120,
+                    type: 'number',
+                    valueFormatter: (params: any) => {
+                        const value = params.value && params.value !== '' ? Number(params.value) : 0;
+                        return value.toLocaleString('pt-BR', { minimumFractionDigits: 0 });
+                    }
+                },
                 { field: 'fornecedor', headerName: 'Fornecedor', width: 180 },
                 { field: 'status', headerName: 'Status', width: 120 },
                 { field: 'observacao', headerName: 'Observação', flex: 1, minWidth: 180 },

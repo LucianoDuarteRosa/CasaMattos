@@ -72,6 +72,8 @@ export class ImportacaoController {
                         row.QuantMinVenda ||
                         row.Quant_Min_Venda
                     );
+                    let quantCaixas = safeString(row.QuantCaixas || row.quantCaixas);
+                    if (!quantCaixas) quantCaixas = '0';
                     let custo = safeString(row.Custo || row.PrecoCusto || row.Preco_Custo || row.ValorCusto);
                     let fornecedorNome = safeString(row.Fornecedor || row.RazaoSocial || row.FornecedorNome);
 
@@ -120,6 +122,7 @@ export class ImportacaoController {
                             preco,
                             quantidade,
                             quantidadeMinimaVenda,
+                            quantCaixas,
                             custo
                         });
                     } catch (rowErr) {
@@ -158,7 +161,6 @@ export class ImportacaoController {
             for (const row of produtos) {
                 try {
                     const codInterno = row.codInterno;
-                    const descricao = row.descricao;
                     const cnpjNumerico = sanitizeCnpj(row.cnpjFornecedor);
                     let fornecedor = await fornecedorRepository.findByCNPJ(cnpjNumerico);
                     if (!fornecedor) {
@@ -182,6 +184,7 @@ export class ImportacaoController {
                         codInterno: parseOrZero(row.codInterno), // obrigatório
                         descricao: row.descricao,
                         quantMinVenda: parseOrZero(row.quantidadeMinimaVenda), // obrigatório
+                        quantCaixas: parseOrZero(row.quantCaixas ?? 0), // se não vier, 0
                         custo: parseOrUndefined(row.custo), // opcional
                         codBarras: row.codBarras || undefined,
                         codFabricante: row.codFabricante || undefined,
