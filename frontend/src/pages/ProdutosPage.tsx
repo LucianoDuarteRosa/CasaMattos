@@ -99,8 +99,9 @@ const ProdutosPage: React.FC = () => {
 
     const [produtos, setProdutos] = useState<IProduto[]>([]);
     const [fornecedores, setFornecedores] = useState<IFornecedor[]>([]);
-    const [estoqueItems, setEstoqueItems] = useState<IEstoqueItem[]>([]);
-    const [loadingEstoqueItems, setLoadingEstoqueItems] = useState(false);
+    // Agora armazena o estoque detalhado (junção de estoque + endereçamento)
+    const [estoqueDetalhado, setEstoqueDetalhado] = useState<any[]>([]);
+    const [loadingEstoqueDetalhado, setLoadingEstoqueDetalhado] = useState(false);
     const [loading, setLoading] = useState(true);
     const [open, setOpen] = useState(false);
     const [detailsOpen, setDetailsOpen] = useState(false);
@@ -287,13 +288,24 @@ const ProdutosPage: React.FC = () => {
     const handleDetails = (produto: IProduto) => {
         setViewingProduto(produto);
         setDetailsOpen(true);
-        setEstoqueItems([]);
-        if (produto?.id) {
-            setLoadingEstoqueItems(true);
-            estoqueItemService.getByProdutoId(produto.id)
-                .then(setEstoqueItems)
-                .catch(() => setEstoqueItems([]))
-                .finally(() => setLoadingEstoqueItems(false));
+        setEstoqueDetalhado([]);
+        // O campo estoqueDetalhado já vem no produto se o backend estiver correto
+        if (produto && Array.isArray((produto as any).estoqueDetalhado)) {
+            setEstoqueDetalhado((produto as any).estoqueDetalhado);
+        } else if (produto?.id) {
+            // fallback: buscar detalhes via API se necessário
+            setLoadingEstoqueDetalhado(true);
+            produtoService.getById(produto.id)
+                .then((resp) => {
+                    const estoqueDetalhado = (resp as any)?.estoqueDetalhado;
+                    if (Array.isArray(estoqueDetalhado)) {
+                        setEstoqueDetalhado(estoqueDetalhado);
+                    } else {
+                        setEstoqueDetalhado([]);
+                    }
+                })
+                .catch(() => setEstoqueDetalhado([]))
+                .finally(() => setLoadingEstoqueDetalhado(false));
         }
     };
 
@@ -718,13 +730,13 @@ const ProdutosPage: React.FC = () => {
                                     />
                                 </Grid>
                             </Grid>
-                            {/* Lista de Itens de Estoque */}
+                            {/* Lista de Itens de Estoque + Endereçamento (unificados) */}
                             <Box sx={{ mt: 1, mb: 0 }}>
-                                <Typography variant="h6" gutterBottom>Itens de Estoque</Typography>
-                                {loadingEstoqueItems ? (
-                                    <Typography>Carregando itens de estoque...</Typography>
-                                ) : estoqueItems.length === 0 ? (
-                                    <Typography>Nenhum item de estoque encontrado para este produto.</Typography>
+                                <Typography variant="h6" gutterBottom>Itens de Estoque e Endereçamento</Typography>
+                                {loadingEstoqueDetalhado ? (
+                                    <Typography>Carregando itens...</Typography>
+                                ) : estoqueDetalhado.length === 0 ? (
+                                    <Typography>Nenhum item encontrado para este produto.</Typography>
                                 ) : (
                                     <Paper variant="outlined" sx={{ maxHeight: 300, overflow: 'auto' }}>
                                         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
@@ -737,8 +749,8 @@ const ProdutosPage: React.FC = () => {
                                                 </tr>
                                             </thead>
                                             <tbody style={{ textAlign: 'center' }}>
-                                                {estoqueItems.map(item => (
-                                                    <tr key={item.id}>
+                                                {estoqueDetalhado.map((item, idx) => (
+                                                    <tr key={idx}>
                                                         <td style={{ padding: 8, borderBottom: '1px solid #eee', textAlign: 'center' }}>{item.lote}</td>
                                                         <td style={{ padding: 8, borderBottom: '1px solid #eee', textAlign: 'center' }}>{item.ton}</td>
                                                         <td style={{ padding: 8, borderBottom: '1px solid #eee', textAlign: 'center' }}>{item.bit}</td>
