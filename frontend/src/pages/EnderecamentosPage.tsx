@@ -659,7 +659,7 @@ const EnderecamentosPage: React.FC = () => {
                     </Button>
                 </Box>
             </Box>
-            <Box sx={{ mb: 2, mt: 0 }}>
+            <Box sx={{ mb: 1, mt: 0 }}>
                 <FormControlLabel
                     control={
                         <Checkbox

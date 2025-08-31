@@ -16,6 +16,8 @@ import {
     MenuItem,
     FormControl,
     InputLabel,
+    Checkbox,
+    FormControlLabel,
 } from '@mui/material';
 import { DataGrid, GridColDef, GridActionsCellItem } from '@mui/x-data-grid';
 import { Add, Edit, Visibility, Search } from '@mui/icons-material';
@@ -96,6 +98,8 @@ const ProdutosPage: React.FC = () => {
     };
 
     const [produtos, setProdutos] = useState<IProduto[]>([]);
+    // Checkbox para filtrar produtos com estoque e endereçamento > 0
+    const [showOnlyWithStock, setShowOnlyWithStock] = useState(true);
     const [fornecedores, setFornecedores] = useState<IFornecedor[]>([]);
     // Agora armazena o estoque detalhado (junção de estoque + endereçamento)
     const [estoqueDetalhado, setEstoqueDetalhado] = useState<any[]>([]);
@@ -434,7 +438,7 @@ const ProdutosPage: React.FC = () => {
             </Typography>
 
             {/* Barra de pesquisa e botão de novo produto */}
-            <Box sx={{ display: 'flex', gap: 2, mb: 3, flexWrap: 'wrap' }}>
+            <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap'}}>
                 <Box sx={{ display: 'flex', gap: 1, flex: 1, minWidth: '200px' }}>
                     <UppercaseTextField
                         placeholder="Buscar produtos..."
@@ -473,10 +477,25 @@ const ProdutosPage: React.FC = () => {
                     Novo Produto
                 </Button>
             </Box>
-
+            {/* Checkbox Produtos com Estoque */}
+            <Box sx={{ mb: 1, mt: 0 }}>
+                <FormControlLabel
+                    control={
+                        <Checkbox
+                            checked={showOnlyWithStock}
+                            onChange={e => setShowOnlyWithStock(e.target.checked)}
+                        />
+                    }
+                    label="Produtos com Estoque"
+                />
+            </Box>
             <Paper sx={dataGridStyles.paperContainer}>
                 <DataGrid
-                    rows={produtos}
+                    rows={
+                        showOnlyWithStock
+                            ? produtos.filter(p => Number(p.estoque) > 0 || Number(p.deposito) > 0)
+                            : produtos
+                    }
                     columns={columns}
                     loading={loading}
                     pageSizeOptions={[10, 25, 50, 100]}
