@@ -169,15 +169,29 @@ const DashboardPage: React.FC = () => {
                 ))}
             </Grid>
 
-            <Grid container spacing={3} sx={{ mt: 3 }}>
+            <Grid container spacing={3} sx={{ mt: 3, pb: 0 }}>
                 <Grid item xs={12} md={6}>
-                    <Paper sx={{ p: 2, height: 400 }}>
+                    <Paper sx={{ p: 2, height: 460 }}>
                         <Typography variant="h6" gutterBottom>
                             Ponta de Estoque
                         </Typography>
                         {produtosPontaEstoque.length > 0 ? (
-                            <TableContainer sx={{ maxHeight: 350 }}>
-                                <Table size="small">
+                            <TableContainer sx={{
+                                maxHeight: 400, overflowY: 'auto',
+                                '&::-webkit-scrollbar': {
+                                    width: 8,
+                                    backgroundColor: '#f1f1f1',
+                                    borderRadius: 4,
+                                },
+                                '&::-webkit-scrollbar-thumb': {
+                                    backgroundColor: '#bdbdbd',
+                                    borderRadius: 4,
+                                },
+                                '&::-webkit-scrollbar-thumb:hover': {
+                                    backgroundColor: '#888',
+                                }
+                            }}>
+                                <Table size="small" stickyHeader>
                                     <TableHead>
                                         <TableRow>
                                             <TableCell>Descrição</TableCell>
@@ -222,13 +236,27 @@ const DashboardPage: React.FC = () => {
                 </Grid>
 
                 <Grid item xs={12} md={6}>
-                    <Paper sx={{ p: 2, height: 400 }}>
+                    <Paper sx={{ p: 2, height: 460 }}>
                         <Typography variant="h6" gutterBottom>
                             Estoque Baixo na Separação
                         </Typography>
                         {produtosEstoqueBaixo.length > 0 ? (
-                            <TableContainer sx={{ maxHeight: 350 }}>
-                                <Table size="small">
+                            <TableContainer sx={{
+                                maxHeight: 400, overflowY: 'auto',
+                                '&::-webkit-scrollbar': {
+                                    width: 8,
+                                    backgroundColor: '#f1f1f1',
+                                    borderRadius: 4,
+                                },
+                                '&::-webkit-scrollbar-thumb': {
+                                    backgroundColor: '#bdbdbd',
+                                    borderRadius: 4,
+                                },
+                                '&::-webkit-scrollbar-thumb:hover': {
+                                    backgroundColor: '#888',
+                                }
+                            }}>
+                                <Table size="small" stickyHeader>
                                     <TableHead>
                                         <TableRow>
                                             <TableCell>Descrição</TableCell>

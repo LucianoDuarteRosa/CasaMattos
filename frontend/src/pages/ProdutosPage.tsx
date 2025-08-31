@@ -22,8 +22,6 @@ import { Add, Edit, Visibility, Search } from '@mui/icons-material';
 import { produtoService } from '@/services/produtoService';
 import { fornecedorService } from '@/services/fornecedorService';
 import { IProduto, IFornecedor } from '@/types';
-import { IEstoqueItem } from '@/types';
-import { estoqueItemService } from '@/services/estoqueItemService';
 import { dataGridPtBR } from '@/utils/dataGridLocale';
 import { dataGridStyles } from '@/utils/dataGridStyles';
 import { useUppercaseForm } from '@/hooks';
