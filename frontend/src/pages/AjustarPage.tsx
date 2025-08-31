@@ -1,3 +1,4 @@
+import { Checkbox, FormControlLabel } from '@mui/material';
 
 
 import React, { useEffect, useState } from 'react';
@@ -24,6 +25,8 @@ import { dataGridPtBR } from '@/utils/dataGridLocale';
 import { dataGridStyles } from '@/utils/dataGridStyles';
 
 const AjustarPage: React.FC = () => {
+    // Estado para exibir apenas produtos com estoque
+    const [showOnlyWithStock, setShowOnlyWithStock] = useState(true);
     const [produtosComEnderecamento, setProdutosComEnderecamento] = useState<any[]>([]);
     const [searchTerm, setSearchTerm] = useState('');
     const [loading, setLoading] = useState(false);
@@ -173,7 +176,7 @@ const AjustarPage: React.FC = () => {
                 Ajustar Estoque
             </Typography>
             {/* Barra de pesquisa */}
-            <Box sx={{ display: 'flex', gap: 2, mb: 3, flexWrap: 'wrap' }}>
+            <Box sx={{ display: 'flex', gap: 2, mb: 0, flexWrap: 'wrap' }}>
                 <Box sx={{ display: 'flex', gap: 1, flex: 1, minWidth: '200px' }}>
                     <TextField
                         placeholder="Buscar produtos..."
@@ -199,9 +202,25 @@ const AjustarPage: React.FC = () => {
                     </Button>
                 </Box>
             </Box>
+            {/* Checkbox Produtos com Estoque */}
+            <Box sx={{ mb: 1, mt: 0 }}>
+                <FormControlLabel
+                    control={
+                        <Checkbox
+                            checked={showOnlyWithStock}
+                            onChange={e => setShowOnlyWithStock(e.target.checked)}
+                        />
+                    }
+                    label="Produtos com Estoque"
+                />
+            </Box>
             <Paper sx={dataGridStyles.paperContainer}>
                 <DataGrid
-                    rows={produtosComEnderecamento}
+                    rows={
+                        showOnlyWithStock
+                            ? produtosComEnderecamento.filter(p => Number(p.estoque) > 0 || Number(p.estoqueEnderecamento) > 0)
+                            : produtosComEnderecamento
+                    }
                     columns={[
                         { field: 'id', headerName: 'ID', width: 70 },
                         { field: 'codInterno', headerName: 'Código', width: 100 },
