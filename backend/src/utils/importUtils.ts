@@ -10,16 +10,16 @@ export function parseSeparacaoExcel(buffer: Buffer): any[] {
     const sheet = workbook.Sheets[sheetName];
     const rows = XLSX.utils.sheet_to_json(sheet, { defval: '' });
     return rows.map((row: any) => ({
-        CodProduto: row.CodProduto || row.CodInterno || row.codProduto || row.codInterno || '',
-        Descricao: row.Descricao || row.descricao || '',
-        CodFabricante: row.CodFabricante || row.codFabricante || '',
-        Lote: row.Lote || row.lote || '',
-        Tonalidade: row.Tonalidade || row.tonalidade || '',
-        Bitola: row.Bitola || row.bitola || '',
-        QuantMinimaVenda: row.QuantMinimaVenda || row.QuantMinVenda || row.quantMinimaVenda || row.quantMinVenda || '',
-        Quantidade: row.Quantidade || row.quantidade || '',
+        CodProduto: (row.CodProduto || row.CodInterno || row.codProduto || row.codInterno || '').toString().toUpperCase(),
+        Descricao: (row.Descricao || row.descricao || '').toString().toUpperCase(),
+        CodFabricante: (row.CodFabricante || row.codFabricante || '').toString().toUpperCase(),
+        Lote: (row.Lote || row.lote || '').toString().toUpperCase(),
+        Tonalidade: (row.Tonalidade || row.tonalidade || '').toString().toUpperCase(),
+        Bitola: (row.Bitola || row.bitola || '').toString().toUpperCase(),
+        QuantMinimaVenda: (row.QuantMinimaVenda || row.QuantMinVenda || row.quantMinimaVenda || row.quantMinVenda || '').toString(),
+        Quantidade: (row.Quantidade || row.quantidade || '').toString(),
         // Aceita tanto "Rota Pedido" quanto "RotaPedido" e variações
-        RotaPedido: row['Rota Pedido'] || row.RotaPedido || row['RotaPedido'] || '',
+        RotaPedido: (row['Rota Pedido'] || row.RotaPedido || row['RotaPedido'] || '').toString().toUpperCase(),
     }));
 }
 
@@ -34,15 +34,15 @@ export function parseProdutosExcel(buffer: Buffer): any[] {
     const rows = XLSX.utils.sheet_to_json(sheet, { defval: '' });
     // Normaliza os campos para garantir compatibilidade
     return rows.map((row: any) => ({
-        CodInterno: row.CodInterno || row.codInterno || '',
-        Descricao: row.Descricao || row.descricao || '',
-        QuantMinVenda: row.QuantMinVenda || row.quantMinVenda || '',
-        ValorCusto: row.ValorCusto || row.valorCusto || '',
-        CodBarras: row.CodBarras || row.codBarras || '',
-        CodFabricante: row.CodFabricante || row.codFabricante || '',
-        QuantCaixas: row.QuantCaixas || row.quantCaixas || '',
-        CnpjFornecedor: row.CnpjFornecedor || row.cnpjFornecedor || '',
-        RazaoSocial: row.RazaoSocial || row.razaoSocial || '',
+        CodInterno: (row.CodInterno || row.codInterno || '').toString().toUpperCase(),
+        Descricao: (row.Descricao || row.descricao || '').toString().toUpperCase(),
+        QuantMinVenda: (row.QuantMinVenda || row.quantMinVenda || '').toString(),
+        ValorCusto: (row.ValorCusto || row.valorCusto || '').toString(),
+        CodBarras: (row.CodBarras || row.codBarras || '').toString().toUpperCase(),
+        CodFabricante: (row.CodFabricante || row.codFabricante || '').toString().toUpperCase(),
+        QuantCaixas: (row.QuantCaixas || row.quantCaixas || '').toString(),
+        CnpjFornecedor: (row.CnpjFornecedor || row.cnpjFornecedor || '').toString(),
+        RazaoSocial: (row.RazaoSocial || row.razaoSocial || '').toString().toUpperCase(),
     }));
 }
 
@@ -52,8 +52,8 @@ export function parseFornecedoresExcel(buffer: Buffer) {
     const sheet = workbook.Sheets[sheetName];
     const data = XLSX.utils.sheet_to_json(sheet, { defval: '' });
     return data.map((row: any) => ({
-        cnpj: row.CnpjFornecedor || '',
-        razaoSocial: row.RazaoSocial || ''
+        cnpj: (row.CnpjFornecedor || '').toString(),
+        razaoSocial: (row.RazaoSocial || '').toString().toUpperCase()
     }));
 }
 

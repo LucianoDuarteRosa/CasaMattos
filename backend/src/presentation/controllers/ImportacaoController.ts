@@ -339,15 +339,20 @@ export class ImportacaoController {
                     return String(val).trim();
                 }
 
-                // Monta lista de pedidos a partir do Excel
+                // Função para normalizar campos-chave
+                function normalize(val: string) {
+                    return (val || '').trim().toUpperCase();
+                }
+
+                // Monta lista de pedidos a partir do Excel, normalizando campos-chave
                 const pedidos = separacoes.map((row: any, idx: number) => ({
                     pedidoId: idx + 1,
-                    codInterno: safeString(row.CodProduto || row.CodInterno),
+                    codInterno: normalize(safeString(row.CodProduto || row.CodInterno)),
                     descricao: safeString(row.Descricao),
                     codFabricante: safeString(row.CodFabricante),
-                    lote: safeString(row.Lote),
-                    tonalidade: safeString(row.Tonalidade),
-                    bitola: safeString(row.Bitola),
+                    lote: normalize(safeString(row.Lote)),
+                    tonalidade: normalize(safeString(row.Tonalidade)),
+                    bitola: normalize(safeString(row.Bitola)),
                     quantMinimaVenda: Number(row.QuantMinimaVenda) || 0,
                     quantidade: Number(row.Quantidade) || 0,
                     rotaPedido: safeString(row['Rota Pedido'] || row.RotaPedido)
@@ -370,23 +375,31 @@ export class ImportacaoController {
                     const tonalidades = [...new Set(pedidos.map(p => p.tonalidade))];
                     const bitolas = [...new Set(pedidos.map(p => p.bitola))];
                     const lotes = [...new Set(pedidos.map(p => p.lote))];
-                    // Filtros flexíveis para garantir compatibilidade
-                    const estoqueItensFiltrados = estoqueItens.filter((item: any) =>
-                        codInternos.includes(Number(item.codInterno)) &&
-                        (!item.tonalidade || tonalidades.includes(item.tonalidade)) &&
-                        (!item.bitola || bitolas.includes(item.bitola)) &&
-                        (!item.lote || lotes.includes(item.lote))
-                    );
-                    const enderecamentosFiltrados = enderecamentos.filter((end: any) =>
-                        codInternos.includes(Number(end.codInterno)) &&
-                        (!end.tonalidade || tonalidades.includes(end.tonalidade)) &&
-                        (!end.bitola || bitolas.includes(end.bitola)) &&
-                        (!end.lote || lotes.includes(end.lote))
-                    );
+                    // Normaliza campos dos estoques para garantir comparação correta
+                    const estoqueItensFiltrados = estoqueItens.filter((item: any) => {
+                        const codInternoNorm = normalize(String(item.codInterno));
+                        const tonalidadeNorm = normalize(item.tonalidade);
+                        const bitolaNorm = normalize(item.bitola);
+                        const loteNorm = normalize(item.lote);
+                        return codInternos.includes(Number(item.codInterno)) &&
+                            (!item.tonalidade || tonalidades.includes(tonalidadeNorm)) &&
+                            (!item.bitola || bitolas.includes(bitolaNorm)) &&
+                            (!item.lote || lotes.includes(loteNorm));
+                    });
+                    const enderecamentosFiltrados = enderecamentos.filter((end: any) => {
+                        const codInternoNorm = normalize(String(end.codInterno));
+                        const tonalidadeNorm = normalize(end.tonalidade);
+                        const bitolaNorm = normalize(end.bitola);
+                        const loteNorm = normalize(end.lote);
+                        return codInternos.includes(Number(end.codInterno)) &&
+                            (!end.tonalidade || tonalidades.includes(tonalidadeNorm)) &&
+                            (!end.bitola || bitolas.includes(bitolaNorm)) &&
+                            (!end.lote || lotes.includes(loteNorm));
+                    });
 
                     // Indexar estoques por produto/tonalidade/bitola/lote
                     function keyEstoque(e: any) {
-                        return [e.codInterno, e.tonalidade, e.bitola, e.lote].join('|');
+                        return [normalize(e.codInterno), normalize(e.tonalidade), normalize(e.bitola), normalize(e.lote)].join('|');
                     }
                     // Agrupar EstoqueItens
                     const estoqueSetor: Record<string, any[]> = {};
