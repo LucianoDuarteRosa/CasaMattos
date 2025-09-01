@@ -443,32 +443,49 @@ export class ImportacaoController {
                     const resultados: any[] = [];
 
                     for (const pedido of pedidos) {
+
                         const k = keyEstoque(pedido);
                         let quantidadeRestante = pedido.quantidade;
                         let detalhes: any[] = [];
                         let status = '';
+                        let observacao = '';
+
+                        // Helper para montar detalhe completo
+                        const buildDetalhe = (lote: string, fonte: string, quantidade: number) => ({
+                            codInterno: pedido.codInterno,
+                            descricao: pedido.descricao,
+                            codFabricante: pedido.codFabricante,
+                            tonalidade: pedido.tonalidade,
+                            bitola: pedido.bitola,
+                            quantMinimaVenda: pedido.quantMinimaVenda,
+                            quantidade: pedido.quantidade,
+                            lote: lote && lote !== '' ? lote : 'N/A',
+                            fonte,
+                            quantidadeAlocada: quantidade,
+                            observacao,
+                            status
+                        });
 
                         // Passo 1: Mesmo lote no setor
                         if (disponibilidadeSetor[k] >= quantidadeRestante) {
-                            detalhes.push({ lote: pedido.lote, fonte: 'setor', quantidade: quantidadeRestante });
+                            status = 'Atendido no lote preferido';
+                            detalhes.push(buildDetalhe(pedido.lote, 'setor', quantidadeRestante));
                             disponibilidadeSetor[k] -= quantidadeRestante;
                             reservaMinima[k] = Math.max(0, reservaMinima[k] - quantidadeRestante);
                             excedente[k] = Math.max(0, excedente[k] - quantidadeRestante);
-                            status = 'Atendido no lote preferido';
                             quantidadeRestante = 0;
                         }
 
                         // Passo 2: Outro lote no setor (sem mistura)
                         if (quantidadeRestante > 0) {
-                            // Procurar outro lote com excedente suficiente
                             for (const k2 in excedente) {
                                 if (k2 !== k && excedente[k2] >= quantidadeRestante) {
                                     const [codInterno2, tonalidade2, bitola2, lote2] = k2.split('|');
                                     if (codInterno2 === pedido.codInterno && tonalidade2 === pedido.tonalidade && bitola2 === pedido.bitola) {
-                                        detalhes.push({ lote: lote2, fonte: 'setor', quantidade: quantidadeRestante });
+                                        status = 'Atendido em outro lote (setor)';
+                                        detalhes.push(buildDetalhe(lote2, 'setor', quantidadeRestante));
                                         disponibilidadeSetor[k2] -= quantidadeRestante;
                                         excedente[k2] = Math.max(0, excedente[k2] - quantidadeRestante);
-                                        status = 'Atendido em outro lote (setor)';
                                         quantidadeRestante = 0;
                                         break;
                                     }
@@ -481,14 +498,14 @@ export class ImportacaoController {
                             let disponivelEndereco = disponibilidadeEndereco[k];
                             let consumir = Math.min(quantidadeRestante, disponivelEndereco);
                             if (consumir > 0) {
-                                // Consumir dos pallets disponíveis (não misturar pallets já usados)
                                 for (const pallet of estoqueEndereco[k]) {
                                     if (palletsConsumidos.has(pallet.id)) continue;
                                     let palletDisponivel = Number(pallet.caixas) * Number(pallet.quantMinVenda);
                                     if (palletDisponivel <= 0) continue;
                                     let consumirPallet = Math.min(consumir, palletDisponivel);
                                     if (consumirPallet > 0) {
-                                        detalhes.push({ lote: pallet.lote, fonte: 'enderecamento', quantidade: consumirPallet });
+                                        status = 'Atendido em mesmo lote (endereçamento)';
+                                        detalhes.push(buildDetalhe(pallet.lote, 'enderecamento', consumirPallet));
                                         enderecamentosUsados.push({ id: pallet.id, lote: pallet.lote, quantidadeConsumida: consumirPallet });
                                         palletsConsumidos.add(pallet.id);
                                         disponibilidadeEndereco[k] -= consumirPallet;
@@ -497,7 +514,6 @@ export class ImportacaoController {
                                     }
                                 }
                                 if (consumir <= 0) {
-                                    status = 'Atendido em mesmo lote (endereçamento)';
                                     quantidadeRestante = 0;
                                 }
                             }
@@ -509,14 +525,14 @@ export class ImportacaoController {
                                 if (k2 !== k && disponibilidadeEndereco[k2] >= quantidadeRestante) {
                                     const [codInterno2, tonalidade2, bitola2, lote2] = k2.split('|');
                                     if (codInterno2 === pedido.codInterno && tonalidade2 === pedido.tonalidade && bitola2 === pedido.bitola) {
-                                        // Consumir dos pallets disponíveis
                                         for (const pallet of estoqueEndereco[k2]) {
                                             if (palletsConsumidos.has(pallet.id)) continue;
                                             let palletDisponivel = Number(pallet.caixas) * Number(pallet.quantMinVenda);
                                             if (palletDisponivel <= 0) continue;
                                             let consumirPallet = Math.min(quantidadeRestante, palletDisponivel);
                                             if (consumirPallet > 0) {
-                                                detalhes.push({ lote: pallet.lote, fonte: 'enderecamento', quantidade: consumirPallet });
+                                                status = 'Atendido em outro lote (endereçamento)';
+                                                detalhes.push(buildDetalhe(pallet.lote, 'enderecamento', consumirPallet));
                                                 enderecamentosUsados.push({ id: pallet.id, lote: pallet.lote, quantidadeConsumida: consumirPallet });
                                                 palletsConsumidos.add(pallet.id);
                                                 disponibilidadeEndereco[k2] -= consumirPallet;
@@ -525,7 +541,6 @@ export class ImportacaoController {
                                             }
                                         }
                                         if (quantidadeRestante <= 0) {
-                                            status = 'Atendido em outro lote (endereçamento)';
                                             quantidadeRestante = 0;
                                             break;
                                         }
@@ -536,7 +551,6 @@ export class ImportacaoController {
 
                         // Passo 3.3: Mistura de lotes no endereçamento
                         if (quantidadeRestante > 0) {
-                            // Misturar lotes apenas no endereçamento
                             let lotesMisturados: any[] = [];
                             for (const k2 in disponibilidadeEndereco) {
                                 const [codInterno2, tonalidade2, bitola2, lote2] = k2.split('|');
@@ -547,7 +561,7 @@ export class ImportacaoController {
                                         if (palletDisponivel <= 0) continue;
                                         let consumirPallet = Math.min(quantidadeRestante, palletDisponivel);
                                         if (consumirPallet > 0) {
-                                            lotesMisturados.push({ lote: pallet.lote, fonte: 'enderecamento', quantidade: consumirPallet });
+                                            lotesMisturados.push(buildDetalhe(pallet.lote, 'enderecamento', consumirPallet));
                                             enderecamentosUsados.push({ id: pallet.id, lote: pallet.lote, quantidadeConsumida: consumirPallet });
                                             palletsConsumidos.add(pallet.id);
                                             disponibilidadeEndereco[k2] -= consumirPallet;
@@ -559,14 +573,15 @@ export class ImportacaoController {
                                 }
                             }
                             if (lotesMisturados.length > 0) {
-                                detalhes.push(...lotesMisturados);
                                 status = quantidadeRestante <= 0 ? 'Parcialmente Atendido - Lote Misturado (endereçamento)' : 'Estoque Insuficiente';
+                                detalhes.push(...lotesMisturados);
                             }
                         }
 
                         // Passo 4: Estoque Insuficiente
                         if (quantidadeRestante > 0 && !status) {
                             status = 'Estoque Insuficiente';
+                            detalhes.push(buildDetalhe('', '', 0));
                         }
 
                         resultados.push({

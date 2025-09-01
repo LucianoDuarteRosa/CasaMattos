@@ -18,18 +18,19 @@ import { dataGridPtBR } from '@/utils/dataGridLocale';
 import { dataGridStyles } from '@/utils/dataGridStyles';
 
 const importTypes = [
-    { value: 'produtos', label: 'Importar Produtos' },
-    { value: 'fornecedores', label: 'Importar Fornecedores' },
     { value: 'separacao', label: 'Importar Separação' },
+    { value: 'produtos', label: 'Importar Produtos' },
+    { value: 'fornecedores', label: 'Importar Fornecedores' }
 ];
 
 const ImportacaoPage: React.FC = () => {
-    const [importType, setImportType] = useState('produtos');
+    const [importType, setImportType] = useState('separacao');
     const [file, setFile] = useState<File | null>(null);
     const [fileRead, setFileRead] = useState(false);
     const [rows, setRows] = useState<any[]>([]);
     const [columns, setColumns] = useState<GridColDef[]>([]);
     const [loading, setLoading] = useState(false);
+    const [enderecamentosUsados, setEnderecamentosUsados] = useState<any[]>([]);
     const { showSnackbar } = useSnackbar();
 
     // Exemplo de colunas para produtos (ajustar depois para leitura real do arquivo)
@@ -89,9 +90,9 @@ const ImportacaoPage: React.FC = () => {
                 { field: 'codInterno', headerName: 'Cod. Interno', width: 120 },
                 { field: 'descricao', headerName: 'Descrição', flex: 1, minWidth: 180 },
                 { field: 'codFabricante', headerName: 'Cod. Fabricante', width: 140 },
-                { field: 'lote', headerName: 'Lote', width: 100 },
                 { field: 'tonalidade', headerName: 'Tonalidade', width: 120 },
                 { field: 'bitola', headerName: 'Bitola', width: 100 },
+                { field: 'lote', headerName: 'Lote', width: 100 },
                 {
                     field: 'quantMinimaVenda',
                     headerName: 'Quant. Mín. Venda',
@@ -104,7 +105,7 @@ const ImportacaoPage: React.FC = () => {
                 },
                 {
                     field: 'quantidade',
-                    headerName: 'Quantidade',
+                    headerName: 'Qtd. Pedido',
                     width: 120,
                     type: 'number',
                     valueFormatter: (params: any) => {
@@ -112,8 +113,19 @@ const ImportacaoPage: React.FC = () => {
                         return value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                     }
                 },
-                { field: 'rota', headerName: 'Rota', width: 90 },
-                { field: 'pedido', headerName: 'Pedido', width: 90 },
+                {
+                    field: 'quantidadeAlocada',
+                    headerName: 'Qtd. Alocada',
+                    width: 120,
+                    type: 'number',
+                    valueFormatter: (params: any) => {
+                        const value = params.value && params.value !== '' ? Number(params.value) : 0;
+                        return value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                    }
+                },
+                { field: 'fonte', headerName: 'Fonte', width: 120 },
+                { field: 'status', headerName: 'Status', width: 200 },
+                { field: 'observacao', headerName: 'Observação', flex: 1, minWidth: 180 },
             ]);
         }
         setRows([]);
@@ -137,36 +149,57 @@ const ImportacaoPage: React.FC = () => {
         setLoading(true);
         try {
             const resp = await importacaoService.importar(importType, file);
-            if ((importType === 'fornecedores' || importType === 'produtos' || importType === 'separacao') && resp.resultados) {
-                let rowsWithId;
-                if (importType === 'separacao') {
-                    rowsWithId = resp.resultados.map((row: any, idx: number) => {
-                        let rota = '', pedido = '';
-                        if (row.rotaPedido) {
-                            const partes = String(row.rotaPedido).split(/\s*[-–—]\s*|\s+/); // tenta separar por hífen ou espaço
-                            rota = partes[0] || '';
-                            pedido = partes[1] || '';
-                        }
-                        return {
-                            id: idx + 1,
-                            ...row,
-                            rota,
-                            pedido
-                        };
-                    });
-                } else {
-                    rowsWithId = resp.resultados.map((row: any, idx: number) => ({
-                        id: idx + 1,
-                        ...row
-                    }));
-                }
+            if (importType === 'produtos' && resp.resultados) {
+                // Garante compatibilidade com as colunas de produtos
+                const rowsWithId = resp.resultados.map((row: any, idx: number) => ({
+                    id: idx + 1,
+                    codInterno: row.codInterno ?? '',
+                    descricao: row.descricao ?? '',
+                    codBarras: row.codBarras ?? '',
+                    codFabricante: row.codFabricante ?? '',
+                    quantidadeMinimaVenda: row.quantidadeMinimaVenda ?? row.quantMinimaVenda ?? row.quantMinVenda ?? 0,
+                    custo: row.custo ?? 0,
+                    quantCaixas: row.quantCaixas ?? row.quantidadeCaixas ?? 0,
+                    fornecedor: row.fornecedor ?? '',
+                    status: row.status ?? '',
+                    observacao: row.observacao ?? '',
+                }));
                 setRows(rowsWithId);
+            } else if (importType === 'fornecedores' && resp.resultados) {
+                const rowsWithId = resp.resultados.map((row: any, idx: number) => ({
+                    id: idx + 1,
+                    ...row
+                }));
+                setRows(rowsWithId);
+            } else if (importType === 'separacao' && resp.resultados) {
+                // Para separação, cada resultado pode ter múltiplos detalhes (lotes alocados)
+                const rowsWithId: any[] = [];
+                resp.resultados.forEach((pedido: any) => {
+                    if (pedido.detalhes && pedido.detalhes.length > 0) {
+                        pedido.detalhes.forEach((detalhe: any) => {
+                            rowsWithId.push({
+                                id: rowsWithId.length + 1,
+                                ...detalhe
+                            });
+                        });
+                    } else {
+                        rowsWithId.push({
+                            id: rowsWithId.length + 1,
+                            status: pedido.status,
+                            observacao: '',
+                        });
+                    }
+                });
+                setRows(rowsWithId);
+                setEnderecamentosUsados(resp.enderecamentosUsados || []);
             } else {
                 setRows([{ id: 1, descricao: resp.message }]);
+                setEnderecamentosUsados([]);
             }
             setFileRead(true);
         } catch (e: any) {
             setRows([{ id: 1, descricao: 'Erro ao importar arquivo' }]);
+            setEnderecamentosUsados([]);
             setFileRead(false);
         } finally {
             setLoading(false);
