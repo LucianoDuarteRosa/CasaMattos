@@ -39,7 +39,7 @@ const ImportacaoPage: React.FC = () => {
             setColumns([
                 { field: 'id', headerName: 'ID', width: 70 },
                 { field: 'codInterno', headerName: 'Código', width: 100 },
-                { field: 'descricao', headerName: 'Descrição', flex: 1, minWidth: 180 },
+                { field: 'descricao', headerName: 'Descrição', minWidth: 300 },
                 { field: 'codBarras', headerName: 'Cód. Barras', width: 140 },
                 { field: 'codFabricante', headerName: 'Cód. Fabricante', width: 140 },
                 {
@@ -88,11 +88,11 @@ const ImportacaoPage: React.FC = () => {
             setColumns([
                 { field: 'id', headerName: 'ID', width: 70 },
                 { field: 'codInterno', headerName: 'Cod. Interno', width: 120 },
-                { field: 'descricao', headerName: 'Descrição', flex: 1, minWidth: 180 },
+                { field: 'descricao', headerName: 'Descrição', flex: 1, minWidth: 220 },
                 { field: 'codFabricante', headerName: 'Cod. Fabricante', width: 140 },
                 { field: 'tonalidade', headerName: 'Tonalidade', width: 120 },
                 { field: 'bitola', headerName: 'Bitola', width: 100 },
-                { field: 'lote', headerName: 'Lote', width: 100 },
+                { field: 'lote', headerName: 'Lote', width: 130 },
                 {
                     field: 'quantMinimaVenda',
                     headerName: 'Quant. Mín. Venda',
@@ -113,19 +113,19 @@ const ImportacaoPage: React.FC = () => {
                         return value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                     }
                 },
-                {
-                    field: 'quantidadeAlocada',
-                    headerName: 'Qtd. Alocada',
-                    width: 120,
-                    type: 'number',
-                    valueFormatter: (params: any) => {
-                        const value = params.value && params.value !== '' ? Number(params.value) : 0;
-                        return value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                    }
-                },
-                { field: 'fonte', headerName: 'Fonte', width: 120 },
-                { field: 'status', headerName: 'Status', width: 200 },
-                { field: 'observacao', headerName: 'Observação', flex: 1, minWidth: 180 },
+                /* {
+                     field: 'quantidadeAlocada',
+                     headerName: 'Qtd. Alocada',
+                     width: 120,
+                     type: 'number',
+                     valueFormatter: (params: any) => {
+                         const value = params.value && params.value !== '' ? Number(params.value) : 0;
+                         return value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                     }
+                 },
+                 { field: 'fonte', headerName: 'Fonte', width: 120 },*/
+                { field: 'status', headerName: 'Status', width: 100 },
+                { field: 'observacao', headerName: 'Observação', minWidth: 350 },
             ]);
         }
         setRows([]);
