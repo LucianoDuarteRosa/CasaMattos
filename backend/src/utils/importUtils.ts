@@ -9,6 +9,8 @@ export function parseSeparacaoExcel(buffer: Buffer): any[] {
     const sheetName = workbook.SheetNames[0];
     const sheet = workbook.Sheets[sheetName];
     const rows = XLSX.utils.sheet_to_json(sheet, { defval: '' });
+    // Loga todas as linhas lidas do Excel para depuração
+    console.log('Linhas lidas do Excel:', JSON.stringify(rows, null, 2));
     return rows.map((row: any) => ({
         CodProduto: (row.CodProduto || row.CodInterno || row.codProduto || row.codInterno || '').toString().toUpperCase(),
         Descricao: (row.Descricao || row.descricao || '').toString().toUpperCase(),
@@ -18,7 +20,6 @@ export function parseSeparacaoExcel(buffer: Buffer): any[] {
         Bitola: (row.Bitola || row.bitola || '').toString().toUpperCase(),
         QuantMinimaVenda: (row.QuantMinimaVenda || row.QuantMinVenda || row.quantMinimaVenda || row.quantMinVenda || '').toString(),
         Quantidade: (row.Quantidade || row.quantidade || '').toString(),
-        // Aceita tanto "Rota Pedido" quanto "RotaPedido" e variações
         RotaPedido: (row['Rota Pedido'] || row.RotaPedido || row['RotaPedido'] || '').toString().toUpperCase(),
     }));
 }

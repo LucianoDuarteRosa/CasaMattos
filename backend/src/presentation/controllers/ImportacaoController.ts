@@ -327,9 +327,6 @@ export class ImportacaoController {
 
             // Função utilitária para parsear separação do Excel (implementar em importUtils.ts ou similar)
             try {
-                const produtoRepoModule = await import('../../infrastructure/repositories/ProdutoRepository');
-                const produtoRepository = new produtoRepoModule.ProdutoRepository();
-
                 const separacoes = parseSeparacaoExcel(buffer);
                 // Função utilitária para garantir string
                 function safeString(val: any) {
@@ -340,8 +337,8 @@ export class ImportacaoController {
                 }
 
                 // Função para normalizar campos-chave
-                function normalize(val: string) {
-                    return (val || '').trim().toUpperCase();
+                function normalize(val: any) {
+                    return (val === undefined || val === null) ? '' : String(val).trim().toUpperCase();
                 }
 
                 // Monta lista de pedidos a partir do Excel, normalizando campos-chave
@@ -351,8 +348,8 @@ export class ImportacaoController {
                     descricao: safeString(row.Descricao),
                     codFabricante: safeString(row.CodFabricante),
                     lote: normalize(safeString(row.Lote)),
-                    tonalidade: normalize(safeString(row.Tonalidade)),
-                    bitola: normalize(safeString(row.Bitola)),
+                    tonalidade: normalize(row.Tonalidade), // Garante string maiúscula
+                    bitola: normalize(row.Bitola), // Garante string maiúscula
                     quantMinimaVenda: Number(row.QuantMinimaVenda) || 0,
                     quantidade: Number(row.Quantidade) || 0,
                     rotaPedido: safeString(row['Rota Pedido'] || row.RotaPedido)
@@ -381,10 +378,26 @@ export class ImportacaoController {
                         const tonalidadeNorm = normalize(item.tonalidade);
                         const bitolaNorm = normalize(item.bitola);
                         const loteNorm = normalize(item.lote);
-                        return codInternos.includes(Number(item.codInterno)) &&
+                        const match = codInternos.includes(Number(item.codInterno)) &&
                             (!item.tonalidade || tonalidades.includes(tonalidadeNorm)) &&
                             (!item.bitola || bitolas.includes(bitolaNorm)) &&
                             (!item.lote || lotes.includes(loteNorm));
+                        if (!match && codInternos.includes(Number(item.codInterno))) {
+                            console.log('[DEBUG ESTOQUE]', {
+                                codInterno: item.codInterno,
+                                tonalidade: item.tonalidade,
+                                bitola: item.bitola,
+                                lote: item.lote,
+                                tonalidadeNorm,
+                                bitolaNorm,
+                                loteNorm,
+                                tonalidades,
+                                bitolas,
+                                lotes,
+                                match
+                            });
+                        }
+                        return match;
                     });
                     const enderecamentosFiltrados = enderecamentos.filter((end: any) => {
                         const codInternoNorm = normalize(String(end.codInterno));
@@ -464,19 +477,20 @@ export class ImportacaoController {
                         let observacao = '';
 
                         // Helper para montar detalhe completo
+                        const toStringSafe = (val: any) => (val === undefined || val === null) ? '' : String(val);
                         const buildDetalhe = (lote: string, fonte: string, quantidade: number) => ({
-                            codInterno: pedido.codInterno,
-                            descricao: pedido.descricao,
-                            codFabricante: pedido.codFabricante,
-                            tonalidade: pedido.tonalidade,
-                            bitola: pedido.bitola,
-                            quantMinimaVenda: pedido.quantMinimaVenda,
-                            quantidade: pedido.quantidade,
-                            lote: lote && lote !== '' ? lote : 'N/A',
-                            fonte,
+                            codInterno: toStringSafe(pedido.codInterno),
+                            descricao: toStringSafe(pedido.descricao),
+                            codFabricante: toStringSafe(pedido.codFabricante),
+                            tonalidade: toStringSafe(pedido.tonalidade),
+                            bitola: toStringSafe(pedido.bitola),
+                            quantMinimaVenda: toStringSafe(pedido.quantMinimaVenda),
+                            quantidade: toStringSafe(pedido.quantidade),
+                            lote: toStringSafe(lote && lote !== '' ? lote : (pedido.lote ?? 'N/A')),
+                            fonte: toStringSafe(fonte),
                             quantidadeAlocada: quantidade,
-                            observacao,
-                            status
+                            observacao: toStringSafe(observacao),
+                            status: toStringSafe(status)
                         });
 
                         // Passo 1: Mesmo lote no setor
