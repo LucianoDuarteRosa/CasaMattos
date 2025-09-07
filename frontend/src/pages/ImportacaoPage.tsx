@@ -159,6 +159,8 @@ const ImportacaoPage: React.FC = () => {
         setLoading(true);
         try {
             const resp = await importacaoService.importar(importType, file);
+            console.log('[Frontend] Resposta da API:', resp);
+
             if (importType === 'produtos' && resp.resultados) {
                 // Garante compatibilidade com as colunas de produtos
                 const rowsWithId = resp.resultados.map((row: any, idx: number) => ({
@@ -182,24 +184,30 @@ const ImportacaoPage: React.FC = () => {
                 }));
                 setRows(rowsWithId);
             } else if (importType === 'separacao' && resp.resultados) {
-                // Para separação, cada resultado pode ter múltiplos detalhes (lotes alocados)
+                // Para separação, mostrar um resultado por pedido com informações consolidadas
                 const rowsWithId: any[] = [];
-                resp.resultados.forEach((pedido: any) => {
-                    if (pedido.detalhes && pedido.detalhes.length > 0) {
-                        pedido.detalhes.forEach((detalhe: any) => {
-                            rowsWithId.push({
-                                id: rowsWithId.length + 1,
-                                ...detalhe
-                            });
-                        });
-                    } else {
-                        rowsWithId.push({
-                            id: rowsWithId.length + 1,
-                            status: pedido.status,
-                            observacao: '',
-                        });
-                    }
+                resp.resultados.forEach((pedido: any, idx: number) => {
+                    // Pegar o primeiro detalhe ou criar um registro básico
+                    const primeiroDetalhe = pedido.detalhes && pedido.detalhes.length > 0 ? pedido.detalhes[0] : {};
+
+                    rowsWithId.push({
+                        id: idx + 1,
+                        pedidoId: pedido.pedidoId,
+                        codInterno: primeiroDetalhe.codInterno || '',
+                        descricao: primeiroDetalhe.descricao || '',
+                        codFabricante: primeiroDetalhe.codFabricante || '',
+                        tonalidade: primeiroDetalhe.tonalidade || '',
+                        bitola: primeiroDetalhe.bitola || '',
+                        lote: primeiroDetalhe.lote || '',
+                        quantMinimaVenda: primeiroDetalhe.quantMinimaVenda || '',
+                        quantidade: primeiroDetalhe.quantidade || '',
+                        quantidadeTotal: primeiroDetalhe.quantidadeTotal || '',
+                        status: pedido.status || 'Erro',
+                        observacao: pedido.observacao || ''
+                    });
                 });
+                console.log('[Frontend] Linhas processadas para exibição:', rowsWithId.length);
+                console.log('[Frontend] Primeira linha:', rowsWithId[0]);
                 setRows(rowsWithId);
                 setEnderecamentosUsados(resp.enderecamentosUsados || []);
             } else {

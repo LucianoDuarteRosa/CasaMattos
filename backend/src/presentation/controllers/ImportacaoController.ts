@@ -354,6 +354,13 @@ export class ImportacaoController {
                     rotaPedido: safeString(row['Rota Pedido'] || row.RotaPedido)
                 }));
                 console.log('[importarSeparacao] Pedidos normalizados:', pedidos.length);
+                console.log('[importarSeparacao] Lista completa de pedidos:', pedidos.map(p => ({
+                    pedidoId: p.pedidoId,
+                    codInterno: p.codInterno,
+                    lote: p.lote,
+                    quantidade: p.quantidade,
+                    quantidadeTotal: p.quantidadeTotal
+                })));
                 console.log('[importarSeparacao] Exemplo de pedido com quantidades:', pedidos[0] ? {
                     codInterno: pedidos[0].codInterno,
                     quantidade: pedidos[0].quantidade,
@@ -459,21 +466,26 @@ export class ImportacaoController {
                     const enderecamentosUsados: { id: any, lote: string, quantidadeConsumida: number }[] = [];
                     const palletsConsumidos = new Map<any, number>(); // id do pallet -> quantidade total consumida
 
-                    // Ordenação dos pedidos: mais restritos (pedem lote) e maiores quantidades primeiro
-                    pedidos.sort((a, b) => {
-                        if (a.lote && !b.lote) return -1;
-                        if (!a.lote && b.lote) return 1;
-                        return b.quantidade - a.quantidade;
-                    });
+                    // Manter ordem original dos pedidos (ordem do Excel) para processamento sequencial
+                    // Não reordenar para manter a ordem de prioridade definida pelo usuário
 
                     // Resultado final
                     const resultados: any[] = [];
 
                     for (const pedido of pedidos) {
                         const k = keyEstoque(pedido);
+                        console.log(`[alocarEstoqueParaPedidos] === PROCESSANDO PEDIDO ${pedido.pedidoId} ===`);
                         console.log(`[alocarEstoqueParaPedidos] Pedido ${pedido.pedidoId}: codInterno=${pedido.codInterno}, lote=${pedido.lote}, ton=${pedido.tonalidade}, bitola=${pedido.bitola}, quantidade=${pedido.quantidade}, quantMinimaVenda=${pedido.quantMinimaVenda}, quantidadeTotal=${pedido.quantidadeTotal}`);
-                        // Log de disponibilidade para cada pedido
+
+                        // Log de disponibilidade atual para cada pedido
+                        console.log(`[alocarEstoqueParaPedidos] Chave do pedido: ${k}`);
                         console.log('[alocarEstoqueParaPedidos] Disponibilidade setor:', disponibilidadeSetor[k], '| Disponibilidade endereçamento:', disponibilidadeEndereco[k]);
+
+                        // Log do estado atual dos pallets para este produto
+                        console.log(`[alocarEstoqueParaPedidos] Estado atual dos pallets consumidos para produto ${pedido.codInterno}:`);
+                        for (const [palletId, consumido] of palletsConsumidos.entries()) {
+                            console.log(`  Pallet ${palletId}: ${consumido} unidades consumidas`);
+                        }
 
                         // Usar quantidadeTotal para comparações com estoque (que já está em unidades totais)
                         let quantidadeRestante = pedido.quantidadeTotal;
@@ -664,23 +676,30 @@ export class ImportacaoController {
                                 status = quantidadeRestante <= 0 ? 'Sucesso - Lote Misturado' : 'Parcialmente Atendido - Lote Misturado';
                                 observacao = `Atendido com mistura de ${lotesMisturados.length} lote(s) diferentes no endereçamento.`;
                                 console.log(`[alocarEstoqueParaPedidos] Mistura realizada com ${lotesMisturados.length} lote(s)`);
-                                detalhes.push(...lotesMisturados);
+                                // Substituir detalhes por lotes misturados
+                                detalhes = lotesMisturados;
                             }
                         }
 
                         // Passo 4: Estoque Insuficiente
-                        if (quantidadeRestante > 0 && !status) {
-                            status = 'Falha';
-                            observacao = 'Estoque insuficiente para o pedido.';
-                            console.log(`[alocarEstoqueParaPedidos] FALHA - Pedido ${pedido.pedidoId}: ${pedido.codInterno} não pôde ser atendido. Quantidade restante: ${quantidadeRestante}`);
-                            detalhes.push(buildDetalhe('', '', 0));
+                        if (quantidadeRestante > 0) {
+                            if (!status) {
+                                status = 'Falha';
+                                observacao = 'Estoque insuficiente para o pedido.';
+                                console.log(`[alocarEstoqueParaPedidos] FALHA - Pedido ${pedido.pedidoId}: ${pedido.codInterno} não pôde ser atendido. Quantidade restante: ${quantidadeRestante}`);
+                                detalhes.push(buildDetalhe('', '', 0));
+                            } else if (status.includes('Parcialmente Atendido')) {
+                                // Manter status de parcialmente atendido
+                                console.log(`[alocarEstoqueParaPedidos] PARCIAL - Pedido ${pedido.pedidoId}: ${pedido.codInterno} parcialmente atendido. Quantidade restante: ${quantidadeRestante}`);
+                            }
                         }
 
-                        // Log final do status do pedido
+                        // Garantir que todo pedido tenha status
                         if (!status) {
-                            status = 'Falha';
+                            status = 'Erro';
                             observacao = 'Pedido não processado corretamente.';
                             console.log(`[alocarEstoqueParaPedidos] ERRO - Pedido ${pedido.pedidoId}: ${pedido.codInterno} passou pelo fluxo sem definir status`);
+                            detalhes.push(buildDetalhe('', '', 0));
                         }
 
                         resultados.push({
@@ -689,15 +708,31 @@ export class ImportacaoController {
                             observacao,
                             detalhes
                         });
-                        console.log('[alocarEstoqueParaPedidos] Resultado do pedido:', { pedidoId: pedido.pedidoId, status, observacao });
-                        console.log('[alocarEstoqueParaPedidos] Alocação finalizada. Total resultados:', resultados.length);
+
+                        console.log(`[alocarEstoqueParaPedidos] Resultado do pedido ${pedido.pedidoId}:`, {
+                            pedidoId: pedido.pedidoId,
+                            status,
+                            observacao,
+                            quantidadeOriginal: pedido.quantidade,
+                            quantidadeTotal: pedido.quantidadeTotal,
+                            quantidadeRestante: quantidadeRestante
+                        });
                     }
 
+                    console.log(`[alocarEstoqueParaPedidos] Alocação completa finalizada. Total resultados: ${resultados.length}`);
                     return { resultados, enderecamentosUsados };
                 }
 
                 // Chama a função de alocação e retorna o resultado
                 const alocacao = await alocarEstoqueParaPedidos(pedidos);
+
+                // Log final do resultado completo
+                console.log('[importarSeparacao] === RESULTADO FINAL ===');
+                console.log(`[importarSeparacao] Total de resultados: ${alocacao.resultados.length}`);
+                console.log('[importarSeparacao] Array completo de resultados:', JSON.stringify(alocacao.resultados, null, 2));
+                console.log(`[importarSeparacao] Total de endereçamentos usados: ${alocacao.enderecamentosUsados.length}`);
+                console.log('[importarSeparacao] Endereçamentos usados:', alocacao.enderecamentosUsados);
+
                 return res.json(alocacao);
             } catch (innerErr) {
                 console.error('Erro ao importar módulos dinâmicos ou processar separação:', innerErr);
