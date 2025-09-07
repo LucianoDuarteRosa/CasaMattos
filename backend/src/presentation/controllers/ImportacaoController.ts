@@ -349,9 +349,17 @@ export class ImportacaoController {
                     bitola: normalize(row.Bitola),
                     quantMinimaVenda: Number(row.QuantMinimaVenda) || 0,
                     quantidade: Number(row.Quantidade) || 0,
+                    // Calcular quantidade total considerando a quantidade mínima de venda
+                    quantidadeTotal: (Number(row.Quantidade) || 0) * (Number(row.QuantMinimaVenda) || 1),
                     rotaPedido: safeString(row['Rota Pedido'] || row.RotaPedido)
                 }));
                 console.log('[importarSeparacao] Pedidos normalizados:', pedidos.length);
+                console.log('[importarSeparacao] Exemplo de pedido com quantidades:', pedidos[0] ? {
+                    codInterno: pedidos[0].codInterno,
+                    quantidade: pedidos[0].quantidade,
+                    quantMinimaVenda: pedidos[0].quantMinimaVenda,
+                    quantidadeTotal: pedidos[0].quantidadeTotal
+                } : 'Nenhum pedido');
 
                 // Função principal de alocação de estoque
                 async function alocarEstoqueParaPedidos(pedidos: any[]) {
@@ -432,11 +440,11 @@ export class ImportacaoController {
                         console.log(`  Produto ${codInterno} - Lote: ${lote}, Ton: ${tonalidade}, Bit: ${bitola} => ${disponibilidadeEndereco[k]} unidades`);
                     }
 
-                    // Demanda por lote
+                    // Demanda por lote (usando quantidadeTotal que já inclui quantMinimaVenda)
                     const demandaPorLote: Record<string, number> = {};
                     for (const p of pedidos) {
                         const k = keyEstoque(p);
-                        demandaPorLote[k] = (demandaPorLote[k] || 0) + Number(p.quantidade);
+                        demandaPorLote[k] = (demandaPorLote[k] || 0) + Number(p.quantidadeTotal);
                     }
 
                     // Reserva mínima e excedente
@@ -463,12 +471,12 @@ export class ImportacaoController {
 
                     for (const pedido of pedidos) {
                         const k = keyEstoque(pedido);
-                        console.log(`[alocarEstoqueParaPedidos] Pedido ${pedido.pedidoId}: codInterno=${pedido.codInterno}, lote=${pedido.lote}, ton=${pedido.tonalidade}, bitola=${pedido.bitola}, quantidade=${pedido.quantidade}`);
+                        console.log(`[alocarEstoqueParaPedidos] Pedido ${pedido.pedidoId}: codInterno=${pedido.codInterno}, lote=${pedido.lote}, ton=${pedido.tonalidade}, bitola=${pedido.bitola}, quantidade=${pedido.quantidade}, quantMinimaVenda=${pedido.quantMinimaVenda}, quantidadeTotal=${pedido.quantidadeTotal}`);
                         // Log de disponibilidade para cada pedido
                         console.log('[alocarEstoqueParaPedidos] Disponibilidade setor:', disponibilidadeSetor[k], '| Disponibilidade endereçamento:', disponibilidadeEndereco[k]);
 
-                        // ...já declarado acima...
-                        let quantidadeRestante = pedido.quantidade;
+                        // Usar quantidadeTotal para comparações com estoque (que já está em unidades totais)
+                        let quantidadeRestante = pedido.quantidadeTotal;
                         let detalhes: any[] = [];
                         let status = '';
                         let observacao = '';
@@ -482,10 +490,11 @@ export class ImportacaoController {
                             tonalidade: toStringSafe(pedido.tonalidade),
                             bitola: toStringSafe(pedido.bitola),
                             quantMinimaVenda: toStringSafe(pedido.quantMinimaVenda),
-                            quantidade: toStringSafe(pedido.quantidade),
+                            quantidade: toStringSafe(pedido.quantidade), // Quantidade original do pedido
+                            quantidadeTotal: toStringSafe(pedido.quantidadeTotal), // Quantidade total (quantidade * quantMinimaVenda)
                             lote: toStringSafe(lote && lote !== '' ? lote : (pedido.lote ?? 'N/A')),
                             fonte: toStringSafe(fonte),
-                            quantidadeAlocada: quantidade,
+                            quantidadeAlocada: quantidade, // Quantidade alocada (em unidades totais)
                             observacao: toStringSafe(observacao),
                             status: toStringSafe(status)
                         });

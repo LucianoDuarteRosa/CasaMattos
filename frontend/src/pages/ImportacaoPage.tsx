@@ -113,6 +113,16 @@ const ImportacaoPage: React.FC = () => {
                         return value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                     }
                 },
+                {
+                    field: 'quantidadeTotal',
+                    headerName: 'Qtd. Total',
+                    width: 120,
+                    type: 'number',
+                    valueFormatter: (params: any) => {
+                        const value = params.value && params.value !== '' ? Number(params.value) : 0;
+                        return value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                    }
+                },
                 /* {
                      field: 'quantidadeAlocada',
                      headerName: 'Qtd. Alocada',
