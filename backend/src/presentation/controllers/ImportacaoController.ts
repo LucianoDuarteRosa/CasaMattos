@@ -542,6 +542,63 @@ export class ImportacaoController {
                             }
                         }
 
+                        // Passo 2.5: Combinar estoque parcial do setor com endereçamento (mesmo lote)
+                        if (quantidadeRestante > 0) {
+                            const dispSetor = disponibilidadeSetor[k] || 0;
+                            const dispEndereco = disponibilidadeEndereco[k] || 0;
+
+                            console.log(`[alocarEstoqueParaPedidos] Verificando combinação setor+endereçamento para lote ${pedido.lote}: setor=${dispSetor}, endereco=${dispEndereco}, total=${dispSetor + dispEndereco}, necessário=${quantidadeRestante}`);
+
+                            // Se houver estoque parcial em ambos e juntos atendem o pedido
+                            if (dispSetor > 0 && dispEndereco > 0 && (dispSetor + dispEndereco) >= quantidadeRestante) {
+                                console.log(`[alocarEstoqueParaPedidos] Combinando estoques: ${dispSetor} (setor) + ${dispEndereco} (endereço) = ${dispSetor + dispEndereco} para atender ${quantidadeRestante}`);
+
+                                status = 'Sucesso';
+                                observacao = 'Atendido combinando estoque do setor e endereçamento (mesmo lote).';
+
+                                // Primeiro consome do setor
+                                const consumirSetor = Math.min(dispSetor, quantidadeRestante);
+                                if (consumirSetor > 0) {
+                                    console.log(`[alocarEstoqueParaPedidos] Consumindo ${consumirSetor} do setor`);
+                                    detalhes.push(buildDetalhe(pedido.lote, 'setor', consumirSetor));
+                                    disponibilidadeSetor[k] -= consumirSetor;
+                                    reservaMinima[k] = Math.max(0, reservaMinima[k] - consumirSetor);
+                                    excedente[k] = Math.max(0, excedente[k] - consumirSetor);
+                                    quantidadeRestante -= consumirSetor;
+                                }
+
+                                // Depois consome do endereçamento se ainda necessário
+                                if (quantidadeRestante > 0) {
+                                    console.log(`[alocarEstoqueParaPedidos] Consumindo ${quantidadeRestante} do endereçamento`);
+                                    let consumir = quantidadeRestante;
+                                    for (const pallet of estoqueEndereco[k] || []) {
+                                        if (consumir <= 0) break;
+
+                                        const quantidadeJaConsumida = palletsConsumidos.get(pallet.id) || 0;
+                                        let quantCaixas = Number(pallet.quantCaixas ?? pallet.caixas ?? pallet.produto?.quantCaixas ?? 0);
+                                        let quantMinVenda = Number(pallet.quantMinVenda ?? pallet.produto?.quantMinVenda ?? 0);
+                                        let palletDisponivel = (quantCaixas * quantMinVenda) - quantidadeJaConsumida;
+
+                                        if (palletDisponivel <= 0) continue;
+
+                                        let consumirPallet = Math.min(consumir, palletDisponivel);
+                                        if (consumirPallet > 0) {
+                                            detalhes.push(buildDetalhe(pallet.lote, 'enderecamento', consumirPallet));
+                                            enderecamentosUsados.push({ id: pallet.id, lote: pallet.lote, quantidadeConsumida: consumirPallet });
+                                            palletsConsumidos.set(pallet.id, quantidadeJaConsumida + consumirPallet);
+                                            disponibilidadeEndereco[k] -= consumirPallet;
+                                            consumir -= consumirPallet;
+                                        }
+                                    }
+                                    quantidadeRestante = consumir;
+                                }
+
+                                if (quantidadeRestante <= 0) {
+                                    console.log(`[alocarEstoqueParaPedidos] Pedido ${pedido.pedidoId} atendido completamente com combinação setor+endereçamento`);
+                                }
+                            }
+                        }
+
                         // Passo 3: Endereçamento (mesmo lote primeiro)
                         if (quantidadeRestante > 0 && disponibilidadeEndereco[k] > 0) {
                             let disponivelEndereco = disponibilidadeEndereco[k];
@@ -678,6 +735,110 @@ export class ImportacaoController {
                                 console.log(`[alocarEstoqueParaPedidos] Mistura realizada com ${lotesMisturados.length} lote(s)`);
                                 // Substituir detalhes por lotes misturados
                                 detalhes = lotesMisturados;
+                            }
+                        }
+
+                        // Passo 3.4: Combinar lotes diferentes entre setor e endereçamento
+                        if (quantidadeRestante > 0) {
+                            console.log(`[alocarEstoqueParaPedidos] Tentando combinação setor+endereçamento com lotes diferentes para pedido ${pedido.pedidoId}. Quantidade restante: ${quantidadeRestante}`);
+
+                            // Buscar todos os lotes disponíveis do mesmo produto no setor
+                            const lotesSetorDisponiveis = [];
+                            for (const k2 in disponibilidadeSetor) {
+                                const [codInterno2, tonalidade2, bitola2, lote2] = k2.split('|');
+                                if (codInterno2 === pedido.codInterno && disponibilidadeSetor[k2] > 0) {
+                                    lotesSetorDisponiveis.push({
+                                        chave: k2,
+                                        lote: lote2,
+                                        tonalidade: tonalidade2,
+                                        bitola: bitola2,
+                                        disponivel: disponibilidadeSetor[k2]
+                                    });
+                                }
+                            }
+
+                            // Buscar todos os lotes disponíveis do mesmo produto no endereçamento
+                            const lotesEnderecoDisponiveis = [];
+                            for (const k2 in disponibilidadeEndereco) {
+                                const [codInterno2, tonalidade2, bitola2, lote2] = k2.split('|');
+                                if (codInterno2 === pedido.codInterno && disponibilidadeEndereco[k2] > 0) {
+                                    lotesEnderecoDisponiveis.push({
+                                        chave: k2,
+                                        lote: lote2,
+                                        tonalidade: tonalidade2,
+                                        bitola: bitola2,
+                                        disponivel: disponibilidadeEndereco[k2]
+                                    });
+                                }
+                            }
+
+                            // Calcular total disponível combinando setor e endereçamento
+                            const totalDisponivel = lotesSetorDisponiveis.reduce((s, l) => s + l.disponivel, 0) +
+                                lotesEnderecoDisponiveis.reduce((s, l) => s + l.disponivel, 0);
+
+                            console.log(`[alocarEstoqueParaPedidos] Total disponível combinando setor+endereçamento: ${totalDisponivel}, necessário: ${quantidadeRestante}`);
+
+                            if (totalDisponivel >= quantidadeRestante) {
+                                console.log(`[alocarEstoqueParaPedidos] Pode atender com combinação setor+endereçamento`);
+
+                                let lotesCombinados: any[] = [];
+                                let quantidadeRestanteCombinacao = quantidadeRestante;
+
+                                // Primeiro, consume do setor (ordenado por quantidade disponível)
+                                lotesSetorDisponiveis.sort((a, b) => b.disponivel - a.disponivel);
+                                for (const loteInfo of lotesSetorDisponiveis) {
+                                    if (quantidadeRestanteCombinacao <= 0) break;
+
+                                    const k2 = loteInfo.chave;
+                                    const consumirLote = Math.min(quantidadeRestanteCombinacao, loteInfo.disponivel);
+                                    if (consumirLote > 0) {
+                                        console.log(`[alocarEstoqueParaPedidos] Consumindo ${consumirLote} do lote ${loteInfo.lote} (setor)`);
+                                        lotesCombinados.push(buildDetalhe(loteInfo.lote, 'setor', consumirLote));
+                                        disponibilidadeSetor[k2] -= consumirLote;
+                                        quantidadeRestanteCombinacao -= consumirLote;
+                                    }
+                                }
+
+                                // Depois, consume do endereçamento se ainda necessário
+                                if (quantidadeRestanteCombinacao > 0) {
+                                    lotesEnderecoDisponiveis.sort((a, b) => b.disponivel - a.disponivel);
+                                    for (const loteInfo of lotesEnderecoDisponiveis) {
+                                        if (quantidadeRestanteCombinacao <= 0) break;
+
+                                        const k2 = loteInfo.chave;
+                                        console.log(`[alocarEstoqueParaPedidos] Tentando consumir do lote ${loteInfo.lote} (endereçamento), disponível: ${loteInfo.disponivel}`);
+
+                                        for (const pallet of estoqueEndereco[k2] || []) {
+                                            if (quantidadeRestanteCombinacao <= 0) break;
+
+                                            const quantidadeJaConsumida = palletsConsumidos.get(pallet.id) || 0;
+                                            let quantCaixas = Number(pallet.quantCaixas ?? pallet.caixas ?? pallet.produto?.quantCaixas ?? 0);
+                                            let quantMinVenda = Number(pallet.quantMinVenda ?? pallet.produto?.quantMinVenda ?? 0);
+                                            let palletDisponivel = (quantCaixas * quantMinVenda) - quantidadeJaConsumida;
+
+                                            if (palletDisponivel <= 0) continue;
+
+                                            let consumirPallet = Math.min(quantidadeRestanteCombinacao, palletDisponivel);
+                                            if (consumirPallet > 0) {
+                                                console.log(`[alocarEstoqueParaPedidos] Consumindo ${consumirPallet} do pallet ${pallet.id} do lote ${loteInfo.lote}`);
+                                                lotesCombinados.push(buildDetalhe(pallet.lote, 'enderecamento', consumirPallet));
+                                                enderecamentosUsados.push({ id: pallet.id, lote: pallet.lote, quantidadeConsumida: consumirPallet });
+                                                palletsConsumidos.set(pallet.id, quantidadeJaConsumida + consumirPallet);
+                                                disponibilidadeEndereco[k2] -= consumirPallet;
+                                                quantidadeRestanteCombinacao -= consumirPallet;
+                                            }
+                                        }
+                                    }
+                                }
+
+                                if (lotesCombinados.length > 0) {
+                                    status = quantidadeRestanteCombinacao <= 0 ? 'Sucesso - Combinação Setor+Endereço' : 'Parcialmente Atendido - Combinação Setor+Endereço';
+                                    observacao = `Atendido combinando ${lotesCombinados.length} fonte(s) diferentes entre setor e endereçamento.`;
+                                    console.log(`[alocarEstoqueParaPedidos] Combinação setor+endereçamento realizada com ${lotesCombinados.length} fonte(s)`);
+                                    // Substituir detalhes por combinação
+                                    detalhes = lotesCombinados;
+                                    quantidadeRestante = quantidadeRestanteCombinacao;
+                                }
                             }
                         }
 
