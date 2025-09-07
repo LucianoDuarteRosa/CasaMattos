@@ -449,7 +449,7 @@ export class ImportacaoController {
 
                     // Controle de pallets já usados
                     const enderecamentosUsados: { id: any, lote: string, quantidadeConsumida: number }[] = [];
-                    const palletsConsumidos = new Set();
+                    const palletsConsumidos = new Map<any, number>(); // id do pallet -> quantidade total consumida
 
                     // Ordenação dos pedidos: mais restritos (pedem lote) e maiores quantidades primeiro
                     pedidos.sort((a, b) => {
@@ -527,10 +527,10 @@ export class ImportacaoController {
                             let consumir = Math.min(quantidadeRestante, disponivelEndereco);
                             if (consumir > 0) {
                                 for (const pallet of estoqueEndereco[k]) {
-                                    if (palletsConsumidos.has(pallet.id)) continue;
+                                    const quantidadeJaConsumida = palletsConsumidos.get(pallet.id) || 0;
                                     let quantCaixas = Number(pallet.quantCaixas ?? pallet.caixas ?? pallet.produto?.quantCaixas ?? 0);
                                     let quantMinVenda = Number(pallet.quantMinVenda ?? pallet.produto?.quantMinVenda ?? 0);
-                                    let palletDisponivel = quantCaixas * quantMinVenda;
+                                    let palletDisponivel = (quantCaixas * quantMinVenda) - quantidadeJaConsumida;
                                     if (palletDisponivel <= 0) continue;
                                     let consumirPallet = Math.min(consumir, palletDisponivel);
                                     if (consumirPallet > 0) {
@@ -538,7 +538,7 @@ export class ImportacaoController {
                                         observacao = 'Atendido em mesmo lote (endereçamento).';
                                         detalhes.push(buildDetalhe(pallet.lote, 'enderecamento', consumirPallet));
                                         enderecamentosUsados.push({ id: pallet.id, lote: pallet.lote, quantidadeConsumida: consumirPallet });
-                                        palletsConsumidos.add(pallet.id);
+                                        palletsConsumidos.set(pallet.id, quantidadeJaConsumida + consumirPallet);
                                         disponibilidadeEndereco[k] -= consumirPallet;
                                         consumir -= consumirPallet;
                                         if (consumir <= 0) break;
@@ -573,10 +573,10 @@ export class ImportacaoController {
                                     console.log(`[alocarEstoqueParaPedidos] Tentando lote alternativo: ${lote2} (ton: ${tonalidade2}, bit: ${bitola2})`);
 
                                     for (const pallet of estoqueEndereco[k2]) {
-                                        if (palletsConsumidos.has(pallet.id)) continue;
+                                        const quantidadeJaConsumida = palletsConsumidos.get(pallet.id) || 0;
                                         let quantCaixas = Number(pallet.quantCaixas ?? pallet.caixas ?? pallet.produto?.quantCaixas ?? 0);
                                         let quantMinVenda = Number(pallet.quantMinVenda ?? pallet.produto?.quantMinVenda ?? 0);
-                                        let palletDisponivel = quantCaixas * quantMinVenda;
+                                        let palletDisponivel = (quantCaixas * quantMinVenda) - quantidadeJaConsumida;
                                         if (palletDisponivel <= 0) continue;
                                         let consumirPallet = Math.min(quantidadeRestante, palletDisponivel);
                                         if (consumirPallet > 0) {
@@ -585,7 +585,7 @@ export class ImportacaoController {
                                             observacao = `Atendido em outro lote do endereçamento: lote=${lote2}, ton=${tonalidade2}, bit=${bitola2}, quantidade=${consumirPallet}`;
                                             detalhes.push(buildDetalhe(pallet.lote, 'enderecamento', consumirPallet));
                                             enderecamentosUsados.push({ id: pallet.id, lote: pallet.lote, quantidadeConsumida: consumirPallet });
-                                            palletsConsumidos.add(pallet.id);
+                                            palletsConsumidos.set(pallet.id, quantidadeJaConsumida + consumirPallet);
                                             disponibilidadeEndereco[k2] -= consumirPallet;
                                             quantidadeRestante -= consumirPallet;
                                             console.log(`[alocarEstoqueParaPedidos] Alocado ${consumirPallet} do lote ${lote2}. Restante: ${quantidadeRestante}`);
@@ -631,17 +631,17 @@ export class ImportacaoController {
                                 console.log(`[alocarEstoqueParaPedidos] Tentando alocar do lote ${loteInfo.lote} (disponível: ${loteInfo.disponivel})`);
 
                                 for (const pallet of estoqueEndereco[k2]) {
-                                    if (palletsConsumidos.has(pallet.id)) continue;
+                                    const quantidadeJaConsumida = palletsConsumidos.get(pallet.id) || 0;
                                     let quantCaixas = Number(pallet.quantCaixas ?? pallet.caixas ?? pallet.produto?.quantCaixas ?? 0);
                                     let quantMinVenda = Number(pallet.quantMinVenda ?? pallet.produto?.quantMinVenda ?? 0);
-                                    let palletDisponivel = quantCaixas * quantMinVenda;
+                                    let palletDisponivel = (quantCaixas * quantMinVenda) - quantidadeJaConsumida;
                                     if (palletDisponivel <= 0) continue;
                                     let consumirPallet = Math.min(quantidadeRestante, palletDisponivel);
                                     if (consumirPallet > 0) {
                                         console.log(`[alocarEstoqueParaPedidos] Alocando ${consumirPallet} do lote ${loteInfo.lote}`);
                                         lotesMisturados.push(buildDetalhe(pallet.lote, 'enderecamento', consumirPallet));
                                         enderecamentosUsados.push({ id: pallet.id, lote: pallet.lote, quantidadeConsumida: consumirPallet });
-                                        palletsConsumidos.add(pallet.id);
+                                        palletsConsumidos.set(pallet.id, quantidadeJaConsumida + consumirPallet);
                                         disponibilidadeEndereco[k2] -= consumirPallet;
                                         quantidadeRestante -= consumirPallet;
                                         if (quantidadeRestante <= 0) {
@@ -663,7 +663,15 @@ export class ImportacaoController {
                         if (quantidadeRestante > 0 && !status) {
                             status = 'Falha';
                             observacao = 'Estoque insuficiente para o pedido.';
+                            console.log(`[alocarEstoqueParaPedidos] FALHA - Pedido ${pedido.pedidoId}: ${pedido.codInterno} não pôde ser atendido. Quantidade restante: ${quantidadeRestante}`);
                             detalhes.push(buildDetalhe('', '', 0));
+                        }
+
+                        // Log final do status do pedido
+                        if (!status) {
+                            status = 'Falha';
+                            observacao = 'Pedido não processado corretamente.';
+                            console.log(`[alocarEstoqueParaPedidos] ERRO - Pedido ${pedido.pedidoId}: ${pedido.codInterno} passou pelo fluxo sem definir status`);
                         }
 
                         resultados.push({

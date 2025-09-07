@@ -88,7 +88,7 @@ const ImportacaoPage: React.FC = () => {
             setColumns([
                 { field: 'id', headerName: 'ID', width: 70 },
                 { field: 'codInterno', headerName: 'Cod. Interno', width: 120 },
-                { field: 'descricao', headerName: 'Descrição', flex: 1, minWidth: 220 },
+                { field: 'descricao', headerName: 'Descrição', minWidth: 300 },
                 { field: 'codFabricante', headerName: 'Cod. Fabricante', width: 140 },
                 { field: 'tonalidade', headerName: 'Tonalidade', width: 120 },
                 { field: 'bitola', headerName: 'Bitola', width: 100 },
@@ -125,7 +125,7 @@ const ImportacaoPage: React.FC = () => {
                  },
                  { field: 'fonte', headerName: 'Fonte', width: 120 },*/
                 { field: 'status', headerName: 'Status', width: 100 },
-                { field: 'observacao', headerName: 'Observação', minWidth: 350 },
+                { field: 'observacao', headerName: 'Observação', minWidth: 700, flex: 1 },
             ]);
         }
         setRows([]);
