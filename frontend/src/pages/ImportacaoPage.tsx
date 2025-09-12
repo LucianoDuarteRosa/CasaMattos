@@ -104,8 +104,8 @@ const ImportacaoPage: React.FC = () => {
                     }
                 },
                 {
-                    field: 'quantidade',
-                    headerName: 'Qtd. Pedido',
+                    field: 'quantidadeCaixas',
+                    headerName: 'Qtd. Caixas',
                     width: 120,
                     type: 'number',
                     valueFormatter: (params: any) => {
@@ -200,7 +200,7 @@ const ImportacaoPage: React.FC = () => {
                         bitola: primeiroDetalhe.bitola || '',
                         lote: primeiroDetalhe.lote || '',
                         quantMinimaVenda: primeiroDetalhe.quantMinimaVenda || '',
-                        quantidade: primeiroDetalhe.quantidade || '',
+                        quantidadeCaixas: primeiroDetalhe.quantidadeCaixas || '',
                         quantidadeTotal: primeiroDetalhe.quantidadeTotal || '',
                         status: pedido.status || 'Erro',
                         observacao: pedido.observacao || ''

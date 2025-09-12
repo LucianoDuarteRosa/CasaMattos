@@ -345,8 +345,12 @@ export class ImportacaoController {
                     bitola: normalize(row.Bitola), // Garante string maiúscula
                     // Mantém o valor informado no arquivo para referência
                     quantMinimaVenda: Number(row.QuantMinimaVenda) || 0,
+                    // Quantidade de caixas informada no arquivo
+                    quantidadeCaixas: Number(row.Quantidade) || 0,
                     // Converte a quantidade solicitada para a mesma unidade do estoque/endereço (m²): caixas * quantMinimaVenda
                     quantidade: (Number(row.Quantidade) || 0) * (Number(row.QuantMinimaVenda) > 0 ? Number(row.QuantMinimaVenda) : 1),
+                    // Quantidade total em m² (espelho da quantidade)
+                    quantidadeTotal: (Number(row.Quantidade) || 0) * (Number(row.QuantMinimaVenda) > 0 ? Number(row.QuantMinimaVenda) : 1),
                     rotaPedido: safeString(row['Rota Pedido'] || row.RotaPedido)
                 }));
 
@@ -532,6 +536,8 @@ export class ImportacaoController {
                             tonalidade: toStringSafe(pedido.tonalidade),
                             bitola: toStringSafe(pedido.bitola),
                             quantMinimaVenda: toStringSafe(pedido.quantMinimaVenda),
+                            quantidadeCaixas: toStringSafe(pedido.quantidadeCaixas),
+                            quantidadeTotal: toStringSafe(pedido.quantidadeTotal ?? (Number(pedido.quantidadeCaixas) * Number(pedido.quantMinimaVenda))),
                             quantidade: toStringSafe(pedido.quantidade),
                             lote: toStringSafe(lote && lote !== '' ? lote : (pedido.lote ?? 'N/A')),
                             fonte: toStringSafe(fonte),
@@ -560,7 +566,7 @@ export class ImportacaoController {
                                     const [codInterno2, tonalidade2, bitola2, lote2] = k2.split('|');
                                     if (codInterno2 === pedido.codInterno && tonalidade2 === pedido.tonalidade && bitola2 === pedido.bitola) {
                                         status = 'Sucesso';
-                                        observacao = `Atendido em outro lote do setor: lote=${lote2}, quantidade=${quantidadeRestante}`;
+                                        observacao = `Atendido em outro lote do setor: lote =${lote2} ton= ${tonalidade2} bit: ${bitola2}`;
                                         detalhes.push(buildDetalhe(lote2, 'setor', quantidadeRestante));
                                         disponibilidadeSetor[k2] -= quantidadeRestante;
                                         excedente[k2] = Math.max(0, excedente[k2] - quantidadeRestante);
@@ -613,33 +619,43 @@ export class ImportacaoController {
                         if (quantidadeRestante > 0) {
                             console.log(`  Tentando atender em outro lote do endereçamento. Quantidade restante: ${quantidadeRestante}`);
                             for (const k2 in disponibilidadeEndereco) {
-                                if (k2 !== k && excedenteEndereco[k2] >= quantidadeRestante) {
-                                    const [codInterno2, tonalidade2, bitola2, lote2] = k2.split('|');
-                                    if (codInterno2 === pedido.codInterno && tonalidade2 === pedido.tonalidade && bitola2 === pedido.bitola) {
-                                        for (const pallet of estoqueEndereco[k2]) {
-                                            if (palletsConsumidos.has(pallet.id)) continue;
-                                            const palletDisponivel = Number(palletSaldo[pallet.id] ?? 0);
-                                            if (palletDisponivel <= 0) continue;
-                                            let consumirPallet = Math.min(quantidadeRestante, palletDisponivel);
-                                            if (consumirPallet > 0) {
-                                                status = 'Sucesso';
-                                                observacao = `Atendido em outro lote do endereçamento: lote=${lote2}, quantidade=${consumirPallet}`;
-                                                detalhes.push(buildDetalhe(pallet.lote, 'enderecamento', consumirPallet));
-                                                enderecamentosUsados.push({ id: pallet.id, lote: pallet.lote, quantidadeConsumida: consumirPallet });
-                                                disponibilidadeEndereco[k2] -= consumirPallet;
-                                                palletSaldo[pallet.id] = Math.max(0, palletDisponivel - consumirPallet);
-                                                if (palletSaldo[pallet.id] <= 0) palletsConsumidos.add(pallet.id);
-                                                excedenteEndereco[k2] = Math.max(0, (excedenteEndereco[k2] || 0) - consumirPallet);
-                                                quantidadeRestante -= consumirPallet;
-                                                console.log(`    Atendido em outro lote do endereçamento: lote=${lote2}, quantidade=${consumirPallet}`);
-                                                break;
-                                            }
-                                        }
-                                        if (quantidadeRestante <= 0) {
-                                            quantidadeRestante = 0;
-                                            break;
-                                        }
+                                if (k2 === k) continue;
+                                const [codInterno2, tonalidade2, bitola2, lote2] = k2.split('|');
+                                // Permite atender com outra tonalidade, contanto que seja o mesmo produto e bitola
+                                if (!(codInterno2 === pedido.codInterno && bitola2 === pedido.bitola)) continue;
+                                const sumPalletsK2 = estoqueEndereco[k2].reduce((s: number, p: any) => s + Number(palletSaldo[p.id] ?? 0), 0);
+                                const capacidadeUtil = Math.min(sumPalletsK2, excedenteEndereco[k2] || 0);
+                                if (capacidadeUtil < quantidadeRestante) continue; // não há folga suficiente após reservas
+
+                                let consumidoLocal = 0;
+                                const detalhesLocais: Array<{ palletId: any, lote: string, quantidade: number }> = [];
+                                for (const pallet of estoqueEndereco[k2]) {
+                                    if (palletsConsumidos.has(pallet.id)) continue;
+                                    const palletDisponivel = Number(palletSaldo[pallet.id] ?? 0);
+                                    if (palletDisponivel <= 0) continue;
+                                    const falta = quantidadeRestante - consumidoLocal;
+                                    if (falta <= 0) break;
+                                    const consumirPallet = Math.min(falta, palletDisponivel);
+                                    if (consumirPallet > 0) {
+                                        detalhesLocais.push({ palletId: pallet.id, lote: pallet.lote, quantidade: consumirPallet });
+                                        consumidoLocal += consumirPallet;
                                     }
+                                }
+                                if (consumidoLocal >= quantidadeRestante) {
+                                    // Commit das alocações locais
+                                    for (const d of detalhesLocais) {
+                                        const dispAtual = Number(palletSaldo[d.palletId] ?? 0);
+                                        palletSaldo[d.palletId] = Math.max(0, dispAtual - d.quantidade);
+                                        disponibilidadeEndereco[k2] -= d.quantidade;
+                                        if (palletSaldo[d.palletId] <= 0) palletsConsumidos.add(d.palletId);
+                                    }
+                                    excedenteEndereco[k2] = Math.max(0, (excedenteEndereco[k2] || 0) - consumidoLocal);
+                                    detalhes.push(...detalhesLocais.map(d => buildDetalhe(d.lote, 'enderecamento', d.quantidade)));
+                                    status = 'Sucesso';
+                                    observacao = `Atendido em outro lote do endereçamento: Lote =${lote2} Ton= ${tonalidade2} Bit: ${bitola2}`;
+                                    quantidadeRestante = 0;
+                                    console.log(`Atendido em outro lote do endereçamento (lote=${lote2}) consumindo ${consumidoLocal}`);
+                                    break;
                                 }
                             }
                         }
@@ -666,6 +682,8 @@ export class ImportacaoController {
                             tonalidade: pedido.tonalidade,
                             bitola: pedido.bitola,
                             quantMinimaVenda: pedido.quantMinimaVenda,
+                            quantidadeCaixas: pedido.quantidadeCaixas,
+                            quantidadeTotal: pedido.quantidadeTotal ?? (Number(pedido.quantidadeCaixas) * Number(pedido.quantMinimaVenda)),
                             quantidade: pedido.quantidade,
                             lote: pedido.lote,
                             rotaPedido: pedido.rotaPedido,
