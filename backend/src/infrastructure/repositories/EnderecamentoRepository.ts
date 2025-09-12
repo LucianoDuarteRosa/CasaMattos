@@ -178,18 +178,29 @@ export class EnderecamentoRepository implements IEnderecamentoRepository {
     }
 
     async findByCodInternoOuDescricao(termo: string): Promise<IEnderecamento[]> {
+        const whereConditions: any[] = [
+            { descricao: { [Op.iLike]: `%${termo}%` } },
+            { codFabricante: { [Op.iLike]: `%${termo}%` } }
+        ];
+
+        // Se o termo for numérico, busca por codInterno exato
+        const termoNumerico = parseInt(termo);
+        if (!isNaN(termoNumerico)) {
+            whereConditions.push({ codInterno: termoNumerico });
+        }
+
+        // Para códigos de barras, usar LIKE apenas se não for vazio
+        if (termo.trim()) {
+            whereConditions.push({ codBarras: { [Op.like]: `%${termo}%` } });
+        }
+
         const enderecamentos = await EnderecamentoModel.findAll({
             include: [
                 {
                     model: ProdutoModel,
                     as: 'produto',
                     where: {
-                        [Op.or]: [
-                            { codInterno: { [Op.like]: `%${termo}%` } },
-                            { descricao: { [Op.iLike]: `%${termo}%` } },
-                            { codBarras: { [Op.like]: `%${termo}%` } },
-                            { codFabricante: { [Op.iLike]: `%${termo}%` } }
-                        ]
+                        [Op.or]: whereConditions
                     }
                 },
                 {

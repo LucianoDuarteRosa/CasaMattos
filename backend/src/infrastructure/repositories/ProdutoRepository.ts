@@ -73,25 +73,34 @@ export class ProdutoRepository implements IProdutoRepository {
     }
 
     async search(term: string): Promise<IProduto[]> {
+        const searchConditions: any[] = [
+            {
+                descricao: {
+                    [Op.iLike]: `%${term}%`
+                }
+            },
+            {
+                codBarras: {
+                    [Op.iLike]: `%${term}%`
+                }
+            },
+            {
+                codFabricante: {
+                    [Op.iLike]: `%${term}%`
+                }
+            }
+        ];
+
+        // Se o termo for numérico, também busca por código interno
+        if (!isNaN(Number(term))) {
+            searchConditions.push({
+                codInterno: Number(term)
+            });
+        }
+
         const produtos = await ProdutoModel.findAll({
             where: {
-                [Op.or]: [
-                    {
-                        descricao: {
-                            [Op.iLike]: `%${term}%`
-                        }
-                    },
-                    {
-                        codBarras: {
-                            [Op.iLike]: `%${term}%`
-                        }
-                    },
-                    {
-                        codFabricante: {
-                            [Op.iLike]: `%${term}%`
-                        }
-                    }
-                ]
+                [Op.or]: searchConditions
             },
             order: [['descricao', 'ASC']]
         });

@@ -286,8 +286,19 @@ const EnderecamentosPage: React.FC = () => {
         try {
             setLoading(true);
             setError('');
-            // Busca por código/descrição + filtros
-            let data = await enderecamentoService.searchByCodigoOuDescricao(searchTerm);
+
+            let data: EnderecamentoWithRelations[] = [];
+
+            // Se há termo de busca, busca por código/descrição
+            if (searchTerm.trim()) {
+                data = await enderecamentoService.searchByCodigoOuDescricao(searchTerm.trim());
+            } else {
+                // Se só há filtros de localização, busca todos primeiro
+                data = showOnlyAvailable
+                    ? await enderecamentoService.getDisponiveis()
+                    : await enderecamentoService.getAll();
+            }
+
             // Filtro por rua
             if (selectedRua) {
                 data = data.filter((e: any) => e.predio?.rua?.nomeRua === selectedRua);
@@ -590,7 +601,7 @@ const EnderecamentosPage: React.FC = () => {
             <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
                 <Box sx={{ display: 'flex', gap: 1, flex: 1, minWidth: '200px' }}>
                     <TextField
-                        placeholder="Buscar por código ou descrição..."
+                        placeholder="Buscar por código interno, código de barras ou descrição do produto..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value.toUpperCase())}
                         sx={{ flex: 1, minWidth: 200 }}
@@ -633,6 +644,7 @@ const EnderecamentosPage: React.FC = () => {
                         variant="outlined"
                         onClick={handleSearch}
                         disabled={loading}
+                        title={"Digite um termo de busca ou selecione uma localização"}
                     >
                         Buscar
                     </Button>

@@ -438,10 +438,10 @@ const ProdutosPage: React.FC = () => {
             </Typography>
 
             {/* Barra de pesquisa e botão de novo produto */}
-            <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap'}}>
+            <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
                 <Box sx={{ display: 'flex', gap: 1, flex: 1, minWidth: '200px' }}>
                     <UppercaseTextField
-                        placeholder="Buscar produtos..."
+                        placeholder="Buscar por descrição, código interno ou código fabricante..."
                         value={searchTerm}
                         onChange={(value) => setSearchTerm(value)}
                         onKeyPress={(e) => {
