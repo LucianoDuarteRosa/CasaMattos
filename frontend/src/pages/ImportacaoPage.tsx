@@ -162,7 +162,7 @@ const ImportacaoPage: React.FC = () => {
             console.log('[Frontend] Resposta da API:', resp);
 
             if (importType === 'produtos' && resp.resultados) {
-                // Garante compatibilidade com as colunas de produtos
+                // Garante compatibilidade com as colunas de produtos e mantém campos necessários para confirmação
                 const rowsWithId = resp.resultados.map((row: any, idx: number) => ({
                     id: idx + 1,
                     codInterno: row.codInterno ?? '',
@@ -172,7 +172,9 @@ const ImportacaoPage: React.FC = () => {
                     quantidadeMinimaVenda: row.quantidadeMinimaVenda ?? row.quantMinimaVenda ?? row.quantMinVenda ?? 0,
                     custo: row.custo ?? 0,
                     quantCaixas: row.quantCaixas ?? row.quantidadeCaixas ?? 0,
-                    fornecedor: row.fornecedor ?? '',
+                    fornecedor: row.fornecedor ?? row.razaoSocial ?? '',
+                    cnpjFornecedor: row.cnpjFornecedor ?? '',
+                    razaoSocial: row.razaoSocial ?? row.fornecedor ?? '',
                     status: row.status ?? '',
                     observacao: row.observacao ?? '',
                 }));
@@ -242,9 +244,26 @@ const ImportacaoPage: React.FC = () => {
                 setLoading(false);
             }
         } else if (importType === 'produtos') {
-            const produtosParaEnviar = rows.filter((row: any) => row.status === 'Sucesso');
-            if (produtosParaEnviar.length === 0) {
+            const produtosSelecionados = rows.filter((row: any) => row.status === 'Sucesso');
+            if (produtosSelecionados.length === 0) {
                 showSnackbar('Nenhum produto válido para importar.', 'info');
+                return;
+            }
+            const produtosParaEnviar = produtosSelecionados.map((row: any) => ({
+                codInterno: row.codInterno,
+                descricao: row.descricao,
+                quantidadeMinimaVenda: row.quantidadeMinimaVenda,
+                quantCaixas: row.quantCaixas,
+                custo: row.custo,
+                codBarras: row.codBarras,
+                codFabricante: row.codFabricante,
+                cnpjFornecedor: row.cnpjFornecedor,
+                razaoSocial: row.razaoSocial,
+            }));
+
+            const produtosInvalidos = produtosParaEnviar.filter((produto: any) => !produto.cnpjFornecedor || !produto.razaoSocial);
+            if (produtosInvalidos.length > 0) {
+                showSnackbar('Produtos sem fornecedor válido na planilha. Verifique os dados e tente novamente.', 'error');
                 return;
             }
             setLoading(true);
