@@ -65,11 +65,11 @@ async function seedDatabase() {
         const senhaHash = await bcrypt.hash('admin123', 10);
 
         await UsuarioModel.findOrCreate({
-            where: { email: 'admin@casamattos.com' },
+            where: { email: 'admin@admin.com' },
             defaults: {
                 nomeCompleto: 'Administrador Sistema',
                 nickname: 'admin',
-                email: 'admin@casamattos.com',
+                email: 'admin@admin.com',
                 telefone: '(11) 99999-9999',
                 senha: senhaHash,
                 ativo: true,
@@ -79,7 +79,7 @@ async function seedDatabase() {
 
         console.log('✅ Usuário administrador criado/verificado');
         console.log('📋 Dados iniciais inseridos:');
-        console.log('   - Email: admin@casamattos.com');
+        console.log('   - Email: admin@admin.com');
         console.log('   - Senha: admin123');
 
     } catch (error) {

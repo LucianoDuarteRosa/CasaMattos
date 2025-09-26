@@ -38,7 +38,7 @@ async function checkDatabase() {
         }
 
         // Mostrar informações do usuário admin
-        const admin = await UsuarioModel.findOne({ where: { email: 'admin@casamattos.com' } });
+        const admin = await UsuarioModel.findOne({ where: { email: 'admin@admin.com' } });
         if (admin) {
             console.log('\n👤 Usuário administrador:');
             console.log(`   📧 Email: ${admin.email}`);
