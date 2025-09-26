@@ -318,10 +318,69 @@ export class ImportacaoController {
                 return res.status(400).json({ message: 'Arquivo não enviado' });
             }
 
-            // Função utilitária para parsear separação do Excel (implementar em importUtils.ts ou similar)
             try {
-                const separacoes = parseSeparacaoExcel(buffer);
-                // Função utilitária para garantir string
+                const separacoes = parseSeparacaoExcel(buffer) || [];
+                const produtoRepoModule = await import('../../infrastructure/repositories/ProdutoRepository');
+                const produtoRepository = new produtoRepoModule.ProdutoRepository();
+
+                type StatusResultado = 'Sucesso' | 'Falha' | 'Pendente';
+                type DetalheResultado = {
+                    codInterno: string;
+                    descricao: string;
+                    codFabricante: string;
+                    tonalidade: string;
+                    bitola: string;
+                    quantMinimaVenda: string;
+                    quantidadeCaixas: string;
+                    quantidadeTotal: string;
+                    quantidade: string;
+                    lote: string;
+                    fonte: string;
+                    quantidadeAlocada: number;
+                    observacao: string;
+                    status: StatusResultado;
+                    referenciaId?: number;
+                };
+                interface ResultadoSeparacao {
+                    id: number;
+                    pedidoId: number;
+                    codInterno: string;
+                    descricao: string;
+                    codFabricante: string;
+                    tonalidade: string;
+                    bitola: string;
+                    quantMinimaVenda: number;
+                    quantidadeCaixas: number;
+                    quantidadeTotal: number;
+                    quantidade: number;
+                    lote: string;
+                    rotaPedido: string;
+                    status: StatusResultado;
+                    observacao: string;
+                    detalhes: DetalheResultado[];
+                }
+                interface PedidoSeparacao {
+                    pedidoId: number;
+                    resultadoIndex: number;
+                    produtoId: number;
+                    codInterno: string;
+                    descricao: string;
+                    codFabricante: string;
+                    tonalidade: string;
+                    bitola: string;
+                    lote: string;
+                    quantMinimaVenda: number;
+                    quantidadeCaixas: number;
+                    quantidadeTotal: number;
+                    quantidade: number;
+                    rotaPedido: string;
+                    atendidoSetor: number;
+                    atendidoEnderecamento: number;
+                    restante: number;
+                    statusInicial: StatusResultado;
+                    detalhes: DetalheResultado[];
+                }
+
                 function safeString(val: any) {
                     if (val === undefined || val === null) return '';
                     if (typeof val === 'string') return val.trim();
@@ -329,379 +388,537 @@ export class ImportacaoController {
                     return String(val).trim();
                 }
 
-                // Função para normalizar campos-chave
                 function normalize(val: any) {
                     return (val === undefined || val === null) ? '' : String(val).trim().toUpperCase();
                 }
 
-                // Monta lista de pedidos a partir do Excel, normalizando campos-chave
-                const pedidos = separacoes.map((row: any, idx: number) => ({
-                    pedidoId: idx + 1,
-                    codInterno: normalize(safeString(row.CodProduto || row.CodInterno)),
-                    descricao: safeString(row.Descricao),
-                    codFabricante: safeString(row.CodFabricante),
-                    lote: normalize(safeString(row.Lote)),
-                    tonalidade: normalize(row.Tonalidade), // Garante string maiúscula
-                    bitola: normalize(row.Bitola), // Garante string maiúscula
-                    // Mantém o valor informado no arquivo para referência
-                    quantMinimaVenda: Number(row.QuantMinimaVenda) || 0,
-                    // Quantidade de caixas informada no arquivo
-                    quantidadeCaixas: Number(row.Quantidade) || 0,
-                    // Converte a quantidade solicitada para a mesma unidade do estoque/endereço (m²): caixas * quantMinimaVenda
-                    quantidade: (Number(row.Quantidade) || 0) * (Number(row.QuantMinimaVenda) > 0 ? Number(row.QuantMinimaVenda) : 1),
-                    // Quantidade total em m² (espelho da quantidade)
-                    quantidadeTotal: (Number(row.Quantidade) || 0) * (Number(row.QuantMinimaVenda) > 0 ? Number(row.QuantMinimaVenda) : 1),
-                    rotaPedido: safeString(row['Rota Pedido'] || row.RotaPedido)
-                }));
-
-                // Função principal de alocação de estoque
-                async function alocarEstoqueParaPedidos(pedidos: any[]) {
-                    // Buscar estoques disponíveis
-                    const estoqueItensRepoModule = await import('../../infrastructure/repositories/EstoqueItemRepository');
-                    const estoqueItemRepository = new estoqueItensRepoModule.EstoqueItemRepository();
-                    const enderecamentoRepoModule = await import('../../infrastructure/repositories/EnderecamentoRepository');
-                    const enderecamentoRepository = new enderecamentoRepoModule.EnderecamentoRepository();
-
-                    // Buscar todos os EstoqueItens e Enderecamentos disponíveis
-                    const estoqueItens = await estoqueItemRepository.findAll();
-                    const enderecamentos = await enderecamentoRepository.findAll();
-
-                    console.log('EstoqueItens originais:', JSON.stringify(estoqueItens, null, 2));
-                    console.log('Enderecamentos originais:', JSON.stringify(enderecamentos, null, 2));
-
-                    // Filtrar apenas os produtos/tonalidades/bitolas/lotes necessários
-                    const codInternos = [...new Set(pedidos.map(p => Number(p.codInterno)).filter(Boolean))];
-                    const tonalidades = [...new Set(pedidos.map(p => p.tonalidade))];
-                    const bitolas = [...new Set(pedidos.map(p => p.bitola))];
-                    const lotes = [...new Set(pedidos.map(p => p.lote))];
-                    // Normaliza campos dos estoques para garantir comparação correta
-                    const estoqueItensFiltrados = estoqueItens.filter((item: any) => {
-                        const codInterno = item.codInterno ?? item.produto?.codInterno;
-                        const tonalidade = item.tonalidade ?? item.ton ?? item.produto?.tonalidade ?? item.produto?.ton;
-                        const bitola = item.bitola ?? item.bit ?? item.produto?.bitola ?? item.produto?.bit;
-                        const lote = item.lote ?? item.produto?.lote;
-                        const codInternoNorm = normalize(String(codInterno));
-                        const tonalidadeNorm = normalize(tonalidade);
-                        const bitolaNorm = normalize(bitola);
-                        const loteNorm = normalize(lote);
-                        const match = codInternos.includes(Number(codInterno)) &&
-                            (!tonalidade || tonalidades.includes(tonalidadeNorm)) &&
-                            (!bitola || bitolas.includes(bitolaNorm)) &&
-                            (!lote || lotes.includes(loteNorm));
-                        if (codInternos.includes(Number(codInterno))) {
-                            console.log('[DEBUG ESTOQUE COMPARE]', {
-                                itemOriginal: item,
-                                camposUsados: { codInterno, tonalidade, bitola, lote },
-                                normalizados: { codInternoNorm, tonalidadeNorm, bitolaNorm, loteNorm },
-                                listas: { tonalidades, bitolas, lotes },
-                                match
-                            });
-                        }
-                        return match;
-                    });
-                    const enderecamentosFiltrados = enderecamentos.filter((end: any) => {
-                        const codInterno = end.codInterno ?? end.produto?.codInterno;
-                        const tonalidade = end.tonalidade ?? end.produto?.tonalidade;
-                        const bitola = end.bitola ?? end.produto?.bitola;
-                        const lote = end.lote ?? end.produto?.lote;
-                        const codInternoNorm = normalize(String(codInterno));
-                        const tonalidadeNorm = normalize(tonalidade);
-                        const bitolaNorm = normalize(bitola);
-                        const loteNorm = normalize(lote);
-                        const match = codInternos.includes(Number(codInterno)) &&
-                            (!tonalidade || tonalidades.includes(tonalidadeNorm)) &&
-                            (!bitola || bitolas.includes(bitolaNorm)) &&
-                            (!lote || lotes.includes(loteNorm));
-                        if (codInternos.includes(Number(codInterno))) {
-                            console.log('[DEBUG ENDERECAMENTO COMPARE]', {
-                                endOriginal: end,
-                                camposUsados: { codInterno, tonalidade, bitola, lote },
-                                normalizados: { codInternoNorm, tonalidadeNorm, bitolaNorm, loteNorm },
-                                listas: { tonalidades, bitolas, lotes },
-                                match
-                            });
-                        }
-                        return match;
-                    });
-                    console.log('EstoqueItens filtrados:', JSON.stringify(estoqueItensFiltrados, null, 2));
-                    console.log('Enderecamentos filtrados:', JSON.stringify(enderecamentosFiltrados, null, 2));
-
-                    // Indexar estoques por produto/tonalidade/bitola/lote
-                    function keyEstoque(e: any) {
-                        // Busca campos na raiz ou em produto
-                        const codInterno = e.codInterno ?? e.produto?.codInterno;
-                        const tonalidade = e.tonalidade ?? e.ton ?? e.produto?.tonalidade ?? e.produto?.ton;
-                        const bitola = e.bitola ?? e.bit ?? e.produto?.bitola ?? e.produto?.bit;
-                        const lote = e.lote ?? e.produto?.lote;
-                        return [normalize(codInterno), normalize(tonalidade), normalize(bitola), normalize(lote)].join('|');
-                    }
-                    // Agrupar EstoqueItens
-                    const estoqueSetor: Record<string, any[]> = {};
-                    for (const item of estoqueItensFiltrados) {
-                        const k = keyEstoque(item);
-                        if (!estoqueSetor[k]) estoqueSetor[k] = [];
-                        estoqueSetor[k].push(item);
-                    }
-                    // Agrupar Enderecamentos
-                    const estoqueEndereco: Record<string, any[]> = {};
-                    for (const end of enderecamentosFiltrados) {
-                        const k = keyEstoque(end);
-                        if (!estoqueEndereco[k]) estoqueEndereco[k] = [];
-                        estoqueEndereco[k].push(end);
-                    }
-
-                    // Calcular disponibilidade por lote
-                    const disponibilidadeSetor: Record<string, number> = {};
-                    for (const k in estoqueSetor) {
-                        disponibilidadeSetor[k] = estoqueSetor[k].reduce((s, i) => s + Number(i.quantidade), 0);
-                    }
-                    const disponibilidadeEndereco: Record<string, number> = {};
-                    for (const k in estoqueEndereco) {
-                        disponibilidadeEndereco[k] = estoqueEndereco[k].reduce((s, e) => {
-                            // Busca quantCaixas e quantMinVenda na raiz ou em produto
-                            const quantCaixas = Number(e.quantCaixas ?? e.caixas ?? e.produto?.quantCaixas ?? 0);
-                            const quantMinVenda = Number(e.quantMinVenda ?? e.produto?.quantMinVenda ?? 0);
-                            return s + (quantCaixas * quantMinVenda);
-                        }, 0);
-                    }
-
-                    // Mapa de saldo por pallet para reuso entre pedidos
-                    const palletSaldo: Record<string | number, number> = {};
-                    for (const k in estoqueEndereco) {
-                        for (const pallet of estoqueEndereco[k]) {
-                            const quantCaixas = Number(pallet.quantCaixas ?? pallet.caixas ?? pallet.produto?.quantCaixas ?? 0);
-                            const quantMinVenda = Number(pallet.quantMinVenda ?? pallet.produto?.quantMinVenda ?? 0);
-                            const disp = quantCaixas * quantMinVenda;
-                            palletSaldo[pallet.id] = (palletSaldo[pallet.id] ?? 0) + disp;
-                        }
-                    }
-
-                    // Variáveis para reservas do endereçamento (preenchidas após calcular demanda)
-                    const reservaMinimaEndereco: Record<string, number> = {};
-                    const excedenteEndereco: Record<string, number> = {};
-
-                    // Demanda por lote
-                    const demandaPorLote: Record<string, number> = {};
-                    for (const p of pedidos) {
-                        const k = keyEstoque(p);
-                        demandaPorLote[k] = (demandaPorLote[k] || 0) + Number(p.quantidade);
-                    }
-
-                    // Reserva mínima e excedente para endereçamento (respeita demanda do mesmo lote)
-                    for (const k in disponibilidadeEndereco) {
-                        reservaMinimaEndereco[k] = Math.min(disponibilidadeEndereco[k], demandaPorLote[k] || 0);
-                        excedenteEndereco[k] = disponibilidadeEndereco[k] - reservaMinimaEndereco[k];
-                    }
-
-                    // Reserva mínima e excedente
-                    const reservaMinima: Record<string, number> = {};
-                    const excedente: Record<string, number> = {};
-                    for (const k in disponibilidadeSetor) {
-                        reservaMinima[k] = Math.min(disponibilidadeSetor[k], demandaPorLote[k] || 0);
-                        excedente[k] = disponibilidadeSetor[k] - reservaMinima[k];
-                    }
-
-                    // Controle de pallets já usados
-                    const enderecamentosUsados: { id: any, lote: string, quantidadeConsumida: number }[] = [];
-                    const palletsConsumidos = new Set();
-
-                    // Ordenação dos pedidos: mais restritos (pedem lote) e maiores quantidades primeiro
-                    pedidos.sort((a, b) => {
-                        if (a.lote && !b.lote) return -1;
-                        if (!a.lote && b.lote) return 1;
-                        return b.quantidade - a.quantidade;
-                    });
-
-                    // Resultado final
-                    const resultados: any[] = [];
-
-                    console.log('Pedidos recebidos para alocação:', JSON.stringify(pedidos, null, 2));
-                    console.log('Disponibilidade inicial setor:', JSON.stringify(disponibilidadeSetor, null, 2));
-                    console.log('Disponibilidade inicial endereçamento:', JSON.stringify(disponibilidadeEndereco, null, 2));
-                    for (const pedido of pedidos) {
-
-                        const k = keyEstoque(pedido);
-                        let quantidadeRestante = pedido.quantidade;
-                        let detalhes: any[] = [];
-                        let status = '';
-                        let observacao = '';
-                        console.log(`\nProcessando pedidoId=${pedido.pedidoId} | codInterno=${pedido.codInterno} | lote=${pedido.lote} | quantidade=${pedido.quantidade}`);
-
-                        // Helper para montar detalhe completo
-                        const toStringSafe = (val: any) => (val === undefined || val === null) ? '' : String(val);
-                        const buildDetalhe = (lote: string, fonte: string, quantidade: number) => ({
-                            codInterno: toStringSafe(pedido.codInterno),
-                            descricao: toStringSafe(pedido.descricao),
-                            codFabricante: toStringSafe(pedido.codFabricante),
-                            tonalidade: toStringSafe(pedido.tonalidade),
-                            bitola: toStringSafe(pedido.bitola),
-                            quantMinimaVenda: toStringSafe(pedido.quantMinimaVenda),
-                            quantidadeCaixas: toStringSafe(pedido.quantidadeCaixas),
-                            quantidadeTotal: toStringSafe(pedido.quantidadeTotal ?? (Number(pedido.quantidadeCaixas) * Number(pedido.quantMinimaVenda))),
-                            quantidade: toStringSafe(pedido.quantidade),
-                            lote: toStringSafe(lote && lote !== '' ? lote : (pedido.lote ?? 'N/A')),
-                            fonte: toStringSafe(fonte),
-                            quantidadeAlocada: quantidade,
-                            observacao: toStringSafe(observacao),
-                            status: toStringSafe(status)
-                        });
-
-                        // Passo 1: Mesmo lote no setor
-                        if (disponibilidadeSetor[k] >= quantidadeRestante) {
-                            status = 'Sucesso';
-                            observacao = 'Atendido no lote preferido.';
-                            detalhes.push(buildDetalhe(pedido.lote, 'setor', quantidadeRestante));
-                            disponibilidadeSetor[k] -= quantidadeRestante;
-                            reservaMinima[k] = Math.max(0, reservaMinima[k] - quantidadeRestante);
-                            excedente[k] = Math.max(0, excedente[k] - quantidadeRestante);
-                            quantidadeRestante = 0;
-                            console.log(`  Atendido no setor (lote preferido). Disponibilidade após: ${disponibilidadeSetor[k]}`);
-                        }
-
-                        // Passo 2: Outro lote no setor (sem mistura)
-                        if (quantidadeRestante > 0) {
-                            console.log(`  Tentando atender em outro lote do setor. Quantidade restante: ${quantidadeRestante}`);
-                            for (const k2 in excedente) {
-                                if (k2 !== k && excedente[k2] >= quantidadeRestante) {
-                                    const [codInterno2, tonalidade2, bitola2, lote2] = k2.split('|');
-                                    if (codInterno2 === pedido.codInterno && tonalidade2 === pedido.tonalidade && bitola2 === pedido.bitola) {
-                                        status = 'Sucesso';
-                                        observacao = `Atendido em outro lote do setor: lote =${lote2} ton= ${tonalidade2} bit: ${bitola2}`;
-                                        detalhes.push(buildDetalhe(lote2, 'setor', quantidadeRestante));
-                                        disponibilidadeSetor[k2] -= quantidadeRestante;
-                                        excedente[k2] = Math.max(0, excedente[k2] - quantidadeRestante);
-                                        quantidadeRestante = 0;
-                                        console.log(`    Atendido em outro lote do setor: lote=${lote2}, quantidade=${quantidadeRestante}`);
-                                        break;
-                                    }
-                                }
-                            }
-                        }
-
-                        // Passo 3: Endereçamento (mesmo lote primeiro)
-                        if (quantidadeRestante > 0 && disponibilidadeEndereco[k] >= quantidadeRestante) {
-                            console.log(`  Tentando atender no endereçamento (mesmo lote) — tudo ou nada. Quantidade solicitada: ${quantidadeRestante}`);
-                            let consumido = 0;
-                            for (const pallet of estoqueEndereco[k]) {
-                                if (palletsConsumidos.has(pallet.id)) continue;
-                                const palletDisponivel = Number(palletSaldo[pallet.id] ?? 0);
-                                if (palletDisponivel <= 0) continue;
-                                const restanteParaEstePasso = quantidadeRestante - consumido;
-                                if (restanteParaEstePasso <= 0) break;
-                                const consumirPallet = Math.min(restanteParaEstePasso, palletDisponivel);
-                                if (consumirPallet > 0) {
-                                    detalhes.push(buildDetalhe(pallet.lote, 'enderecamento', consumirPallet));
-                                    enderecamentosUsados.push({ id: pallet.id, lote: pallet.lote, quantidadeConsumida: consumirPallet });
-                                    disponibilidadeEndereco[k] -= consumirPallet;
-                                    palletSaldo[pallet.id] = Math.max(0, palletDisponivel - consumirPallet);
-                                    if (palletSaldo[pallet.id] <= 0) palletsConsumidos.add(pallet.id);
-                                    // Consome primeiro a reserva mínima desse lote
-                                    const consReserva = Math.min(consumirPallet, reservaMinimaEndereco[k] || 0);
-                                    reservaMinimaEndereco[k] = Math.max(0, (reservaMinimaEndereco[k] || 0) - consReserva);
-                                    excedenteEndereco[k] = Math.max(0, (excedenteEndereco[k] || 0) - Math.max(0, consumirPallet - consReserva));
-                                    consumido += consumirPallet;
-                                }
-                            }
-                            if (consumido >= quantidadeRestante) {
-                                status = 'Sucesso';
-                                observacao = 'Atendido em mesmo lote (endereçamento).';
-                                quantidadeRestante = 0;
-                                console.log('    Atendido totalmente no endereçamento (mesmo lote)');
-                            } else {
-                                // Rollback local: se não alcançou o total, desfaz detalhes adicionados deste passo
-                                for (const d of detalhes.filter(d => d.fonte === 'enderecamento' && d.lote === (pedido.lote || ''))) {
-                                    // Não temos como repor de volta exatamente nos pallets sem mais estado; como guardião: manteremos a política de não entrar aqui porque a checagem de disponibilidade já garante.
-                                }
-                            }
-                        }
-
-                        // Passo 3.2: Outro lote no endereçamento (sem mistura)
-                        if (quantidadeRestante > 0) {
-                            console.log(`  Tentando atender em outro lote do endereçamento. Quantidade restante: ${quantidadeRestante}`);
-                            for (const k2 in disponibilidadeEndereco) {
-                                if (k2 === k) continue;
-                                const [codInterno2, tonalidade2, bitola2, lote2] = k2.split('|');
-                                // Permite atender com outra tonalidade, contanto que seja o mesmo produto e bitola
-                                if (!(codInterno2 === pedido.codInterno && bitola2 === pedido.bitola)) continue;
-                                const sumPalletsK2 = estoqueEndereco[k2].reduce((s: number, p: any) => s + Number(palletSaldo[p.id] ?? 0), 0);
-                                const capacidadeUtil = Math.min(sumPalletsK2, excedenteEndereco[k2] || 0);
-                                if (capacidadeUtil < quantidadeRestante) continue; // não há folga suficiente após reservas
-
-                                let consumidoLocal = 0;
-                                const detalhesLocais: Array<{ palletId: any, lote: string, quantidade: number }> = [];
-                                for (const pallet of estoqueEndereco[k2]) {
-                                    if (palletsConsumidos.has(pallet.id)) continue;
-                                    const palletDisponivel = Number(palletSaldo[pallet.id] ?? 0);
-                                    if (palletDisponivel <= 0) continue;
-                                    const falta = quantidadeRestante - consumidoLocal;
-                                    if (falta <= 0) break;
-                                    const consumirPallet = Math.min(falta, palletDisponivel);
-                                    if (consumirPallet > 0) {
-                                        detalhesLocais.push({ palletId: pallet.id, lote: pallet.lote, quantidade: consumirPallet });
-                                        consumidoLocal += consumirPallet;
-                                    }
-                                }
-                                if (consumidoLocal >= quantidadeRestante) {
-                                    // Commit das alocações locais
-                                    for (const d of detalhesLocais) {
-                                        const dispAtual = Number(palletSaldo[d.palletId] ?? 0);
-                                        palletSaldo[d.palletId] = Math.max(0, dispAtual - d.quantidade);
-                                        disponibilidadeEndereco[k2] -= d.quantidade;
-                                        if (palletSaldo[d.palletId] <= 0) palletsConsumidos.add(d.palletId);
-                                    }
-                                    excedenteEndereco[k2] = Math.max(0, (excedenteEndereco[k2] || 0) - consumidoLocal);
-                                    detalhes.push(...detalhesLocais.map(d => buildDetalhe(d.lote, 'enderecamento', d.quantidade)));
-                                    status = 'Sucesso';
-                                    observacao = `Atendido em outro lote do endereçamento: Lote =${lote2} Ton= ${tonalidade2} Bit: ${bitola2}`;
-                                    quantidadeRestante = 0;
-                                    console.log(`Atendido em outro lote do endereçamento (lote=${lote2}) consumindo ${consumidoLocal}`);
-                                    break;
-                                }
-                            }
-                        }
-
-                        // Passo 3.3 desativado: não permitir mistura de lotes no endereçamento
-
-                        // Passo 4: Não atender se não houver capacidade total
-                        if (quantidadeRestante > 0 && !status) {
-                            status = 'Falha';
-                            observacao = 'Estoque insuficiente para atendimento completo.';
-                            console.log('  Pedido não atendido por falta de capacidade total.');
-                            // Garantir pelo menos um detalhe com os campos do pedido
-                            if (detalhes.length === 0) {
-                                detalhes.push(buildDetalhe(pedido.lote, '', 0));
-                            }
-                        }
-
-                        console.log(`  Resultado do pedidoId=${pedido.pedidoId}: status=${status}, detalhes=`, detalhes);
-                        resultados.push({
-                            pedidoId: pedido.pedidoId,
-                            codInterno: pedido.codInterno,
-                            descricao: pedido.descricao,
-                            codFabricante: pedido.codFabricante,
-                            tonalidade: pedido.tonalidade,
-                            bitola: pedido.bitola,
-                            quantMinimaVenda: pedido.quantMinimaVenda,
-                            quantidadeCaixas: pedido.quantidadeCaixas,
-                            quantidadeTotal: pedido.quantidadeTotal ?? (Number(pedido.quantidadeCaixas) * Number(pedido.quantMinimaVenda)),
-                            quantidade: pedido.quantidade,
-                            lote: pedido.lote,
-                            rotaPedido: pedido.rotaPedido,
-                            status,
-                            observacao,
-                            detalhes
-                        });
-                    }
-
-                    return { resultados, enderecamentosUsados };
+                function buildDetalhe(
+                    pedido: PedidoSeparacao,
+                    fonte: string,
+                    loteOrigem: string,
+                    quantidadeAlocada: number,
+                    statusDetalhe: StatusResultado,
+                    observacaoDetalhe: string,
+                    referenciaId?: number
+                ): DetalheResultado {
+                    const loteFinal = loteOrigem && loteOrigem !== '' ? loteOrigem : pedido.lote;
+                    return {
+                        codInterno: safeString(pedido.codInterno),
+                        descricao: safeString(pedido.descricao),
+                        codFabricante: safeString(pedido.codFabricante),
+                        tonalidade: safeString(pedido.tonalidade),
+                        bitola: safeString(pedido.bitola),
+                        quantMinimaVenda: safeString(pedido.quantMinimaVenda),
+                        quantidadeCaixas: safeString(pedido.quantidadeCaixas),
+                        quantidadeTotal: safeString(pedido.quantidadeTotal),
+                        quantidade: safeString(pedido.quantidade),
+                        lote: safeString(loteFinal),
+                        fonte: safeString(fonte),
+                        quantidadeAlocada: Number(quantidadeAlocada) || 0,
+                        observacao: safeString(observacaoDetalhe),
+                        status: statusDetalhe,
+                        referenciaId
+                    };
                 }
 
-                // Chama a função de alocação e retorna o resultado
-                const alocacao = await alocarEstoqueParaPedidos(pedidos);
-                return res.json(alocacao);
+                const resultados: ResultadoSeparacao[] = [];
+                const pedidos: PedidoSeparacao[] = [];
+
+                let seqId = 1;
+                for (const row of separacoes) {
+                    const codInternoStr = safeString(row.CodProduto || row.CodInterno);
+                    const codInternoNum = Number(codInternoStr);
+                    const descricaoPlano = safeString(row.Descricao);
+                    const tonalidade = normalize(row.Tonalidade);
+                    const bitola = normalize(row.Bitola);
+                    const lote = normalize(row.Lote);
+                    const quantidadeCaixasPlano = Number(row.Quantidade) || 0;
+                    const rotaPedido = safeString(row['Rota Pedido'] || row.RotaPedido);
+                    const quantMinimaVendaPlanilha = Number(row.QuantMinimaVenda) || 0;
+
+                    const resultadoBase: ResultadoSeparacao = {
+                        id: seqId,
+                        pedidoId: seqId,
+                        codInterno: codInternoStr,
+                        descricao: descricaoPlano,
+                        codFabricante: safeString(row.CodFabricante),
+                        tonalidade,
+                        bitola,
+                        quantMinimaVenda: quantMinimaVendaPlanilha,
+                        quantidadeCaixas: quantidadeCaixasPlano,
+                        quantidadeTotal: quantidadeCaixasPlano * (quantMinimaVendaPlanilha > 0 ? quantMinimaVendaPlanilha : 0),
+                        quantidade: quantidadeCaixasPlano * (quantMinimaVendaPlanilha > 0 ? quantMinimaVendaPlanilha : 0),
+                        lote,
+                        rotaPedido,
+                        status: 'Pendente',
+                        observacao: '',
+                        detalhes: []
+                    };
+
+                    const resultadoIndex = resultados.push(resultadoBase) - 1;
+
+                    if (!codInternoStr) {
+                        resultados[resultadoIndex].status = 'Falha';
+                        resultados[resultadoIndex].observacao = 'Código interno não informado na planilha.';
+                        seqId++;
+                        continue;
+                    }
+
+                    if (Number.isNaN(codInternoNum) || codInternoNum <= 0) {
+                        resultados[resultadoIndex].status = 'Falha';
+                        resultados[resultadoIndex].observacao = 'Código interno inválido.';
+                        seqId++;
+                        continue;
+                    }
+
+                    const produto = await produtoRepository.findByCodInterno(codInternoNum);
+                    if (!produto) {
+                        resultados[resultadoIndex].status = 'Falha';
+                        resultados[resultadoIndex].observacao = 'Produto não localizado na base.';
+                        seqId++;
+                        continue;
+                    }
+
+                    const quantMinimaVenda = quantMinimaVendaPlanilha > 0 ? quantMinimaVendaPlanilha : Number(produto.quantMinVenda) || 0;
+                    if (quantMinimaVenda <= 0) {
+                        resultados[resultadoIndex].status = 'Falha';
+                        resultados[resultadoIndex].observacao = 'Quantidade mínima de venda não informada.';
+                        seqId++;
+                        continue;
+                    }
+
+                    const quantidadeTotal = quantidadeCaixasPlano * quantMinimaVenda;
+                    if (quantidadeTotal <= 0) {
+                        resultados[resultadoIndex].status = 'Falha';
+                        resultados[resultadoIndex].observacao = 'Quantidade solicitada inválida.';
+                        seqId++;
+                        continue;
+                    }
+
+                    resultados[resultadoIndex] = {
+                        ...resultados[resultadoIndex],
+                        descricao: descricaoPlano || produto.descricao || '',
+                        codFabricante: safeString(row.CodFabricante) || produto.codFabricante || '',
+                        quantMinimaVenda,
+                        quantidadeCaixas: quantidadeCaixasPlano,
+                        quantidadeTotal,
+                        quantidade: quantidadeTotal,
+                    };
+
+                    pedidos.push({
+                        pedidoId: seqId,
+                        resultadoIndex,
+                        produtoId: produto.id,
+                        codInterno: String(produto.codInterno ?? codInternoStr),
+                        descricao: descricaoPlano || produto.descricao || '',
+                        codFabricante: safeString(row.CodFabricante) || produto.codFabricante || '',
+                        tonalidade,
+                        bitola,
+                        lote,
+                        quantMinimaVenda,
+                        quantidadeCaixas: quantidadeCaixasPlano,
+                        quantidadeTotal,
+                        quantidade: quantidadeTotal,
+                        rotaPedido,
+                        atendidoSetor: 0,
+                        atendidoEnderecamento: 0,
+                        restante: quantidadeTotal,
+                        statusInicial: 'Pendente',
+                        detalhes: []
+                    });
+
+                    seqId++;
+                }
+
+                const enderecamentosUsados: Array<{ id?: number; lote: string; quantidadeConsumida: number; pedidoId: number; }> = [];
+
+                if (pedidos.length > 0) {
+                    const estoqueItemRepoModule = await import('../../infrastructure/repositories/EstoqueItemRepository');
+                    const enderecamentoRepoModule = await import('../../infrastructure/repositories/EnderecamentoRepository');
+                    const estoqueItemRepository = new estoqueItemRepoModule.EstoqueItemRepository();
+                    const enderecamentoRepository = new enderecamentoRepoModule.EnderecamentoRepository();
+
+                    const [estoqueItens, enderecamentos] = await Promise.all([
+                        estoqueItemRepository.findAll(),
+                        enderecamentoRepository.findAll()
+                    ]);
+
+                    const keyFrom = (produtoId: number, ton: string, bit: string, loteKey: string) => {
+                        return [produtoId, normalize(ton), normalize(bit), normalize(loteKey)].join('|');
+                    };
+
+                    const parseKey = (key: string) => {
+                        const [produtoIdStr, ton, bit, loteKey] = key.split('|');
+                        return {
+                            produtoId: Number(produtoIdStr),
+                            ton,
+                            bit,
+                            lote: loteKey
+                        };
+                    };
+
+                    const estoqueSetorDisponivel = new Map<string, number>();
+                    for (const item of estoqueItens) {
+                        const key = keyFrom(item.produtoId, item.ton, item.bit, item.lote || '');
+                        const atual = estoqueSetorDisponivel.get(key) || 0;
+                        const quantidade = Number(item.quantidade) || 0;
+                        if (quantidade <= 0) continue;
+                        estoqueSetorDisponivel.set(key, atual + quantidade);
+                    }
+
+                    const enderecamentoDisponivel = new Map<string, Array<{ id?: number; restante: number; quantCaixas: number; quantMinPadrao: number }>>();
+                    for (const end of enderecamentos) {
+                        if (!end.disponivel) continue;
+                        const key = keyFrom(end.idProduto, end.tonalidade, end.bitola, end.lote || '');
+                        const quantCaixas = Number(end.quantCaixas ?? 0);
+                        const quantMinVendaProduto = Number(end.produto?.quantMinVenda ?? 0);
+                        if (quantCaixas <= 0) continue;
+                        const capacidade = quantCaixas * (quantMinVendaProduto > 0 ? quantMinVendaProduto : 0);
+                        const lista = enderecamentoDisponivel.get(key) || [];
+                        lista.push({ id: end.id, restante: capacidade, quantCaixas, quantMinPadrao: quantMinVendaProduto });
+                        enderecamentoDisponivel.set(key, lista);
+                    }
+
+                    for (const pedido of pedidos) {
+                        const resultadoRef = resultados[pedido.resultadoIndex];
+                        if (resultadoRef.status === 'Falha') {
+                            pedido.statusInicial = 'Falha';
+                            continue;
+                        }
+
+                        const key = keyFrom(pedido.produtoId, pedido.tonalidade, pedido.bitola, pedido.lote);
+                        let necessario = pedido.quantidadeTotal;
+                        let consumidoSetor = 0;
+                        let consumidoEndereco = 0;
+                        const detalhes: DetalheResultado[] = [];
+
+                        const setorDisponivel = estoqueSetorDisponivel.get(key) || 0;
+                        if (setorDisponivel > 0 && necessario > 0) {
+                            const consumir = Math.min(setorDisponivel, necessario);
+                            if (consumir > 0) {
+                                consumidoSetor += consumir;
+                                necessario -= consumir;
+                                estoqueSetorDisponivel.set(key, setorDisponivel - consumir);
+                                detalhes.push(
+                                    buildDetalhe(
+                                        pedido,
+                                        'Estoque (mesmo lote)',
+                                        pedido.lote,
+                                        consumir,
+                                        'Sucesso',
+                                        'Atendido com estoque no setor (mesmo lote).'
+                                    )
+                                );
+                            }
+                        }
+
+                        if (necessario > 0) {
+                            const listaEnderecos = enderecamentoDisponivel.get(key) || [];
+                            for (const registro of listaEnderecos) {
+                                if (necessario <= 0) break;
+                                if (registro.restante <= 0 && registro.quantMinPadrao <= 0) {
+                                    registro.restante = registro.quantCaixas * pedido.quantMinimaVenda;
+                                }
+                                if (registro.restante <= 0) continue;
+                                const consumir = Math.min(registro.restante, necessario);
+                                if (consumir <= 0) continue;
+                                consumidoEndereco += consumir;
+                                necessario -= consumir;
+                                registro.restante -= consumir;
+                                detalhes.push(
+                                    buildDetalhe(
+                                        pedido,
+                                        'Endereçamento (mesmo lote)',
+                                        pedido.lote,
+                                        consumir,
+                                        'Sucesso',
+                                        'Atendido no endereçamento (mesmo lote).',
+                                        registro.id
+                                    )
+                                );
+                                enderecamentosUsados.push({ id: registro.id, lote: pedido.lote, quantidadeConsumida: consumir, pedidoId: pedido.pedidoId });
+                            }
+                        }
+
+                        pedido.atendidoSetor = consumidoSetor;
+                        pedido.atendidoEnderecamento = consumidoEndereco;
+                        pedido.restante = necessario;
+                        pedido.detalhes = detalhes;
+
+                        if (necessario <= 0) {
+                            resultadoRef.status = 'Sucesso';
+                            resultadoRef.observacao = consumidoEndereco > 0
+                                ? 'Atendido com estoque do mesmo lote utilizando setor e endereçamento.'
+                                : 'Atendido com estoque do mesmo lote no setor.';
+                        } else if ((consumidoSetor + consumidoEndereco) > 0) {
+                            resultadoRef.status = 'Pendente';
+                            resultadoRef.observacao = 'Atendimento parcial com estoque do mesmo lote. Necessário complementar em outras fontes.';
+                        } else {
+                            resultadoRef.status = 'Pendente';
+                            resultadoRef.observacao = 'Saldo indisponível no mesmo lote. Necessário verificar outros lotes.';
+                        }
+
+                        resultadoRef.detalhes = detalhes;
+                        pedido.statusInicial = resultadoRef.status;
+                    }
+
+                    const pedidosPendentes = pedidos.filter(p => resultados[p.resultadoIndex].status !== 'Falha' && p.restante > 0);
+
+                    for (const pedido of pedidosPendentes) {
+                        let necessario = pedido.restante;
+                        if (necessario <= 0) continue;
+
+                        const resultadoRef = resultados[pedido.resultadoIndex];
+                        const detalhesExtras: DetalheResultado[] = [];
+                        let consumidoSetorExtra = 0;
+                        let consumidoEnderecoExtra = 0;
+
+                        const pedidoProdutoId = pedido.produtoId;
+                        const pedidoTon = normalize(pedido.tonalidade);
+                        const pedidoBit = normalize(pedido.bitola);
+                        const pedidoLoteOriginal = normalize(pedido.lote);
+
+                        const candidateSetorKeys = Array.from(estoqueSetorDisponivel.entries()).filter(([key, disponibilidade]) => {
+                            if ((disponibilidade || 0) <= 0) return false;
+                            const parts = parseKey(key);
+                            return parts.produtoId === pedidoProdutoId &&
+                                parts.ton === pedidoTon &&
+                                parts.bit === pedidoBit &&
+                                parts.lote !== pedidoLoteOriginal;
+                        });
+
+                        for (const [key] of candidateSetorKeys) {
+                            if (necessario <= 0) break;
+                            const parts = parseKey(key);
+                            let disponibilidade = estoqueSetorDisponivel.get(key) || 0;
+                            if (disponibilidade <= 0) continue;
+                            const consumir = Math.min(disponibilidade, necessario);
+                            if (consumir <= 0) continue;
+                            estoqueSetorDisponivel.set(key, disponibilidade - consumir);
+                            necessario -= consumir;
+                            consumidoSetorExtra += consumir;
+                            detalhesExtras.push(
+                                buildDetalhe(
+                                    pedido,
+                                    'Estoque (outro lote)',
+                                    parts.lote,
+                                    consumir,
+                                    'Sucesso',
+                                    'Atendido com estoque do setor em lote alternativo.'
+                                )
+                            );
+
+                            if (necessario > 0) {
+                                const listaEnd = enderecamentoDisponivel.get(key) || [];
+                                for (const registro of listaEnd) {
+                                    if (necessario <= 0) break;
+                                    if (registro.restante <= 0 && registro.quantMinPadrao <= 0) {
+                                        registro.restante = registro.quantCaixas * pedido.quantMinimaVenda;
+                                    }
+                                    if (registro.restante <= 0) continue;
+                                    const consumirEndereco = Math.min(registro.restante, necessario);
+                                    if (consumirEndereco <= 0) continue;
+                                    registro.restante -= consumirEndereco;
+                                    necessario -= consumirEndereco;
+                                    consumidoEnderecoExtra += consumirEndereco;
+                                    detalhesExtras.push(
+                                        buildDetalhe(
+                                            pedido,
+                                            'Endereçamento (mesmo lote do setor)',
+                                            parts.lote,
+                                            consumirEndereco,
+                                            'Sucesso',
+                                            'Atendido no endereçamento associado ao lote alternativo.',
+                                            registro.id
+                                        )
+                                    );
+                                    enderecamentosUsados.push({ id: registro.id, lote: parts.lote, quantidadeConsumida: consumirEndereco, pedidoId: pedido.pedidoId });
+                                }
+                            }
+                        }
+
+                        if (necessario > 0) {
+                            const candidateEndKeys = Array.from(enderecamentoDisponivel.entries()).filter(([key, lista]) => {
+                                const parts = parseKey(key);
+                                if (parts.produtoId !== pedidoProdutoId) return false;
+                                if (parts.ton !== pedidoTon || parts.bit !== pedidoBit) return false;
+                                if (parts.lote === pedidoLoteOriginal) return false;
+                                return lista.some(registro => registro.restante > 0 || (registro.quantMinPadrao <= 0 && registro.quantCaixas > 0));
+                            });
+
+                            for (const [key, lista] of candidateEndKeys) {
+                                if (necessario <= 0) break;
+                                const parts = parseKey(key);
+                                for (const registro of lista) {
+                                    if (necessario <= 0) break;
+                                    if (registro.restante <= 0 && registro.quantMinPadrao <= 0) {
+                                        registro.restante = registro.quantCaixas * pedido.quantMinimaVenda;
+                                    }
+                                    if (registro.restante <= 0) continue;
+                                    const consumirEndereco = Math.min(registro.restante, necessario);
+                                    if (consumirEndereco <= 0) continue;
+                                    registro.restante -= consumirEndereco;
+                                    necessario -= consumirEndereco;
+                                    consumidoEnderecoExtra += consumirEndereco;
+                                    detalhesExtras.push(
+                                        buildDetalhe(
+                                            pedido,
+                                            'Endereçamento (outro lote)',
+                                            parts.lote,
+                                            consumirEndereco,
+                                            'Sucesso',
+                                            'Atendido no endereçamento em lote alternativo.',
+                                            registro.id
+                                        )
+                                    );
+                                    enderecamentosUsados.push({ id: registro.id, lote: parts.lote, quantidadeConsumida: consumirEndereco, pedidoId: pedido.pedidoId });
+                                }
+                            }
+                        }
+
+                        if (necessario > 0) {
+                            const candidateSetorKeysByBit = Array.from(estoqueSetorDisponivel.entries()).filter(([key, disponibilidade]) => {
+                                if ((disponibilidade || 0) <= 0) return false;
+                                const parts = parseKey(key);
+                                return parts.produtoId === pedidoProdutoId && parts.bit === pedidoBit && parts.ton !== pedidoTon;
+                            });
+
+                            for (const [key] of candidateSetorKeysByBit) {
+                                if (necessario <= 0) break;
+                                const parts = parseKey(key);
+                                let disponibilidade = estoqueSetorDisponivel.get(key) || 0;
+                                if (disponibilidade <= 0) continue;
+                                const consumir = Math.min(disponibilidade, necessario);
+                                if (consumir <= 0) continue;
+                                estoqueSetorDisponivel.set(key, disponibilidade - consumir);
+                                necessario -= consumir;
+                                consumidoSetorExtra += consumir;
+                                detalhesExtras.push(
+                                    buildDetalhe(
+                                        pedido,
+                                        'Estoque (outra tonalidade)',
+                                        parts.lote,
+                                        consumir,
+                                        'Sucesso',
+                                        'Atendido com estoque do setor em outra tonalidade.'
+                                    )
+                                );
+
+                                if (necessario > 0) {
+                                    const listaEnd = enderecamentoDisponivel.get(key) || [];
+                                    for (const registro of listaEnd) {
+                                        if (necessario <= 0) break;
+                                        if (registro.restante <= 0 && registro.quantMinPadrao <= 0) {
+                                            registro.restante = registro.quantCaixas * pedido.quantMinimaVenda;
+                                        }
+                                        if (registro.restante <= 0) continue;
+                                        const consumirEndereco = Math.min(registro.restante, necessario);
+                                        if (consumirEndereco <= 0) continue;
+                                        registro.restante -= consumirEndereco;
+                                        necessario -= consumirEndereco;
+                                        consumidoEnderecoExtra += consumirEndereco;
+                                        detalhesExtras.push(
+                                            buildDetalhe(
+                                                pedido,
+                                                'Endereçamento (outra tonalidade vinculada)',
+                                                parts.lote,
+                                                consumirEndereco,
+                                                'Sucesso',
+                                                'Atendido no endereçamento em outra tonalidade vinculada.',
+                                                registro.id
+                                            )
+                                        );
+                                        enderecamentosUsados.push({ id: registro.id, lote: parts.lote, quantidadeConsumida: consumirEndereco, pedidoId: pedido.pedidoId });
+                                    }
+                                }
+                            }
+                        }
+
+                        if (necessario > 0) {
+                            const candidateEndKeysByBit = Array.from(enderecamentoDisponivel.entries()).filter(([key, lista]) => {
+                                const parts = parseKey(key);
+                                if (parts.produtoId !== pedidoProdutoId) return false;
+                                if (parts.bit !== pedidoBit) return false;
+                                if (parts.ton === pedidoTon && parts.lote === pedidoLoteOriginal) return false;
+                                return lista.some(registro => registro.restante > 0 || (registro.quantMinPadrao <= 0 && registro.quantCaixas > 0));
+                            });
+
+                            for (const [key, lista] of candidateEndKeysByBit) {
+                                if (necessario <= 0) break;
+                                const parts = parseKey(key);
+                                for (const registro of lista) {
+                                    if (necessario <= 0) break;
+                                    if (registro.restante <= 0 && registro.quantMinPadrao <= 0) {
+                                        registro.restante = registro.quantCaixas * pedido.quantMinimaVenda;
+                                    }
+                                    if (registro.restante <= 0) continue;
+                                    const consumirEndereco = Math.min(registro.restante, necessario);
+                                    if (consumirEndereco <= 0) continue;
+                                    registro.restante -= consumirEndereco;
+                                    necessario -= consumirEndereco;
+                                    consumidoEnderecoExtra += consumirEndereco;
+                                    detalhesExtras.push(
+                                        buildDetalhe(
+                                            pedido,
+                                            'Endereçamento (outra tonalidade)',
+                                            parts.lote,
+                                            consumirEndereco,
+                                            'Sucesso',
+                                            'Atendido no endereçamento em outra tonalidade.',
+                                            registro.id
+                                        )
+                                    );
+                                    enderecamentosUsados.push({ id: registro.id, lote: parts.lote, quantidadeConsumida: consumirEndereco, pedidoId: pedido.pedidoId });
+                                }
+                            }
+                        }
+
+                        pedido.atendidoSetor += consumidoSetorExtra;
+                        pedido.atendidoEnderecamento += consumidoEnderecoExtra;
+                        pedido.restante = necessario;
+                        pedido.detalhes = [...pedido.detalhes, ...detalhesExtras];
+                        resultadoRef.detalhes = [...resultadoRef.detalhes, ...detalhesExtras];
+
+                        const totalAtendido = pedido.quantidadeTotal - necessario;
+                        if (necessario <= 0) {
+                            resultadoRef.status = 'Sucesso';
+                            resultadoRef.observacao = (pedido.atendidoEnderecamento > 0)
+                                ? 'Atendido com estoque utilizando lotes alternativos.'
+                                : 'Atendido com estoque do setor em lotes alternativos.';
+                        } else if (totalAtendido > 0) {
+                            resultadoRef.status = 'Pendente';
+                            resultadoRef.observacao = 'Atendimento parcial após buscar lotes alternativos. Verificar saldo restante.';
+                        } else {
+                            resultadoRef.status = 'Falha';
+                            resultadoRef.observacao = 'Estoque insuficiente.';
+                        }
+
+                        pedido.statusInicial = resultadoRef.status;
+                    }
+                }
+
+                for (const pedido of pedidos) {
+                    const resultadoRef = resultados[pedido.resultadoIndex];
+                    if (!resultadoRef.detalhes || resultadoRef.detalhes.length === 0) {
+                        const statusFinal: StatusResultado = resultadoRef.status === 'Falha' ? 'Falha' : 'Pendente';
+                        const observacaoFinal = resultadoRef.observacao || (statusFinal === 'Falha' ? 'Estoque insuficiente.' : 'Sem alocação registrada.');
+                        const detalheFallback = buildDetalhe(
+                            pedido,
+                            'Sem alocação',
+                            pedido.lote,
+                            0,
+                            statusFinal,
+                            observacaoFinal
+                        );
+                        resultadoRef.detalhes = [detalheFallback];
+                        pedido.detalhes = resultadoRef.detalhes;
+                    }
+                }
+
+                return res.json({ resultados, pedidos, enderecamentosUsados });
             } catch (innerErr) {
-                console.error('Erro ao importar módulos dinâmicos ou processar separação:', innerErr);
-                return res.status(500).json({ message: 'Erro ao importar módulos dinâmicos ou processar separação', error: (innerErr as Error).message });
+                console.error('Erro ao processar separação:', innerErr);
+                return res.status(500).json({ message: 'Erro ao processar arquivo de separação', error: (innerErr as Error).message });
             }
         } catch (err) {
             console.error('Erro inesperado em importarSeparacao:', err);
