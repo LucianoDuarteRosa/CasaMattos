@@ -178,13 +178,14 @@ const PrediosPage: React.FC = () => {
             field: 'id',
             headerName: 'ID',
             width: 90,
+            minWidth: 70,
             sortable: true
         },
         {
             field: 'nomePredio',
             headerName: 'Nome do Prédio',
             flex: 1,
-            minWidth: 250,
+            minWidth: 320,
             sortable: true
         },
         {
@@ -198,7 +199,7 @@ const PrediosPage: React.FC = () => {
             field: 'rua',
             headerName: 'Rua',
             flex: 1,
-            minWidth: 200,
+            minWidth: 260,
             sortable: false,
             valueGetter: (params) => {
                 const ruaObj = ruas.find(r => r.id === params.row.idRua);
@@ -209,7 +210,8 @@ const PrediosPage: React.FC = () => {
             field: 'actions',
             headerName: 'Ações',
             type: 'actions',
-            width: 120,
+            width: 140,
+            minWidth: 120,
             getActions: (params) => [
                 <GridActionsCellItem
                     key="edit"
@@ -251,8 +253,8 @@ const PrediosPage: React.FC = () => {
             </Typography>
 
             {/* Barra de pesquisa e botão de novo prédio */}
-            <Box sx={{ display: 'flex', gap: 2, mb: 3, flexWrap: 'wrap' }}>
-                <Box sx={{ display: 'flex', gap: 1, flex: 1, minWidth: '200px' }}>
+            <Box sx={{ display: 'flex', gap: 2, mb: 3, flexWrap: 'wrap', alignItems: 'center' }}>
+                <Box sx={{ display: 'flex', gap: 1, flex: 1, minWidth: '220px', flexWrap: 'wrap' }}>
                     <TextField
                         placeholder="Buscar por nome do prédio..."
                         value={searchTerm}
@@ -264,6 +266,7 @@ const PrediosPage: React.FC = () => {
                         variant="outlined"
                         onClick={handleSearch}
                         disabled={loading}
+                        sx={{ flex: { xs: '1 1 100%', sm: '0 0 auto' }, minWidth: 140, height: { xs: 'auto', sm: 56 } }}
                     >
                         Buscar
                     </Button>
@@ -271,6 +274,7 @@ const PrediosPage: React.FC = () => {
                         variant="outlined"
                         onClick={handleClearSearch}
                         disabled={loading}
+                        sx={{ flex: { xs: '1 1 100%', sm: '0 0 auto' }, minWidth: 140, height: { xs: 'auto', sm: 56 } }}
                     >
                         Limpar
                     </Button>
@@ -279,7 +283,7 @@ const PrediosPage: React.FC = () => {
                     variant="contained"
                     startIcon={<Add />}
                     onClick={() => setOpen(true)}
-                    sx={{ minWidth: '120px' }}
+                    sx={{ minWidth: '160px', flex: { xs: '1 1 100%', sm: '0 0 auto' }, height: { xs: 'auto', sm: 56 } }}
                     size="medium"
                 >
                     Novo Prédio

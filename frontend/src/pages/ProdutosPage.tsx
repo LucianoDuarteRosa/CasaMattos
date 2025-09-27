@@ -147,7 +147,7 @@ const ProdutosPage: React.FC = () => {
             field: 'descricao',
             headerName: 'Descrição',
             flex: 1,
-            minWidth: 200
+            minWidth: 300
         },
         {
             field: 'codFabricante',
@@ -438,8 +438,8 @@ const ProdutosPage: React.FC = () => {
             </Typography>
 
             {/* Barra de pesquisa e botão de novo produto */}
-            <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
-                <Box sx={{ display: 'flex', gap: 1, flex: 1, minWidth: '200px' }}>
+            <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'center' }}>
+                <Box sx={{ display: 'flex', gap: 1, flex: 1, minWidth: '220px', flexWrap: 'wrap' }}>
                     <UppercaseTextField
                         placeholder="Buscar por descrição, código interno ou código fabricante..."
                         value={searchTerm}
@@ -456,6 +456,7 @@ const ProdutosPage: React.FC = () => {
                         variant="outlined"
                         onClick={handleSearch}
                         disabled={loading}
+                        sx={{ flex: { xs: '1 1 100%', sm: '0 0 auto' }, minWidth: 140, height: { xs: 'auto', sm: 56 } }}
                     >
                         Buscar
                     </Button>
@@ -463,6 +464,7 @@ const ProdutosPage: React.FC = () => {
                         variant="outlined"
                         onClick={loadProdutos}
                         disabled={loading}
+                        sx={{ flex: { xs: '1 1 100%', sm: '0 0 auto' }, minWidth: 140, height: { xs: 'auto', sm: 56 } }}
                     >
                         Limpar
                     </Button>
@@ -471,7 +473,7 @@ const ProdutosPage: React.FC = () => {
                     variant="contained"
                     startIcon={<Add />}
                     onClick={handleAdd}
-                    sx={{ minWidth: '120px' }}
+                    sx={{ minWidth: '140px', flex: { xs: '1 1 100%', sm: '0 0 auto' }, height: { xs: 'auto', sm: 56 } }}
                     size="medium"
                 >
                     Novo Produto

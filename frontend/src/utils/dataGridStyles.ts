@@ -6,7 +6,8 @@ export const dataGridStyles = {
         borderRadius: 2, // Bordas mais arredondadas
         border: '1px solid',
         borderColor: 'divider',
-        overflow: 'hidden',
+        overflowX: 'auto',
+        overflowY: 'hidden',
         display: 'flex',
         flexDirection: 'column' as const,
     },
@@ -50,10 +51,12 @@ export const dataGridStyles = {
             backgroundColor: 'background.default',
         },
         '& .MuiDataGrid-main': {
-            overflow: 'hidden'
+            overflowX: 'auto',
+            overflowY: 'hidden'
         },
         '& .MuiDataGrid-virtualScroller': {
-            overflow: 'auto'
+            overflowX: 'auto',
+            overflowY: 'auto'
         },
         // Melhor aparência para células de ação
         '& .MuiDataGrid-actionsCell': {

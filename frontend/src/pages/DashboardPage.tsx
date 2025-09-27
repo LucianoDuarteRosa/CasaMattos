@@ -167,7 +167,7 @@ const DashboardPage: React.FC = () => {
                             Ponta de Estoque
                         </Typography>
                         {produtosPontaEstoque.length > 0 ? (
-                            <Box sx={{ height: 390, width: '100%' }}>
+                            <Box sx={{ height: 390, width: '100%', overflowX: 'auto' }}>
                                 <DataGrid
                                     rows={produtosPontaEstoque.map((produto, idx) => ({
                                         id: `${produto.id || idx}-${produto.lote}-${produto.ton}-${produto.bit}`,
@@ -184,6 +184,7 @@ const DashboardPage: React.FC = () => {
                                             field: 'descricao',
                                             headerName: 'Descrição',
                                             flex: 1.2,
+                                            minWidth: 300,
                                             renderCell: (params) => (
                                                 <Box>
                                                     <Typography variant="body2" noWrap>{params.value}</Typography>
@@ -191,19 +192,21 @@ const DashboardPage: React.FC = () => {
                                                 </Box>
                                             )
                                         },
-                                        { field: 'lote', headerName: 'Lote', flex: 0.7 },
-                                        { field: 'ton', headerName: 'Tonalidade', flex: 0.7 },
-                                        { field: 'bit', headerName: 'Bitola', flex: 0.7 },
+                                        { field: 'lote', headerName: 'Lote', flex: 0.7, minWidth: 120 },
+                                        { field: 'ton', headerName: 'Tonalidade', flex: 0.7, minWidth: 120 },
+                                        { field: 'bit', headerName: 'Bitola', flex: 0.7, minWidth: 120 },
                                         {
                                             field: 'totalDisponivel',
                                             headerName: 'Total',
                                             flex: 0.9,
+                                            minWidth: 140,
                                             valueFormatter: ({ value }) => `${Number(value).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} m²`
                                         },
                                         {
                                             field: 'quantMinVenda',
                                             headerName: 'Mín Venda',
                                             flex: 0.9,
+                                            minWidth: 150,
                                             align: 'right',
                                             headerAlign: 'right',
                                             valueFormatter: ({ value }) => Number(value).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
@@ -212,7 +215,17 @@ const DashboardPage: React.FC = () => {
                                     pageSizeOptions={[5]}
                                     initialState={{ pagination: { paginationModel: { pageSize: 5, page: 0 } } }}
                                     localeText={dataGridPtBR}
-                                    sx={dataGridStyles.dataGridSx}
+                                    sx={{
+                                        ...dataGridStyles.dataGridSx,
+                                        '& .MuiDataGrid-main': {
+                                            overflowX: 'auto',
+                                            overflowY: 'hidden'
+                                        },
+                                        '& .MuiDataGrid-virtualScroller': {
+                                            overflowX: 'auto',
+                                            overflowY: 'auto'
+                                        }
+                                    }}
                                 />
                             </Box>
                         ) : (
@@ -229,7 +242,7 @@ const DashboardPage: React.FC = () => {
                             Estoque Baixo na Separação
                         </Typography>
                         {produtosEstoqueBaixo.length > 0 ? (
-                            <Box sx={{ height: 390, width: '100%' }}>
+                            <Box sx={{ height: 390, width: '100%', overflowX: 'auto' }}>
                                 <DataGrid
                                     rows={produtosEstoqueBaixo.map((produto, idx) => ({
                                         id: produto.id || idx,
@@ -242,6 +255,7 @@ const DashboardPage: React.FC = () => {
                                             field: 'descricao',
                                             headerName: 'Descrição',
                                             flex: 1.2,
+                                            minWidth: 300,
                                             renderCell: (params) => (
                                                 <Box>
                                                     <Typography variant="body2" noWrap>{params.value}</Typography>
@@ -253,6 +267,7 @@ const DashboardPage: React.FC = () => {
                                             field: 'estoque',
                                             headerName: 'Estoque Atual',
                                             flex: 0.9,
+                                            minWidth: 160,
                                             align: 'right',
                                             headerAlign: 'right',
                                             valueFormatter: ({ value }) => `${Number(value).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} m²`
@@ -261,6 +276,7 @@ const DashboardPage: React.FC = () => {
                                             field: 'status',
                                             headerName: 'Status',
                                             flex: 0.7,
+                                            minWidth: 120,
                                             align: 'right',
                                             headerAlign: 'right',
                                             renderCell: () => (
@@ -271,7 +287,17 @@ const DashboardPage: React.FC = () => {
                                     pageSizeOptions={[5]}
                                     initialState={{ pagination: { paginationModel: { pageSize: 5, page: 0 } } }}
                                     localeText={dataGridPtBR}
-                                    sx={dataGridStyles.dataGridSx}
+                                    sx={{
+                                        ...dataGridStyles.dataGridSx,
+                                        '& .MuiDataGrid-main': {
+                                            overflowX: 'auto',
+                                            overflowY: 'hidden'
+                                        },
+                                        '& .MuiDataGrid-virtualScroller': {
+                                            overflowX: 'auto',
+                                            overflowY: 'auto'
+                                        }
+                                    }}
                                 />
                             </Box>
                         ) : (

@@ -67,7 +67,7 @@ const FornecedoresPage: React.FC = () => {
             field: 'razaoSocial',
             headerName: 'Razão Social',
             flex: 1,
-            minWidth: 150
+            minWidth: 300
         },
         {
             field: 'cnpj',
@@ -255,8 +255,8 @@ const FornecedoresPage: React.FC = () => {
             </Typography>
 
             {/* Barra de pesquisa e botão de novo fornecedor */}
-            <Box sx={{ display: 'flex', gap: 2, mb: 3, flexWrap: 'wrap' }}>
-                <Box sx={{ display: 'flex', gap: 1, flex: 1, minWidth: '200px' }}>
+            <Box sx={{ display: 'flex', gap: 2, mb: 3, flexWrap: 'wrap', alignItems: 'center' }}>
+                <Box sx={{ display: 'flex', gap: 1, flex: 1, minWidth: '220px', flexWrap: 'wrap' }}>
                     <UppercaseTextField
                         placeholder="Buscar fornecedores..."
                         value={searchTerm}
@@ -273,6 +273,7 @@ const FornecedoresPage: React.FC = () => {
                         variant="outlined"
                         onClick={handleSearch}
                         disabled={loading}
+                        sx={{ flex: { xs: '1 1 100%', sm: '0 0 auto' }, minWidth: 140, height: { xs: 'auto', sm: 56 } }}
                     >
                         Buscar
                     </Button>
@@ -280,6 +281,7 @@ const FornecedoresPage: React.FC = () => {
                         variant="outlined"
                         onClick={loadFornecedores}
                         disabled={loading}
+                        sx={{ flex: { xs: '1 1 100%', sm: '0 0 auto' }, minWidth: 140, height: { xs: 'auto', sm: 56 } }}
                     >
                         Limpar
                     </Button>
@@ -288,7 +290,7 @@ const FornecedoresPage: React.FC = () => {
                     variant="contained"
                     startIcon={<Add />}
                     onClick={handleAdd}
-                    sx={{ minWidth: '120px' }}
+                    sx={{ minWidth: '140px', flex: { xs: '1 1 100%', sm: '0 0 auto' }, height: { xs: 'auto', sm: 56 } }}
                     size="medium"
                 >
                     Novo Fornecedor

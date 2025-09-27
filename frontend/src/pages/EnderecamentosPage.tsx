@@ -105,7 +105,7 @@ const EnderecamentosPage: React.FC = () => {
             field: 'produtoDesc',
             headerName: 'Produto',
             flex: 1,
-            minWidth: 150,
+            minWidth: 300,
             valueGetter: (params) => {
                 const produto = params.row.produto;
                 return produto ? produto.descricao : 'N/A';
@@ -598,8 +598,8 @@ const EnderecamentosPage: React.FC = () => {
             </Typography>
 
             {/* Barra de pesquisa e controles */}
-            <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
-                <Box sx={{ display: 'flex', gap: 1, flex: 1, minWidth: '200px' }}>
+            <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'center' }}>
+                <Box sx={{ display: 'flex', gap: 1, flex: 1, minWidth: '220px', flexWrap: 'wrap' }}>
                     <TextField
                         placeholder="Buscar por código interno, código de barras ou descrição do produto..."
                         value={searchTerm}
@@ -608,7 +608,7 @@ const EnderecamentosPage: React.FC = () => {
                         InputProps={{ startAdornment: <Search sx={{ mr: 1 }} /> }}
                     />
                     {/* Select de Rua */}
-                    <FormControl sx={{ minWidth: 140 }}>
+                    <FormControl sx={{ minWidth: 160, flex: { xs: '1 1 160px', sm: '0 0 auto' } }}>
                         <InputLabel id="select-rua-label">Rua</InputLabel>
                         <Select
                             labelId="select-rua-label"
@@ -626,7 +626,7 @@ const EnderecamentosPage: React.FC = () => {
                         </Select>
                     </FormControl>
                     {/* Select de Prédio */}
-                    <FormControl sx={{ minWidth: 140 }} disabled={selectedRua === ''}>
+                    <FormControl sx={{ minWidth: 160, flex: { xs: '1 1 160px', sm: '0 0 auto' } }} disabled={selectedRua === ''}>
                         <InputLabel id="select-predio-label">Prédio</InputLabel>
                         <Select
                             labelId="select-predio-label"
@@ -645,6 +645,7 @@ const EnderecamentosPage: React.FC = () => {
                         onClick={handleSearch}
                         disabled={loading}
                         title={"Digite um termo de busca ou selecione uma localização"}
+                        sx={{ flex: { xs: '1 1 100%', md: '0 0 auto' }, minWidth: 140 }}
                     >
                         Buscar
                     </Button>
@@ -657,6 +658,7 @@ const EnderecamentosPage: React.FC = () => {
                             loadEnderecamentos();
                         }}
                         disabled={loading}
+                        sx={{ flex: { xs: '1 1 100%', md: '0 0 auto' }, minWidth: 140 }}
                     >
                         Limpar
                     </Button>
@@ -664,7 +666,7 @@ const EnderecamentosPage: React.FC = () => {
                         variant="contained"
                         startIcon={<Add />}
                         onClick={handleAdd}
-                        sx={{ minWidth: '120px' }}
+                        sx={{ minWidth: '160px', flex: { xs: '1 1 100%', md: '0 0 auto' } }}
                         size="medium"
                     >
                         Novo Endereçamento

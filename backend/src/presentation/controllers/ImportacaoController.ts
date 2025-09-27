@@ -381,6 +381,20 @@ export class ImportacaoController {
                     detalhes: DetalheResultado[];
                 }
 
+                interface EnderecamentoUso {
+                    id?: number;
+                    pedidoId: number;
+                    produtoId: number;
+                    codInterno: string;
+                    descricao: string;
+                    tonalidade: string;
+                    bitola: string;
+                    lote: string;
+                    quantidadeConsumida: number;
+                    fontes: string[];
+                    rotaPedido: string;
+                }
+
                 function safeString(val: any) {
                     if (val === undefined || val === null) return '';
                     if (typeof val === 'string') return val.trim();
@@ -530,13 +544,49 @@ export class ImportacaoController {
                     seqId++;
                 }
 
-                const enderecamentosUsados: Array<{ id?: number; lote: string; quantidadeConsumida: number; pedidoId: number; }> = [];
+                let enderecamentosUsados: EnderecamentoUso[] = [];
 
                 if (pedidos.length > 0) {
                     const estoqueItemRepoModule = await import('../../infrastructure/repositories/EstoqueItemRepository');
                     const enderecamentoRepoModule = await import('../../infrastructure/repositories/EnderecamentoRepository');
                     const estoqueItemRepository = new estoqueItemRepoModule.EstoqueItemRepository();
                     const enderecamentoRepository = new enderecamentoRepoModule.EnderecamentoRepository();
+
+                    const enderecamentosUsadosMap = new Map<string, EnderecamentoUso>();
+                    const registrarEnderecamentoUso = (
+                        pedido: PedidoSeparacao,
+                        fonte: string,
+                        loteOrigem: string,
+                        quantidadeConsumida: number,
+                        registroId?: number
+                    ) => {
+                        if (quantidadeConsumida <= 0) {
+                            return;
+                        }
+                        const loteFinalNormalizado = normalize(loteOrigem) || pedido.lote;
+                        const key = [registroId ?? 'sem-id', pedido.pedidoId, loteFinalNormalizado].join('|');
+                        const existente = enderecamentosUsadosMap.get(key);
+                        if (existente) {
+                            existente.quantidadeConsumida += quantidadeConsumida;
+                            if (!existente.fontes.includes(fonte)) {
+                                existente.fontes.push(fonte);
+                            }
+                            return;
+                        }
+                        enderecamentosUsadosMap.set(key, {
+                            id: registroId,
+                            pedidoId: pedido.pedidoId,
+                            produtoId: pedido.produtoId,
+                            codInterno: pedido.codInterno,
+                            descricao: pedido.descricao,
+                            tonalidade: pedido.tonalidade,
+                            bitola: pedido.bitola,
+                            lote: loteFinalNormalizado,
+                            quantidadeConsumida,
+                            fontes: [fonte],
+                            rotaPedido: pedido.rotaPedido
+                        });
+                    };
 
                     const [estoqueItens, enderecamentos] = await Promise.all([
                         estoqueItemRepository.findAll(),
@@ -636,7 +686,13 @@ export class ImportacaoController {
                                         registro.id
                                     )
                                 );
-                                enderecamentosUsados.push({ id: registro.id, lote: pedido.lote, quantidadeConsumida: consumir, pedidoId: pedido.pedidoId });
+                                registrarEnderecamentoUso(
+                                    pedido,
+                                    'Endereçamento (mesmo lote)',
+                                    pedido.lote,
+                                    consumir,
+                                    registro.id
+                                );
                             }
                         }
 
@@ -732,7 +788,13 @@ export class ImportacaoController {
                                             registro.id
                                         )
                                     );
-                                    enderecamentosUsados.push({ id: registro.id, lote: parts.lote, quantidadeConsumida: consumirEndereco, pedidoId: pedido.pedidoId });
+                                    registrarEnderecamentoUso(
+                                        pedido,
+                                        'Endereçamento (mesmo lote do setor)',
+                                        parts.lote,
+                                        consumirEndereco,
+                                        registro.id
+                                    );
                                 }
                             }
                         }
@@ -771,7 +833,13 @@ export class ImportacaoController {
                                             registro.id
                                         )
                                     );
-                                    enderecamentosUsados.push({ id: registro.id, lote: parts.lote, quantidadeConsumida: consumirEndereco, pedidoId: pedido.pedidoId });
+                                    registrarEnderecamentoUso(
+                                        pedido,
+                                        'Endereçamento (outro lote)',
+                                        parts.lote,
+                                        consumirEndereco,
+                                        registro.id
+                                    );
                                 }
                             }
                         }
@@ -828,7 +896,13 @@ export class ImportacaoController {
                                                 registro.id
                                             )
                                         );
-                                        enderecamentosUsados.push({ id: registro.id, lote: parts.lote, quantidadeConsumida: consumirEndereco, pedidoId: pedido.pedidoId });
+                                        registrarEnderecamentoUso(
+                                            pedido,
+                                            'Endereçamento (outra tonalidade vinculada)',
+                                            parts.lote,
+                                            consumirEndereco,
+                                            registro.id
+                                        );
                                     }
                                 }
                             }
@@ -868,7 +942,13 @@ export class ImportacaoController {
                                             registro.id
                                         )
                                     );
-                                    enderecamentosUsados.push({ id: registro.id, lote: parts.lote, quantidadeConsumida: consumirEndereco, pedidoId: pedido.pedidoId });
+                                    registrarEnderecamentoUso(
+                                        pedido,
+                                        'Endereçamento (outra tonalidade)',
+                                        parts.lote,
+                                        consumirEndereco,
+                                        registro.id
+                                    );
                                 }
                             }
                         }
@@ -895,6 +975,7 @@ export class ImportacaoController {
 
                         pedido.statusInicial = resultadoRef.status;
                     }
+                    enderecamentosUsados = Array.from(enderecamentosUsadosMap.values());
                 }
 
                 for (const pedido of pedidos) {
@@ -923,6 +1004,36 @@ export class ImportacaoController {
         } catch (err) {
             console.error('Erro inesperado em importarSeparacao:', err);
             return res.status(500).json({ message: 'Erro ao importar separação', error: (err as Error).message });
+        }
+    }
+
+    async confirmarImportacaoSeparacao(req: Request, res: Response) {
+        try {
+            const pedidos = Array.isArray(req.body?.pedidos) ? req.body.pedidos : [];
+            const enderecamentos = Array.isArray(req.body?.enderecamentos) ? req.body.enderecamentos : [];
+
+            if (!pedidos.length) {
+                return res.status(400).json({ message: 'Nenhum pedido informado para confirmação.' });
+            }
+
+            const { executorUserId } = extractRequestContext(req);
+            const totalAlocado = enderecamentos.reduce((acc: number, item: any) => {
+                const quantidade = Number(item?.quantidadeConsumida ?? item?.quantidade ?? 0);
+                return acc + (Number.isFinite(quantidade) ? quantidade : 0);
+            }, 0);
+
+            // TODO: Implementar persistência dos dados de separação conforme regras de negócio definidas.
+
+            return res.json({
+                message: 'Confirmação de importação de separação recebida com sucesso.',
+                pedidosProcessados: pedidos.length,
+                enderecamentosRecebidos: enderecamentos.length,
+                totalAlocado,
+                executorUserId
+            });
+        } catch (err) {
+            console.error('Erro ao confirmar importação de separação:', err);
+            return res.status(500).json({ message: 'Erro ao confirmar importação de separação', error: (err as Error).message });
         }
     }
 }

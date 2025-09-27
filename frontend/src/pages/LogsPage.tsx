@@ -82,21 +82,21 @@ const LogsPage: React.FC = () => {
     };
 
     const columns: GridColDef[] = [
-        { field: 'id', headerName: 'ID', width: 80 },
+        { field: 'id', headerName: 'ID', minWidth: 120, flex: 0.2 },
         {
             field: 'dataHora',
             headerName: 'Data/Hora',
-            minWidth: 120,
-            flex: 0.4,
+            minWidth: 200,
+            flex: 0.5,
             valueFormatter: (params) => {
                 const date = new Date(params.value);
                 return date.toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
             }
         },
-        { field: 'usuario', headerName: 'Usuário', minWidth: 100, flex: 0.4 },
-        { field: 'entidade', headerName: 'Entidade', minWidth: 100, flex: 0.4 },
-        { field: 'tipo', headerName: 'Tipo', minWidth: 80, flex: 0.3 },
-        { field: 'detalhes', headerName: 'Detalhes', minWidth: 300, flex: 2.2 },
+        { field: 'usuario', headerName: 'Usuário', minWidth: 160, flex: 0.6 },
+        { field: 'entidade', headerName: 'Entidade', minWidth: 160, flex: 0.6 },
+        { field: 'tipo', headerName: 'Tipo', minWidth: 140, flex: 0.4 },
+        { field: 'detalhes', headerName: 'Detalhes', minWidth: 400, flex: 2.2 },
     ];
 
     return (
@@ -104,17 +104,17 @@ const LogsPage: React.FC = () => {
             <Typography variant="h4" gutterBottom>
                 Logs do Sistema
             </Typography>
-            <Box sx={{ display: 'flex', gap: 2, mb: 3, flexWrap: 'wrap', width: '100%' }}>
-                <Box sx={{ display: 'flex', flex: 1, gap: 2, minWidth: 0 }}>
+            <Box sx={{ display: 'flex', gap: 2, mb: 3, flexWrap: 'wrap', width: '100%', alignItems: 'flex-end' }}>
+                <Box sx={{ display: 'flex', flex: 1, gap: 2, minWidth: 0, flexWrap: 'wrap' }}>
                     <TextField
                         fullWidth
                         label="Buscar por usuário ou detalhes"
                         value={search}
                         onChange={e => setSearch(e.target.value)}
-                        sx={{ minWidth: 220 }}
+                        sx={{ flex: 1, minWidth: 220 }}
                         InputProps={{ startAdornment: <Search sx={{ mr: 1 }} /> }}
                     />
-                    <FormControl fullWidth sx={{ minWidth: 180 }}>
+                    <FormControl fullWidth sx={{ minWidth: 200, flex: { xs: '1 1 220px', md: '0 0 240px' } }}>
                         <InputLabel>Entidade</InputLabel>
                         <Select
                             value={entidade}
@@ -126,7 +126,7 @@ const LogsPage: React.FC = () => {
                             ))}
                         </Select>
                     </FormControl>
-                    <FormControl fullWidth sx={{ minWidth: 180 }}>
+                    <FormControl fullWidth sx={{ minWidth: 200, flex: { xs: '1 1 220px', md: '0 0 240px' } }}>
                         <InputLabel>Tipo</InputLabel>
                         <Select
                             value={tipo}
@@ -143,7 +143,11 @@ const LogsPage: React.FC = () => {
                     variant="outlined"
                     onClick={handleFilter}
                     disabled={loading}
-                    sx={{ minWidth: 120, height: '56px', alignSelf: 'flex-end' }}
+                    sx={{
+                        minWidth: 140,
+                        height: { xs: 'auto', sm: '56px' },
+                        flex: { xs: '1 1 100%', md: '0 0 auto' }
+                    }}
                 >
                     Filtrar
                 </Button>

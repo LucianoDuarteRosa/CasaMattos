@@ -9,6 +9,7 @@ const upload = multer();
 
 router.post('/', upload.single('arquivo'), (req, res) => controller.importar(req, res));
 router.post('/confirmar-produtos', authenticateToken, async (req, res) => controller.confirmarImportacaoProdutos(req, res));
+router.post('/confirmar-separacao', authenticateToken, async (req, res) => controller.confirmarImportacaoSeparacao(req, res));
 router.post('/confirmar', authenticateToken, async (req, res) => controller.confirmarImportacao(req, res));
 
 export default router;

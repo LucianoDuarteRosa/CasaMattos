@@ -397,17 +397,20 @@ const ListasPage: React.FC = () => {
             field: 'id',
             headerName: 'ID',
             width: 80,
+            minWidth: 70,
         },
         {
             field: 'nome',
             headerName: 'Nome',
             width: 250,
             flex: 1,
+            minWidth: 300,
         },
         {
             field: 'disponivel',
             headerName: 'Status',
-            width: 120,
+            width: 140,
+            minWidth: 130,
             renderCell: (params) => (
                 <Chip
                     label={params.value ? 'Aberta' : 'Finalizada'}
@@ -420,7 +423,8 @@ const ListasPage: React.FC = () => {
         {
             field: 'createdAt',
             headerName: 'Criada em',
-            width: 150,
+            width: 160,
+            minWidth: 140,
             valueFormatter: (params) => {
                 return params.value ? new Date(params.value).toLocaleDateString('pt-BR') : '';
             },
@@ -429,7 +433,8 @@ const ListasPage: React.FC = () => {
             field: 'actions',
             type: 'actions',
             headerName: 'Ações',
-            width: 180,
+            width: 200,
+            minWidth: 180,
             getActions: (params) => {
                 const actions = [
                     <GridActionsCellItem
@@ -485,7 +490,8 @@ const ListasPage: React.FC = () => {
         {
             field: 'codInterno',
             headerName: 'Código Interno',
-            width: 120,
+            width: 130,
+            minWidth: 120,
             valueGetter: (params) => {
                 const produto = params.row.produto;
                 return produto?.codInterno || 'N/A';
@@ -494,8 +500,9 @@ const ListasPage: React.FC = () => {
         {
             field: 'descricao',
             headerName: 'Descrição',
-            width: 200,
+            width: 240,
             flex: 1,
+            minWidth: 300,
             valueGetter: (params) => {
                 const produto = params.row.produto;
                 return produto?.descricao || 'N/A';
@@ -504,7 +511,8 @@ const ListasPage: React.FC = () => {
         {
             field: 'codFabricante',
             headerName: 'Cód Fabricante',
-            width: 120,
+            width: 140,
+            minWidth: 130,
             valueGetter: (params) => {
                 const produto = params.row.produto;
                 return produto?.codFabricante || 'N/A';
@@ -513,22 +521,26 @@ const ListasPage: React.FC = () => {
         {
             field: 'tonalidade',
             headerName: 'Tonalidade',
-            width: 120,
+            width: 130,
+            minWidth: 120,
         },
         {
             field: 'bitola',
             headerName: 'Bitola',
-            width: 100,
+            width: 110,
+            minWidth: 100,
         },
         {
             field: 'quantCaixas',
             headerName: 'Qtd Caixas',
-            width: 120,
+            width: 130,
+            minWidth: 120,
         },
         {
             field: 'quantMinVenda',
             headerName: 'Qtd Min Venda',
-            width: 120,
+            width: 130,
+            minWidth: 120,
             valueGetter: (params) => {
                 const produto = params.row.produto;
                 return produto?.quantMinVenda || 'N/A';
@@ -537,7 +549,8 @@ const ListasPage: React.FC = () => {
         {
             field: 'localizacao',
             headerName: 'Localização',
-            width: 200,
+            width: 240,
+            minWidth: 220,
             valueGetter: (params) => {
                 const predio = params.row.predio;
                 if (!predio) return 'N/A';
@@ -549,7 +562,8 @@ const ListasPage: React.FC = () => {
             field: 'actions',
             type: 'actions',
             headerName: 'Ações',
-            width: 80,
+            width: 100,
+            minWidth: 90,
             getActions: (params) => [
                 <GridActionsCellItem
                     key="remove"
@@ -567,7 +581,8 @@ const ListasPage: React.FC = () => {
         {
             field: 'codInterno',
             headerName: 'Código Interno',
-            width: 120,
+            width: 130,
+            minWidth: 120,
             valueGetter: (params) => {
                 const produto = params.row.produto;
                 return produto?.codInterno || 'N/A';
@@ -576,8 +591,9 @@ const ListasPage: React.FC = () => {
         {
             field: 'descricao',
             headerName: 'Descrição',
-            width: 200,
+            width: 240,
             flex: 1,
+            minWidth: 300,
             valueGetter: (params) => {
                 const produto = params.row.produto;
                 return produto?.descricao || 'N/A';
@@ -586,7 +602,8 @@ const ListasPage: React.FC = () => {
         {
             field: 'codFabricante',
             headerName: 'Cód Fabricante',
-            width: 120,
+            width: 140,
+            minWidth: 130,
             valueGetter: (params) => {
                 const produto = params.row.produto;
                 return produto?.codFabricante || 'N/A';
@@ -595,22 +612,26 @@ const ListasPage: React.FC = () => {
         {
             field: 'tonalidade',
             headerName: 'Tonalidade',
-            width: 120,
+            width: 130,
+            minWidth: 120,
         },
         {
             field: 'bitola',
             headerName: 'Bitola',
-            width: 100,
+            width: 110,
+            minWidth: 100,
         },
         {
             field: 'quantCaixas',
             headerName: 'Qtd Caixas',
-            width: 120,
+            width: 130,
+            minWidth: 120,
         },
         {
             field: 'quantMinVenda',
             headerName: 'Qtd Min Venda',
-            width: 120,
+            width: 130,
+            minWidth: 120,
             valueGetter: (params) => {
                 const produto = params.row.produto;
                 return produto?.quantMinVenda || 'N/A';
@@ -619,7 +640,8 @@ const ListasPage: React.FC = () => {
         {
             field: 'localizacao',
             headerName: 'Localização',
-            width: 200,
+            width: 240,
+            minWidth: 220,
             valueGetter: (params) => {
                 const predio = params.row.predio;
                 if (!predio) return 'N/A';
@@ -648,8 +670,8 @@ const ListasPage: React.FC = () => {
             </Typography>
 
             {/* Barra de pesquisa e botão ocupando toda a largura, igual Usuários */}
-            <Box sx={{ display: 'flex', gap: 2, mb: 3, flexWrap: 'wrap' }}>
-                <Box sx={{ display: 'flex', gap: 1, flex: 1, minWidth: '200px', alignItems: 'center' }}>
+            <Box sx={{ display: 'flex', gap: 2, mb: 3, flexWrap: 'wrap', alignItems: 'center' }}>
+                <Box sx={{ display: 'flex', gap: 1, flex: 1, minWidth: '220px', alignItems: 'center', flexWrap: 'wrap' }}>
                     <TextField
                         placeholder="Pesquisar pelo nome da lista..."
                         value={filtroNome}
@@ -664,7 +686,7 @@ const ListasPage: React.FC = () => {
                     variant="contained"
                     startIcon={<Add />}
                     onClick={abrirDialogNovaLista}
-                    sx={{ minWidth: '120px', boxSizing: 'border-box' }}
+                    sx={{ minWidth: '160px', boxSizing: 'border-box', flex: { xs: '1 1 100%', sm: '0 0 auto' }, height: { xs: 'auto', sm: 56 } }}
                     size="medium"
                 >
                     Nova Lista

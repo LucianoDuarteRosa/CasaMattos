@@ -176,8 +176,8 @@ const AjustarPage: React.FC = () => {
                 Ajustar Estoque
             </Typography>
             {/* Barra de pesquisa */}
-            <Box sx={{ display: 'flex', gap: 2, mb: 0, flexWrap: 'wrap' }}>
-                <Box sx={{ display: 'flex', gap: 1, flex: 1, minWidth: '200px' }}>
+            <Box sx={{ display: 'flex', gap: 2, mb: 0, flexWrap: 'wrap', alignItems: 'center' }}>
+                <Box sx={{ display: 'flex', gap: 1, flex: 1, minWidth: '220px', flexWrap: 'wrap' }}>
                     <TextField
                         placeholder="Buscar produtos..."
                         value={searchTerm}
@@ -190,6 +190,7 @@ const AjustarPage: React.FC = () => {
                         variant="outlined"
                         onClick={handleSearch}
                         disabled={loading}
+                        sx={{ flex: { xs: '1 1 100%', sm: '0 0 auto' }, minWidth: 140 }}
                     >
                         Buscar
                     </Button>
@@ -197,6 +198,7 @@ const AjustarPage: React.FC = () => {
                         variant="outlined"
                         onClick={() => loadProdutosComEnderecamento()}
                         disabled={loading}
+                        sx={{ flex: { xs: '1 1 100%', sm: '0 0 auto' }, minWidth: 140 }}
                     >
                         Limpar
                     </Button>
@@ -222,13 +224,13 @@ const AjustarPage: React.FC = () => {
                             : produtosComEnderecamento
                     }
                     columns={[
-                        { field: 'id', headerName: 'ID', width: 70 },
-                        { field: 'codInterno', headerName: 'Código', width: 100 },
-                        { field: 'descricao', headerName: 'Descrição', flex: 1, minWidth: 180 },
+                        { field: 'id', headerName: 'ID', width: 70, minWidth: 60 },
+                        { field: 'codInterno', headerName: 'Código', width: 110, minWidth: 100 },
+                        { field: 'descricao', headerName: 'Descrição', flex: 1, minWidth: 300 },
                         {
                             field: 'estoque',
                             headerName: 'Estoque',
-                            width: 100,
+                            width: 120,
                             type: 'number',
                             valueFormatter: (params) =>
                                 params.value !== undefined && params.value !== null
@@ -238,7 +240,7 @@ const AjustarPage: React.FC = () => {
                         {
                             field: 'estoqueEnderecamento',
                             headerName: 'Depósito',
-                            width: 150,
+                            width: 160,
                             type: 'number',
                             valueFormatter: (params) => {
                                 // Corrigir acesso à linha completa

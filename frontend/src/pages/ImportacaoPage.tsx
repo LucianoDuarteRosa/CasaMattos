@@ -30,6 +30,7 @@ const ImportacaoPage: React.FC = () => {
     const [rows, setRows] = useState<any[]>([]);
     const [columns, setColumns] = useState<GridColDef[]>([]);
     const [loading, setLoading] = useState(false);
+    const [pedidos, setPedidos] = useState<any[]>([]);
     const [enderecamentosUsados, setEnderecamentosUsados] = useState<any[]>([]);
     const { showSnackbar } = useSnackbar();
 
@@ -38,10 +39,10 @@ const ImportacaoPage: React.FC = () => {
         if (importType === 'produtos') {
             setColumns([
                 { field: 'id', headerName: 'ID', width: 70 },
-                { field: 'codInterno', headerName: 'Código', width: 100 },
-                { field: 'descricao', headerName: 'Descrição', minWidth: 300 },
-                { field: 'codBarras', headerName: 'Cód. Barras', width: 140 },
-                { field: 'codFabricante', headerName: 'Cód. Fabricante', width: 140 },
+                { field: 'codInterno', headerName: 'Código', width: 100, minWidth: 100 },
+                { field: 'descricao', headerName: 'Descrição', flex: 1, minWidth: 300 },
+                { field: 'codBarras', headerName: 'Cód. Barras', width: 140, minWidth: 140 },
+                { field: 'codFabricante', headerName: 'Cód. Fabricante', width: 140, minWidth: 140 },
                 {
                     field: 'quantidadeMinimaVenda',
                     headerName: 'Qtd. Mín. Venda',
@@ -72,31 +73,32 @@ const ImportacaoPage: React.FC = () => {
                         return value.toLocaleString('pt-BR', { minimumFractionDigits: 0 });
                     }
                 },
-                { field: 'fornecedor', headerName: 'Fornecedor', width: 180 },
-                { field: 'status', headerName: 'Status', width: 120 },
-                { field: 'observacao', headerName: 'Observação', flex: 1, minWidth: 180 },
+                { field: 'fornecedor', headerName: 'Fornecedor', width: 180, minWidth: 180 },
+                { field: 'status', headerName: 'Status', width: 120, minWidth: 120 },
+                { field: 'observacao', headerName: 'Observação', flex: 1, minWidth: 220 },
             ]);
         } else if (importType === 'fornecedores') {
             setColumns([
                 { field: 'id', headerName: 'ID', width: 70 },
-                { field: 'razaoSocial', headerName: 'Razão Social', flex: 1, minWidth: 200 },
-                { field: 'cnpj', headerName: 'CNPJ', width: 180 },
-                { field: 'status', headerName: 'Status', width: 120 },
-                { field: 'observacao', headerName: 'Observação', flex: 2, minWidth: 300 },
+                { field: 'razaoSocial', headerName: 'Razão Social', flex: 1, minWidth: 300 },
+                { field: 'cnpj', headerName: 'CNPJ', width: 180, minWidth: 180 },
+                { field: 'status', headerName: 'Status', width: 120, minWidth: 120 },
+                { field: 'observacao', headerName: 'Observação', flex: 2, minWidth: 320 },
             ]);
         } else if (importType === 'separacao') {
             setColumns([
                 { field: 'id', headerName: 'ID', width: 70 },
-                { field: 'codInterno', headerName: 'Cod. Interno', width: 120 },
-                { field: 'descricao', headerName: 'Descrição', minWidth: 300 },
-                { field: 'codFabricante', headerName: 'Cod. Fabricante', width: 140 },
-                { field: 'tonalidade', headerName: 'Tonalidade', width: 120 },
-                { field: 'bitola', headerName: 'Bitola', width: 100 },
-                { field: 'lote', headerName: 'Lote', width: 130 },
+                { field: 'codInterno', headerName: 'Cod. Interno', width: 120, minWidth: 120 },
+                { field: 'descricao', headerName: 'Descrição', flex: 1, minWidth: 300 },
+                { field: 'codFabricante', headerName: 'Cod. Fabricante', width: 140, minWidth: 140 },
+                { field: 'tonalidade', headerName: 'Tonalidade', width: 120, minWidth: 120 },
+                { field: 'bitola', headerName: 'Bitola', width: 100, minWidth: 100 },
+                { field: 'lote', headerName: 'Lote', width: 130, minWidth: 130 },
                 {
                     field: 'quantMinimaVenda',
                     headerName: 'Quant. Mín. Venda',
                     width: 140,
+                    minWidth: 140,
                     type: 'number',
                     valueFormatter: (params: any) => {
                         const value = params.value && params.value !== '' ? Number(params.value) : 0;
@@ -107,6 +109,7 @@ const ImportacaoPage: React.FC = () => {
                     field: 'quantidadeCaixas',
                     headerName: 'Qtd. Caixas',
                     width: 120,
+                    minWidth: 120,
                     type: 'number',
                     valueFormatter: (params: any) => {
                         const value = params.value && params.value !== '' ? Number(params.value) : 0;
@@ -117,6 +120,7 @@ const ImportacaoPage: React.FC = () => {
                     field: 'quantidadeTotal',
                     headerName: 'Qtd. Total',
                     width: 120,
+                    minWidth: 120,
                     type: 'number',
                     valueFormatter: (params: any) => {
                         const value = params.value && params.value !== '' ? Number(params.value) : 0;
@@ -134,13 +138,15 @@ const ImportacaoPage: React.FC = () => {
                      }
                  },
                  { field: 'fonte', headerName: 'Fonte', width: 120 },*/
-                { field: 'status', headerName: 'Status', width: 100 },
-                { field: 'observacao', headerName: 'Observação', minWidth: 700, flex: 1 },
+                { field: 'status', headerName: 'Status', width: 100, minWidth: 100 },
+                { field: 'observacao', headerName: 'Observação', minWidth: 320, flex: 1 },
             ]);
         }
         setRows([]);
         setFile(null);
         setFileRead(false);
+        setPedidos([]);
+        setEnderecamentosUsados([]);
     }, [importType]);
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -156,6 +162,8 @@ const ImportacaoPage: React.FC = () => {
     // Envia arquivo e tipo para a API
     const handleReadFile = async () => {
         if (!file) return;
+        setPedidos([]);
+        setEnderecamentosUsados([]);
         setLoading(true);
         try {
             const resp = await importacaoService.importar(importType, file);
@@ -211,6 +219,7 @@ const ImportacaoPage: React.FC = () => {
                 console.log('[Frontend] Linhas processadas para exibição:', rowsWithId.length);
                 console.log('[Frontend] Primeira linha:', rowsWithId[0]);
                 setRows(rowsWithId);
+                setPedidos(resp.pedidos || []);
                 setEnderecamentosUsados(resp.enderecamentosUsados || []);
             } else {
                 setRows([{ id: 1, descricao: resp.message }]);
@@ -220,6 +229,7 @@ const ImportacaoPage: React.FC = () => {
         } catch (e: any) {
             setRows([{ id: 1, descricao: 'Erro ao importar arquivo' }]);
             setEnderecamentosUsados([]);
+            setPedidos([]);
             setFileRead(false);
         } finally {
             setLoading(false);
@@ -275,6 +285,23 @@ const ImportacaoPage: React.FC = () => {
             } finally {
                 setLoading(false);
             }
+        } else if (importType === 'separacao') {
+            if (rows.length === 0) {
+                showSnackbar('Nenhum pedido de separação processado para confirmar.', 'info');
+                return;
+            }
+            setLoading(true);
+            try {
+                const resp = await importacaoService.confirmarImportacaoSeparacao({
+                    pedidos,
+                    enderecamentos: enderecamentosUsados
+                });
+                showSnackbar(resp.message || 'Importação de separação enviada para processamento!', 'success');
+            } catch (e: any) {
+                showSnackbar('Erro ao confirmar importação de separação', 'error');
+            } finally {
+                setLoading(false);
+            }
         } else {
             showSnackbar('Importação realizada!', 'success');
         }
@@ -287,56 +314,58 @@ const ImportacaoPage: React.FC = () => {
             </Typography>
             {/* Controles de importação, alinhados à esquerda/topo */}
             <Box sx={{ display: 'flex', gap: 2, mb: 3, flexWrap: 'wrap', alignItems: 'center' }}>
-                <Box sx={{ display: 'flex', gap: 1, flex: 1, minWidth: '200px' }}>
-                    <FormControl sx={{ minWidth: 220 }}>
-                        <InputLabel id="import-type-label">Tipo de Importação</InputLabel>
-                        <Select
-                            labelId="import-type-label"
-                            value={importType}
-                            label="Tipo de Importação"
-                            onChange={e => setImportType(e.target.value)}
-                        >
-                            {importTypes.map(opt => (
-                                <MenuItem key={opt.value} value={opt.value}>{opt.label}</MenuItem>
-                            ))}
-                        </Select>
-                    </FormControl>
-                    <Button
-                        variant="outlined"
-                        component="label"
+                <FormControl
+                    sx={{ minWidth: 220, flex: { xs: '1 1 220px', sm: '0 0 auto' }, minHeight: 56 }}
+                >
+                    <InputLabel id="import-type-label">Tipo de Importação</InputLabel>
+                    <Select
+                        labelId="import-type-label"
+                        value={importType}
+                        label="Tipo de Importação"
+                        onChange={e => setImportType(e.target.value)}
                     >
-                        Selecionar Arquivo
-                        <input
-                            type="file"
-                            accept=".xlsx,.xls,.csv"
-                            hidden
-                            onChange={handleFileChange}
-                        />
-                    </Button>
-                    <TextField
-                        label="Arquivo Selecionado"
-                        value={file ? file.name : ''}
-                        disabled
-                        sx={{ flex: 1, minWidth: 180 }}
+                        {importTypes.map(opt => (
+                            <MenuItem key={opt.value} value={opt.value}>{opt.label}</MenuItem>
+                        ))}
+                    </Select>
+                </FormControl>
+                <Button
+                    variant="outlined"
+                    component="label"
+                    sx={{ flex: { xs: '1 1 100%', sm: '0 0 auto' }, minWidth: 160, height: { xs: 'auto', sm: 56 } }}
+                >
+                    Selecionar Arquivo
+                    <input
+                        type="file"
+                        accept=".xlsx,.xls,.csv"
+                        hidden
+                        onChange={handleFileChange}
                     />
-                    <Button
-                        variant="contained"
-                        color="primary"
-                        disabled={!file}
-                        onClick={handleReadFile}
-                    >
-                        Ler Arquivo
-                    </Button>
-                    <Button
-                        variant="contained"
-                        color="success"
-                        disabled={!fileRead || rows.length === 0}
-                        onClick={handleImport}
-                    >
-                        Importar
-                    </Button>
-                </Box>
-
+                </Button>
+                <TextField
+                    label="Arquivo Selecionado"
+                    value={file ? file.name : ''}
+                    disabled
+                    sx={{ flex: { xs: '1 1 100%', md: '1 1 300px' }, minWidth: 200 }}
+                />
+                <Button
+                    variant="contained"
+                    color="primary"
+                    disabled={!file}
+                    onClick={handleReadFile}
+                    sx={{ flex: { xs: '1 1 100%', sm: '0 0 auto' }, minWidth: 150, height: { xs: 'auto', sm: 56 } }}
+                >
+                    Ler Arquivo
+                </Button>
+                <Button
+                    variant="contained"
+                    color="success"
+                    disabled={!fileRead || rows.length === 0}
+                    onClick={handleImport}
+                    sx={{ flex: { xs: '1 1 100%', sm: '0 0 auto' }, minWidth: 150, height: { xs: 'auto', sm: 56 } }}
+                >
+                    Importar
+                </Button>
             </Box>
             <Box sx={{ maxWidth: '100%', mt: 1 }}>
                 <Paper sx={dataGridStyles.paperContainer}>

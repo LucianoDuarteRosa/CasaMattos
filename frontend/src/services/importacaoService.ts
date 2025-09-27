@@ -19,4 +19,8 @@ export const importacaoService = {
         const response = await api.post('/importacao/confirmar-produtos', { produtos });
         return response.data;
     },
+    confirmarImportacaoSeparacao: async (payload: { pedidos: any[]; enderecamentos: any[] }) => {
+        const response = await api.post('/importacao/confirmar-separacao', payload);
+        return response.data;
+    },
 };

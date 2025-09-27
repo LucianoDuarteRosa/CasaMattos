@@ -386,8 +386,8 @@ const UsuariosPage: React.FC = () => {
         {
             field: 'avatar',
             headerName: '',
-            width: 80,
-            flex: 0,
+            minWidth: 100,
+            flex: 0.2,
             renderCell: (params) => (
                 <Avatar
                     src={params.row.imagemUrl ? `${SERVER_BASE_URL}${params.row.imagemUrl}` : ''}
@@ -399,7 +399,7 @@ const UsuariosPage: React.FC = () => {
             sortable: false,
             filterable: false
         },
-        { field: 'id', headerName: 'ID', width: 70, flex: 0 },
+        { field: 'id', headerName: 'ID', minWidth: 140, flex: 0.2 },
         { field: 'nomeCompleto', headerName: 'Nome Completo', flex: 1, minWidth: 200 },
         { field: 'nickname', headerName: 'Nickname', flex: 0.8, minWidth: 150 },
         { field: 'email', headerName: 'Email', flex: 1.2, minWidth: 200 },
@@ -416,8 +416,8 @@ const UsuariosPage: React.FC = () => {
         {
             field: 'ativo',
             headerName: 'Ativo',
-            width: 100,
-            flex: 0,
+            minWidth: 160,
+            flex: 0.3,
             renderCell: (params) => (
                 <Switch
                     checked={params.value}
@@ -432,7 +432,7 @@ const UsuariosPage: React.FC = () => {
             type: 'actions',
             headerName: 'Ações',
             flex: 0.8,
-            minWidth: 150,
+            minWidth: 220,
             getActions: (params) => [
                 <GridActionsCellItem
                     icon={<EditIcon />}
@@ -468,8 +468,8 @@ const UsuariosPage: React.FC = () => {
             </Typography>
 
             {/* Barra de pesquisa e botão de novo usuário */}
-            <Box sx={{ display: 'flex', gap: 2, mb: 3, flexWrap: 'wrap' }}>
-                <Box sx={{ display: 'flex', gap: 1, flex: 1, minWidth: '200px' }}>
+            <Box sx={{ display: 'flex', gap: 2, mb: 3, flexWrap: 'wrap', alignItems: 'center' }}>
+                <Box sx={{ display: 'flex', gap: 1, flex: 1, minWidth: '220px', flexWrap: 'wrap' }}>
                     <TextField
                         placeholder="Buscar usuários..."
                         value={searchTerm}
@@ -481,6 +481,7 @@ const UsuariosPage: React.FC = () => {
                         variant="outlined"
                         onClick={handleSearch}
                         disabled={loading}
+                        sx={{ flex: { xs: '1 1 100%', sm: '0 0 auto' }, minWidth: 140, height: { xs: 'auto', sm: 56 } }}
                     >
                         Buscar
                     </Button>
@@ -488,6 +489,7 @@ const UsuariosPage: React.FC = () => {
                         variant="outlined"
                         onClick={loadUsuarios}
                         disabled={loading}
+                        sx={{ flex: { xs: '1 1 100%', sm: '0 0 auto' }, minWidth: 140, height: { xs: 'auto', sm: 56 } }}
                     >
                         Limpar
                     </Button>
@@ -496,7 +498,7 @@ const UsuariosPage: React.FC = () => {
                     variant="contained"
                     startIcon={<AddIcon />}
                     onClick={() => handleOpenDialog()}
-                    sx={{ minWidth: '120px' }}
+                    sx={{ minWidth: 160, flex: { xs: '1 1 100%', sm: '0 0 auto' }, height: { xs: 'auto', sm: 56 } }}
                     size="medium"
                 >
                     Novo Usuário
