@@ -21,6 +21,7 @@ import SettingsPage from '@/pages/SettingsPage';
 import ExportacaoPage from '@/pages/ExportacaoPage';
 import ImportacaoPage from '@/pages/ImportacaoPage';
 import AjustarPage from '@/pages/AjustarPage';
+import NotFoundPage from '@/pages/NotFoundPage';
 
 // Serviços
 import { authService } from '@/services/authService';
@@ -173,6 +174,7 @@ const App: React.FC = () => {
                                             <Route path="/exportacao" element={<ExportacaoPage />} />
                                             <Route path="/importacao" element={<ImportacaoPage />} />
                                             <Route path="/ajustar" element={<AjustarPage />} />
+                                            <Route path="*" element={<NotFoundPage />} />
                                         </Routes>
                                     </Layout>
                                 </PrivateRoute>

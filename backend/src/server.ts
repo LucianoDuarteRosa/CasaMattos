@@ -14,6 +14,7 @@ import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import dotenv from 'dotenv';
 import path from 'path';
+import fs from 'fs';
 import sequelize from './infrastructure/database/connection';
 import authRoutes from './presentation/routes/authRoutes';
 import exportacaoRoutes from './presentation/routes/exportacaoRoutes';
@@ -39,6 +40,9 @@ dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3001;
+
+const frontendDistPath = path.resolve(__dirname, '../../frontend/dist');
+const hasFrontendBuild = fs.existsSync(frontendDistPath);
 
 // Middlewares de segurança
 app.use(helmet({
@@ -115,6 +119,22 @@ app.use('/api/exportacao', exportacaoRoutes);
 app.use('/api/templates', templateRoutes);
 app.use('/api/importacao', importacaoRoutes);
 
+if (hasFrontendBuild) {
+    app.use(express.static(frontendDistPath));
+}
+
+app.use((req, res, next) => {
+    if (req.path.startsWith('/api')) {
+        return res.status(404).json({ error: 'Rota não encontrada' });
+    }
+
+    if (hasFrontendBuild && req.method === 'GET') {
+        return res.sendFile(path.join(frontendDistPath, 'index.html'));
+    }
+
+    return res.status(404).json({ error: 'Rota não encontrada' });
+});
+
 // Middleware de tratamento de erros
 app.use((error: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
     console.error('Error:', error);
@@ -122,11 +142,6 @@ app.use((error: any, req: express.Request, res: express.Response, next: express.
         error: 'Erro interno do servidor',
         message: process.env.NODE_ENV === 'development' ? error.message : 'Algo deu errado'
     });
-});
-
-// Middleware para rotas não encontradas
-app.use('*', (req, res) => {
-    res.status(404).json({ error: 'Rota não encontrada' });
 });
 
 // Inicializar banco de dados e servidor
